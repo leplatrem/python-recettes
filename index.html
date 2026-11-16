@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Recipes</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="prefetch" href="recipes/buckwheat-crepes.html">
+    <link rel="prefetch" href="recipes/caramel.html">
+    <link rel="prefetch" href="recipes/crackers.html">
+    <link rel="prefetch" href="recipes/granola.html">
+    <link rel="prefetch" href="recipes/julia-cookies.html">
+    <link rel="prefetch" href="recipes/lemon-ginger-syrup.html">
+    <link rel="prefetch" href="recipes/lemon-tart.html">
+    <link rel="prefetch" href="recipes/onion-soup.html">
+    <link rel="prefetch" href="recipes/walnut-cake.html">
+    <script type="module" src="assets/app.js"></script>
+  </head>
+  <body>
+    <main class="recipe-index">
+      <h1>My Recipes</h1>
+      <label class="search-box">
+        <span aria-hidden="true">⌕</span>
+        <input id="recipe-search" type="search" aria-label="Search recipes" autocomplete="off">
+      </label>
+      <div class="tag-cloud" id="tag-cloud"></div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </main>
+    <footer class="site-footer">
+      Built with
+      <a href="https://github.com/leplatrem/python-recettes">Recettes</a>, the free software
+      that turns Markdown files into a recipes website.
+    </footer>
+
+    <template id="tag-cloud-item-template">
+      <button class="tag-cloud-item" type="button" aria-pressed="false">
+        <span data-tag-name></span>
+        <span data-tag-count></span>
+      </button>
+    </template>
+
+    <template id="recipe-card-template">
+      <article class="recipe-card">
+        <a>
+          <h2 data-recipe-title></h2>
+          <p class="card-excerpt" data-recipe-excerpt></p>
+          <div class="recipe-tags" data-recipe-tags></div>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </a>
+      </article>
+    </template>
+
+    <template id="recipe-tag-template">
+      <span class="tag" data-tag-label></span>
+    </template>
+  </body>
+</html>

@@ -387,6 +387,47 @@ input {
   font-weight: 600;
 }
 
+.recipe-schema {
+  width: max-content;
+  max-width: calc(100vw - 36px);
+  overflow-x: auto;
+  margin: 0 0 24px 50%;
+  transform: translateX(-50%);
+  border: 2px solid var(--accent);
+}
+
+.recipe-schema:empty {
+  display: none;
+}
+
+.schema-step,
+.schema-inputs {
+  display: grid;
+  gap: 1px;
+  background: #d8c9bb;
+}
+
+.schema-step {
+  grid-template-columns: 1fr auto;
+}
+
+.recipe-schema > .schema-step {
+  width: max-content;
+}
+
+.recipe-schema [data-ingredient],
+.schema-label {
+  align-content: center;
+  padding: 4px 10px;
+  background: var(--surface);
+}
+
+.schema-label {
+  max-width: 10em;
+  font-weight: 600;
+  text-align: center;
+}
+
 .recipe-gallery {
   display: grid;
   grid-template-columns: 1fr;

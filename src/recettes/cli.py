@@ -106,6 +106,29 @@ def markdown_with_ingredients(markdown: str) -> tuple[str, list[dict[str, object
     return rendered, ingredients
 
 
+def recipe_diagram(markdown: str) -> str:
+    """Generate the recipe diagram.
+    Steps are in between the step before it and the ingredients it uses."""
+    diagram = ""
+    tokens = MARKDOWN.parse(markdown)
+    for token, inline in zip(tokens, tokens[1:]):
+        if token.type == "heading_open" and token.tag == "h1" and diagram:
+            break
+        if token.type != "paragraph_open":
+            continue
+        for raw in INGREDIENT_RE.findall(inline.content):
+            amount, unit, name = parse_quantity(raw)
+            ingredient = {"amount": amount, "unit": unit, "name": name, "raw": raw}
+            diagram += ingredient_html(ingredient, "div")
+        if diagram:
+            label = html.escape(inline.content.split("{{")[0].strip(" ,;:."))
+            diagram = (
+                f'<div class="schema-step"><div class="schema-inputs">{diagram}</div>'
+                f'<div class="schema-label">{label}</div></div>'
+            )
+    return diagram
+
+
 def first_paragraph(markdown: str, limit: int = 180) -> str:
     tokens = MARKDOWN.parse(markdown)
     for index, token in enumerate(tokens):
@@ -173,7 +196,9 @@ def rewrite_recipe_links(content: str, source_path: Path, recipe_slugs: dict[Pat
     return re.sub(r'href="([^"]*)"', replace_href, content)
 
 
-def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> dict[str, object]:
+def recipe_page(
+    path: Path, image_dir: Path, recipe_slugs: dict[Path, str], diagrams: bool = True
+) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
     except (OSError, ValueError) as exc:
@@ -202,7 +227,7 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
         image_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(image, image_dir / image.name)
 
-    excluded = {"title", "tags", "portions"}
+    excluded = {"title", "tags", "portions", "diagram"}
     properties = [
         {"name": str(key), "value": value} for key, value in metadata.items() if key not in excluded
     ]
@@ -217,6 +242,7 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
         "ingredients": ingredients,
         "ingredient_list": aggregate_ingredients(ingredients),
         "content": content,
+        "schema": recipe_diagram(document.content) if metadata.get("diagram", diagrams) else "",
         "images": [image.name for image in images],
     }
 
@@ -288,6 +314,7 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
             ingredient_html(item, "li") for item in recipe["ingredient_list"]
         ),
         "gallery": gallery,
+        "schema": str(recipe["schema"]),
         # Last: inserted recipe content must not be scanned for other placeholders.
         "content": insert_ingredients(str(recipe["content"]), recipe["ingredients"]),
     }
@@ -323,7 +350,7 @@ def render_template(path: Path, **values: str) -> str:
     return template
 
 
-def build(source: Path, destination: Path, title: str = "Recettes") -> int:
+def build(source: Path, destination: Path, title: str = "Recettes", diagrams: bool = True) -> int:
     source = source.resolve()
     destination = destination.resolve()
     if not source.is_dir():
@@ -356,7 +383,7 @@ def build(source: Path, destination: Path, title: str = "Recettes") -> int:
         if slug in seen:
             fail(f"Recipe filenames must be unique: {path.name}")
         seen.add(slug)
-        recipe = recipe_page(path, image_dir, recipe_slugs)
+        recipe = recipe_page(path, image_dir, recipe_slugs, diagrams)
         recipes.append(recipe)
         page = render_template(
             templates / "recipe.html",
@@ -394,9 +421,12 @@ def build_command(
     title: Annotated[
         str, typer.Option("--title", help="Title for the home page")
     ] = "Recettes",
+    diagrams: Annotated[
+        bool, typer.Option(help="Draw a diagram of each recipe, unless its front matter says so")
+    ] = True,
 ) -> None:
     """Build the static recipe website."""
-    count = build(source, destination, title)
+    count = build(source, destination, title, diagrams)
     typer.echo(f"Built {count} recipes into {destination}")
 
 

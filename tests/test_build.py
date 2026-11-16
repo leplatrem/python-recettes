@@ -150,3 +150,60 @@ def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:
         'as="fetch" crossorigin>'
     ) in index
     assert not re.search(r"\{\{ \w+ \}\}", index + recipe)
+
+
+def build_one(tmp_path: Path, markdown: str, diagrams: bool = True) -> str:
+    source = tmp_path / "recipes"
+    source.mkdir(exist_ok=True)
+    (source / "recipe.md").write_text(markdown, encoding="utf-8")
+    build(source, tmp_path / "site", diagrams=diagrams)
+    page = (tmp_path / "site" / "recipes" / "recipe.html").read_text(encoding="utf-8")
+    return re.search(r'<div class="recipe-schema">(.*)</div>\n', page).group(1)
+
+
+def test_diagram_nests_each_step_around_the_one_before(tmp_path: Path) -> None:
+    diagram = build_one(
+        tmp_path,
+        "From grandma.\n\n# Preparation\n\n"
+        "1. Cream {{ 100g butter }} with {{ 200g of sugar }}.\n"
+        "2. Beat in {{ 2 eggs }}.\n"
+        "3. Bake for 30min.\n",
+    )
+
+    texts = re.findall(r">([^<]+)<", diagram)
+    assert texts == [
+        "100 g butter",
+        "200 g of sugar",
+        "Cream",
+        "2 eggs",
+        "Beat in",
+        "Bake for 30min",
+    ]
+    assert diagram.startswith('<div class="schema-step"><div class="schema-inputs">' * 3)
+    assert 'data-amount="100.0" data-unit="g" data-name="butter"' in diagram
+
+
+def test_diagram_stops_at_the_section_after_the_steps(tmp_path: Path) -> None:
+    diagram = build_one(
+        tmp_path,
+        "# Preparation\n\n"
+        "## Step 1\n\nMix {{ 100g flour }}.\n\n"
+        "## Step 2\n\nBake.\n\n"
+        "# Notes\n\nTry it with {{ 50g of raspberries }}.\n\n- Less sugar\n",
+    )
+
+    texts = re.findall(r">([^<]+)<", diagram)
+    assert texts == ["100 g flour", "Mix", "Bake"]
+
+
+def test_recipe_without_ingredient_markers_has_no_diagram(tmp_path: Path) -> None:
+    assert build_one(tmp_path, "1. Mix flour and water.\n2. Bake.\n") == ""
+
+
+def test_diagrams_follow_the_flag_unless_the_recipe_says_otherwise(tmp_path: Path) -> None:
+    step = "Mix {{ 100g flour }}.\n"
+
+    assert build_one(tmp_path, step, diagrams=False) == ""
+    assert build_one(tmp_path, "---\ndiagram: true\n---\n" + step, diagrams=False) != ""
+    assert build_one(tmp_path, "---\ndiagram: false\n---\n" + step) == ""
+    assert "diagram</dt>" not in (tmp_path / "site/recipes/recipe.html").read_text("utf-8")

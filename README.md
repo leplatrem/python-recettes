@@ -8,12 +8,12 @@ Look at the [examples/](./examples/) folder and how it turned into [this website
 
 ## Recipe format
 
-Put one Markdown file per recipe in a directory. Optional photos sit beside the Markdown file and use its filename with a numbered suffix:
+Put one Markdown file per recipe in a directory. Optional photos sit beside the Markdown file and can use the same filename for the first photo, followed by numbered suffixes for additional photos:
 
 ```text
 examples/
 ├── onion-soup.md
-├── onion-soup-1.jpg
+├── onion-soup.jpg
 └── onion-soup-2.webp
 ```
 

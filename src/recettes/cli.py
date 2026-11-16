@@ -23,7 +23,8 @@ QUANTITY_RE = re.compile(
     re.IGNORECASE,
 )
 TOKEN_RE = re.compile(r"RECIPEINGREDIENTTOKEN(\d+)END")
-IMAGE_RE = re.compile(r"^(?P<stem>.+)-(?P<number>\d+)\.(?P<ext>jpe?g|png|webp|avif)$", re.I)
+STEP_LABEL_RE = re.compile(r"\b(?:etape|étape|step)\s*(\d+)\b", re.I)
+STEP_BLOCK_RE = re.compile(r"<(?:p|h[1-6])\b[^>]*>.*?</(?:p|h[1-6])>", re.I | re.S)
 MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
 
 
@@ -129,12 +130,70 @@ def first_paragraph(markdown: str, limit: int = 180) -> str:
 
 
 def recipe_images(markdown_path: Path) -> list[Path]:
-    images = []
+    images: list[Path] = []
+    prefix = re.compile(
+        rf"^{re.escape(markdown_path.stem)}(?:-(?P<suffix>[^.]+))?\.(?:jpe?g|png|webp|avif)$",
+        re.I,
+    )
     for path in markdown_path.parent.iterdir():
-        match = IMAGE_RE.fullmatch(path.name)
-        if path.is_file() and match and match.group("stem") == markdown_path.stem:
+        if path.is_file() and prefix.fullmatch(path.name):
             images.append(path)
-    return sorted(images, key=lambda path: int(IMAGE_RE.fullmatch(path.name).group("number")))
+    return sorted(
+        images,
+        key=lambda path: (
+            0 if image_step(path, markdown_path.stem) is None else 1,
+            image_step(path, markdown_path.stem) or 0,
+            path.name.lower(),
+        ),
+    )
+
+
+def image_step(path: Path, recipe_stem: str) -> int | None:
+    match = re.fullmatch(
+        rf"{re.escape(recipe_stem)}-(\d+)\.(?:jpe?g|png|webp|avif)", path.name, re.I
+    )
+    return int(match.group(1)) if match else None
+
+
+def image_figure(image: str, title: str, index: int) -> str:
+    return (
+        f'<figure><img loading="lazy" src="../assets/images/{attr(quote(image, safe=""))}" '
+        f'alt="{attr(title)} {index}"></figure>'
+    )
+
+
+def insert_step_images(content: str, images: list[str], title: str, recipe_stem: str) -> str:
+    by_step: dict[int, list[str]] = {}
+    for image in images:
+        step = image_step(Path(image), recipe_stem)
+        if step is not None:
+            by_step.setdefault(step, []).append(image)
+
+    pending = set(by_step)
+    image_index = {image: index for index, image in enumerate(images, start=1)}
+
+    def place(match: re.Match[str]) -> str:
+        paragraph = match.group(0)
+        text = html.unescape(re.sub(r"<[^>]+>", " ", paragraph))
+        label = STEP_LABEL_RE.search(text)
+        if not label:
+            return paragraph
+        step = int(label.group(1))
+        if step not in pending:
+            return paragraph
+        pending.remove(step)
+        figures = "".join(
+            image_figure(image, title, image_index[image]) for image in by_step[step]
+        )
+        return paragraph + f'<div class="recipe-gallery step-gallery">{figures}</div>'
+
+    content = STEP_BLOCK_RE.sub(place, content)
+    unmatched = [image for step in sorted(pending) for image in by_step[step]]
+    if unmatched:
+        content += '<div class="recipe-gallery step-gallery">' + "".join(
+            image_figure(image, title, image_index[image]) for image in unmatched
+        ) + "</div>"
+    return content
 
 
 def recipe_slug(path: Path) -> str:
@@ -201,6 +260,8 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
     for image in images:
         image_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(image, image_dir / image.name)
+    main_images = [image.name for image in images if image_step(image, path.stem) is None]
+    step_images = [image.name for image in images if image_step(image, path.stem) is not None]
 
     excluded = {"title", "tags", "portions"}
     properties = [
@@ -217,7 +278,8 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
         "ingredients": ingredients,
         "ingredient_list": aggregate_ingredients(ingredients),
         "content": content,
-        "images": [image.name for image in images],
+        "images": main_images,
+        "step_images": step_images,
     }
 
 
@@ -273,8 +335,7 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
         for item in recipe["properties"]
     )
     gallery = "".join(
-        f'<figure><img loading="lazy" src="../assets/images/{attr(quote(image, safe=""))}" '
-        f'alt="{attr(recipe["title"])} {index}"></figure>'
+        image_figure(image, str(recipe["title"]), index)
         for index, image in enumerate(recipe["images"], start=1)
     )
     portions = recipe["portions"]
@@ -289,7 +350,15 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
         ),
         "gallery": gallery,
         # Last: inserted recipe content must not be scanned for other placeholders.
-        "content": insert_ingredients(str(recipe["content"]), recipe["ingredients"]),
+        "content": insert_ingredients(
+            insert_step_images(
+                str(recipe["content"]),
+                recipe["step_images"],
+                str(recipe["title"]),
+                str(recipe["slug"]),
+            ),
+            recipe["ingredients"],
+        ),
     }
 
 

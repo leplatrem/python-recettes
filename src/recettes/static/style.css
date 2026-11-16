@@ -394,6 +394,10 @@ input {
   margin: 30px 0;
 }
 
+.recipe-gallery:empty {
+  display: none;
+}
+
 .recipe-gallery figure {
   overflow: hidden;
   margin: 0;

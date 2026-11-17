@@ -345,6 +345,7 @@ def build(source: Path, destination: Path, title: str = "Recettes") -> int:
         shutil.copyfile(static / filename, assets / filename)
         digest = hashlib.sha256((static / filename).read_bytes()).hexdigest()[:10]
         versions[filename.replace(".", "_") + "_version"] = digest
+    shutil.copytree(static / "fonts", assets / "fonts", dirs_exist_ok=True)
     image_dir = assets / "images"
     recipes_dir = destination / "recipes"
     recipes_dir.mkdir(parents=True, exist_ok=True)

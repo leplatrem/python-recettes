@@ -44,7 +44,9 @@ Simmer gently until tender.
 
 Write ingredient amounts inside `{{ }}` in the recipe text.
 
-*Recettes* reads a number and an optional unit from the start of each expression, including decimals and fractions such as `0.5cac` and `1/2 cac`. Supported units include metric abbreviations, `tbsp`/`tablespoon(s)`, `tsp`/`teaspoon(s)`, `cup(s)`, `oz`/`ounce(s)`, and `lb`/`pound(s)`. A number without a unit is treated as a count. Text without a leading number is kept as written.
+*Recettes* reads a number and an optional unit from the start of each expression, including decimals and fractions such as `0.5oz` and `1/2 tbsp`.
+
+Supported units include metric units, `tbsp`/`tablespoon(s)`, `tsp`/`teaspoon(s)`, `cup(s)`, `oz`/`ounce(s)`, `fl_oz`/`floz`/`fl oz`, and `lb`/`pound(s)`, plus common spoon abbreviations in French (`cas`, `càs`, `cac`, `càc`), German (`TL`, `EL`), Spanish (`cdita`, `cda`), Italian (`Cc`/`CC` for tablespoons, `cc`/`ct` for teaspoons), Swedish (`tsk`, `msk`), and Norwegian (`ts`, `ss`). French units `cas`/`càs` and `cac`/`càc` display as `c. à s.` and `c. à c.`. A number without a unit is treated as a count. Text without a leading number is kept as written.
 
 The optional `portions` property enables serving controls, and `lang` sets the recipe page's language for browsers and assistive technology.
 

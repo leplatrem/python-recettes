@@ -9,15 +9,51 @@ import typer
 from recettes.cli import aggregate_ingredients, build, ci_edit_url, parse_quantity
 
 
-def test_parse_quantity_and_guessed_count_unit() -> None:
-    assert parse_quantity("50g de beurre") == (50.0, "g", "de beurre")
-    assert parse_quantity("1cas d'huile") == (1.0, "cas", "d'huile")
-    assert parse_quantity("1/2 cac") == (0.5, "cac", "")
-    assert parse_quantity("3 gousses d'ail") == (3.0, "", "gousses d'ail")
-    assert parse_quantity("2 louches de bouillon") == (2.0, "", "louches de bouillon")
-    assert parse_quantity("0.5cac") == (0.5, "cac", "")
-    assert parse_quantity("4 oignons") == (4.0, "", "oignons")
-    assert parse_quantity("comté râpé") == (None, "", "comté râpé")
+@pytest.mark.parametrize(
+    ("text", "parsed"),
+    [
+        ("1.5L of water", (1.5, "l", "of water")),
+        ("50g de beurre", (50.0, "g", "de beurre")),
+        ("1cas d'huile", (1.0, "c. à s.", "d'huile")),
+        ("1/2 cac", (0.5, "c. à c.", "")),
+        ("3 gousses d'ail", (3.0, "", "gousses d'ail")),
+        ("2 louches de bouillon", (2.0, "", "louches de bouillon")),
+        ("0.5cac", (0.5, "c. à c.", "")),
+        ("4 oignons", (4.0, "", "oignons")),
+        ("comté râpé", (None, "", "comté râpé")),
+    ],
+)
+def test_parse_quantity_and_guessed_count_unit(text: str, parsed: tuple) -> None:
+    assert parse_quantity(text) == parsed
+
+
+@pytest.mark.parametrize(
+    ("quantity", "expected_unit"),
+    [
+        ("1 càs", "c. à s."),
+        ("1 c. à s.", "c. à s."),
+        ("1 càc", "c. à c."),
+        ("1 c. à c.", "c. à c."),
+        ("1 TL", "TL"),
+        ("1 EL", "EL"),
+        ("1 cdita", "cdita"),
+        ("1 cda", "cda"),
+        ("1 Cc", "Cc"),
+        ("1 CC", "CC"),
+        ("1 cc", "cc"),
+        ("1 ct", "ct"),
+        ("1 tsk", "tsk"),
+        ("1 msk", "msk"),
+        ("1 ts", "ts"),
+        ("1 ss", "ss"),
+        ("1 fl_oz", "fl oz"),
+        ("1 floz", "fl oz"),
+        ("1 fl oz", "fl oz"),
+    ],
+)
+def test_parse_localized_spoon_units(quantity: str, expected_unit: str) -> None:
+    amount, unit, name = parse_quantity(quantity)
+    assert (amount, unit, name) == (1.0, expected_unit, "")
 
 
 def test_aggregate_repeated_ingredients_by_name_and_unit() -> None:
@@ -72,7 +108,8 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
         '<li data-ingredient data-amount="4.0" data-unit="" data-name="oignons">4 oignons</li>'
         '<li data-ingredient data-amount="70.0" data-unit="g" data-name="de beurre">'
         "70 g de beurre</li>"
-        '<li data-ingredient data-amount="1.0" data-unit="cac" data-name="de sel">1 cac de sel</li>'
+        '<li data-ingredient data-amount="1.0" data-unit="c. à c." data-name="de sel">'
+        "1 c. à c. de sel</li>"
         "</ul>"
     ) in recipe
     assert (

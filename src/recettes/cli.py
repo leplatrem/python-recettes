@@ -20,7 +20,8 @@ app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from
 INGREDIENT_RE = re.compile(r"\{\{\s*(.*?)\s*\}\}")
 QUANTITY_RE = re.compile(
     r"^(?P<amount>\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)?)"
-    r"\s*(?P<unit>(?:c\.?\s*à\.?\s*[sc]\.?|cas|cac|tablespoons?|tbsp|teaspoons?|tsp|cups?|"
+    r"\s*(?P<unit>(?:c\.?\s*à\.?\s*[sc]\.?|cas|càs|cac|càc|"
+    r"cdita|cda|cc|ct|tl|el|tsk|msk|ts|ss|fl[_ ]?oz|tablespoons?|tbsp|teaspoons?|tsp|cups?|"
     r"ounces?|oz|pounds?|lbs?|kg|mg|g|ml|cl|l)(?![^\W\d_]))?\s*(?P<name>.*)$",
     re.IGNORECASE,
 )
@@ -48,10 +49,17 @@ def parse_quantity(value: str) -> tuple[float | None, str, str]:
         amount = float(Fraction(amount_text))
     except (ValueError, ZeroDivisionError):
         return None, "", value.strip()
-    raw_unit = (match.group("unit") or "").lower().replace(" ", "").replace(".", "")
-    unit = {
-        "càs": "cas",
-        "càc": "cac",
+    raw_unit = (match.group("unit") or "").replace(" ", "").replace(".", "")
+    normalized_unit = raw_unit.lower()
+    unit_map = {
+        "cas": "c. à s.",
+        "càs": "c. à s.",
+        "cac": "c. à c.",
+        "càc": "c. à c.",
+        "tl": "TL",
+        "el": "EL",
+        "fl_oz": "fl oz",
+        "floz": "fl oz",
         "tablespoon": "tbsp",
         "tablespoons": "tbsp",
         "teaspoon": "tsp",
@@ -62,7 +70,8 @@ def parse_quantity(value: str) -> tuple[float | None, str, str]:
         "pound": "lb",
         "pounds": "lb",
         "lbs": "lb",
-    }.get(raw_unit, raw_unit)
+    }
+    unit = unit_map.get(normalized_unit, raw_unit if normalized_unit == "cc" else normalized_unit)
     return amount, unit, match.group("name").strip()
 
 

@@ -461,7 +461,7 @@ def ci_edit_url(source: Path) -> str | None:
 
 
 def build(
-    source: Path, destination: Path, title: str = "Recettes", edit_url: str | None = None
+    source: Path, destination: Path, title: str = "Recipes", edit_url: str | None = None
 ) -> int:
     source = source.resolve()
     destination = destination.resolve()
@@ -533,9 +533,7 @@ def build_command(
     destination: Annotated[
         Path, typer.Option("--destination", "-d", help="Generated website directory")
     ] = Path("site"),
-    title: Annotated[
-        str, typer.Option("--title", help="Title for the home page")
-    ] = "Recettes",
+    title: Annotated[str, typer.Option("--title", help="Title for the home page")] = "Recipes",
     edit_url: Annotated[
         str | None,
         typer.Option(

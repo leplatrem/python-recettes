@@ -3,6 +3,9 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+import typer
+
 from recettes.cli import aggregate_ingredients, build, parse_quantity
 
 
@@ -111,19 +114,37 @@ def test_local_markdown_recipe_links_resolve_to_recipe_pages(tmp_path: Path) -> 
     source = tmp_path / "recipes"
     source.mkdir()
     (source / "flan-coco.md").write_text(
-        "---\ntitle: Flan coco\n---\n\nServez avec [caramel](caramel) "
-        "ou [caramel.md](caramel.md).\n",
+        "---\ntitle: Flan coco\n---\n\nServez avec [caramel](caramel), "
+        "[caramel.md](caramel.md), [html](caramel.html), [dot](./caramel.md), "
+        "[anchor](caramel.md#etape-2), [accents](<crème brûlée.md>) "
+        "ou [haut](#top).\n\n![photo](flan-coco-1.jpg)\n",
         encoding="utf-8",
     )
     (source / "caramel.md").write_text(
         "---\ntitle: Caramel\n---\n\nDu caramel.\n", encoding="utf-8"
     )
+    (source / "crème brûlée.md").write_text("Crème.\n", encoding="utf-8")
+    (source / "flan-coco-1.jpg").write_bytes(b"fake jpeg")
     output = tmp_path / "site"
 
     build(source, output)
 
     recipe = (output / "recipes" / "flan-coco.html").read_text(encoding="utf-8")
-    assert recipe.count('href="../recipes/caramel.html"') == 2
+    assert recipe.count('href="../recipes/caramel.html"') == 4
+    assert 'href="../recipes/caramel.html#etape-2"' in recipe
+    assert 'href="../recipes/cr%C3%A8me%20br%C3%BBl%C3%A9e.html"' in recipe
+    assert 'href="#top"' in recipe
+    assert '<img src="../assets/images/flan-coco-1.jpg" alt="photo">' in recipe
+
+
+@pytest.mark.parametrize("link", ["[tiramisu](tiramisu.md)", "![photo](flan-2.jpg)"])
+def test_links_to_missing_files_fail_the_build(tmp_path: Path, link: str) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "flan.md").write_text(f"Servez avec {link}.\n", encoding="utf-8")
+
+    with pytest.raises(typer.BadParameter, match="'flan.md' links to missing file"):
+        build(source, tmp_path / "site")
 
 
 def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:

@@ -35,9 +35,12 @@
     <template id="recipe-card-template">
       <article class="recipe-card">
         <a>
-          <h2 data-recipe-title></h2>
-          <p class="card-excerpt" data-recipe-excerpt></p>
-          <div class="recipe-tags" data-recipe-tags></div>
+          <div class="card-body">
+            <h2 data-recipe-title></h2>
+            <p class="card-excerpt" data-recipe-excerpt></p>
+            <div class="recipe-tags" data-recipe-tags></div>
+          </div>
+          <img class="card-image" data-recipe-image alt="" loading="lazy" hidden>
           <span class="card-arrow" aria-hidden="true">↗</span>
         </a>
       </article>

@@ -8,14 +8,17 @@ Look at the [examples/](./examples/) folder and how it turned into [this website
 
 ## Recipe format
 
-Put one Markdown file per recipe in a directory. Optional photos sit beside the Markdown file and use its filename with a numbered suffix:
+Put one Markdown file per recipe in a directory. Optional photos sit beside the Markdown file and are named after it:
 
 ```text
 examples/
 ├── onion-soup.md
-├── onion-soup-1.jpg
-└── onion-soup-2.webp
+├── onion-soup.jpg          # main picture, shown below the ingredients
+├── onion-soup-step-2.png   # shown at the end of the "Step 2" section
+└── onion-soup-1.webp       # no matching heading: shown at the end of the recipe
 ```
+
+Section pictures use the slug of a heading: lowercase, accents removed, non-alphanumeric characters replaced by dashes (`## Étape 1` → `etape-1`).
 
 Recipe properties go in YAML front matter. Tags can be a comma-separated string or a YAML list. All properties are optional:
 

@@ -5,6 +5,7 @@ import html
 import json
 import re
 import shutil
+import unicodedata
 from fractions import Fraction
 from pathlib import Path
 from typing import Annotated
@@ -23,7 +24,8 @@ QUANTITY_RE = re.compile(
     re.IGNORECASE,
 )
 TOKEN_RE = re.compile(r"RECIPEINGREDIENTTOKEN(\d+)END")
-IMAGE_RE = re.compile(r"^(?P<stem>.+)-(?P<number>\d+)\.(?P<ext>jpe?g|png|webp|avif)$", re.I)
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"}
+HEADING_RE = re.compile(r"<h([1-6])>(.*?)</h\1>", re.S)
 MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
 
 
@@ -128,13 +130,61 @@ def first_paragraph(markdown: str, limit: int = 180) -> str:
     return ""
 
 
-def recipe_images(markdown_path: Path) -> list[Path]:
-    images = []
-    for path in markdown_path.parent.iterdir():
-        match = IMAGE_RE.fullmatch(path.name)
-        if path.is_file() and match and match.group("stem") == markdown_path.stem:
-            images.append(path)
-    return sorted(images, key=lambda path: int(IMAGE_RE.fullmatch(path.name).group("number")))
+def slugify(text: str) -> str:
+    """Turn a heading into a filename-friendly slug ("Étape 1" -> "etape-1")."""
+    normalized = unicodedata.normalize("NFKD", text)
+    ascii_text = "".join(char for char in normalized if not unicodedata.combining(char))
+    return re.sub(r"[^a-z0-9]+", "-", ascii_text.casefold()).strip("-")
+
+
+def natural_key(name: str) -> list[object]:
+    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", name.casefold())]
+
+
+def assign_images(source: Path, recipe_stems: set[str]) -> dict[str, list[Path]]:
+    """Map recipe stems to their images: `{stem}.ext` or `{stem}-{suffix}.ext`.
+
+    An image goes to the longest matching recipe stem, so `tart-lemon.jpg` belongs to
+    `tart-lemon.md` (when it exists) rather than to `tart.md`.
+    """
+    images: dict[str, list[Path]] = {stem: [] for stem in recipe_stems}
+    for path in source.iterdir():
+        if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
+            continue
+        owners = [
+            stem for stem in recipe_stems if path.stem == stem or path.stem.startswith(stem + "-")
+        ]
+        if owners:
+            images[max(owners, key=len)].append(path)
+    for paths in images.values():
+        paths.sort(key=lambda path: natural_key(path.name))
+    return images
+
+
+def heading_text(content: str) -> str:
+    text = TOKEN_RE.sub("", re.sub(r"<[^>]*>", "", content))
+    return html.unescape(" ".join(text.split()))
+
+
+def classify_images(
+    stem: str, images: list[Path], content: str
+) -> tuple[str | None, dict[str, list[str]], list[str]]:
+    """Split images into the main picture, per-heading pictures, and leftovers."""
+    heading_slugs = {
+        slugify(heading_text(match.group(2))) for match in HEADING_RE.finditer(content)
+    }
+    main = None
+    sections: dict[str, list[str]] = {}
+    gallery = []
+    for image in images:
+        suffix = image.stem[len(stem) + 1 :]
+        if image.stem == stem and main is None:
+            main = image.name
+        elif suffix and suffix in heading_slugs:
+            sections.setdefault(suffix, []).append(image.name)
+        else:
+            gallery.append(image.name)
+    return main, sections, gallery
 
 
 def recipe_slug(path: Path) -> str:
@@ -173,7 +223,9 @@ def rewrite_recipe_links(content: str, source_path: Path, recipe_slugs: dict[Pat
     return re.sub(r'href="([^"]*)"', replace_href, content)
 
 
-def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> dict[str, object]:
+def recipe_page(
+    path: Path, image_dir: Path, recipe_slugs: dict[Path, str], images: list[Path]
+) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
     except (OSError, ValueError) as exc:
@@ -197,7 +249,7 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
     slug = recipe_slug(path)
     content, ingredients = markdown_with_ingredients(document.content)
     content = rewrite_recipe_links(content, path, recipe_slugs)
-    images = recipe_images(path)
+    main_image, section_images, gallery = classify_images(path.stem, images, content)
     for image in images:
         image_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(image, image_dir / image.name)
@@ -217,7 +269,9 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
         "ingredients": ingredients,
         "ingredient_list": aggregate_ingredients(ingredients),
         "content": content,
-        "images": [image.name for image in images],
+        "main_image": main_image,
+        "section_images": section_images,
+        "gallery": gallery,
     }
 
 
@@ -261,6 +315,37 @@ def display_value(value: object) -> str:
     return "" if value is None else str(value)
 
 
+def image_html(image: str, alt: str, lazy: bool = True) -> str:
+    loading = ' loading="lazy"' if lazy else ""
+    src = f"../assets/images/{quote(image, safe='')}"
+    return f'<img{loading} src="{attr(src)}" alt="{attr(alt)}">'
+
+
+def figure_html(image: str, alt: str) -> str:
+    return f"<figure>{image_html(image, alt)}</figure>"
+
+
+def insert_section_images(content: str, section_images: dict[str, list[str]], title: str) -> str:
+    """Append each heading's images at the end of its section (before the next heading)."""
+    if not section_images:
+        return content
+    headings = list(HEADING_RE.finditer(content))
+    insertions: dict[int, str] = {}
+    placed = set()
+    for index, heading in enumerate(headings):
+        text = heading_text(heading.group(2))
+        slug = slugify(text)
+        if slug not in section_images or slug in placed:
+            continue
+        placed.add(slug)
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(content)
+        figures = "".join(figure_html(image, f"{title} – {text}") for image in section_images[slug])
+        insertions[end] = f'<div class="recipe-step-images">{figures}</div>\n'
+    for position in sorted(insertions, reverse=True):
+        content = content[:position] + insertions[position] + content[position:]
+    return content
+
+
 def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
     tags = "".join(
         f'<a class="tag" href="../index.html?tag={attr(quote(tag, safe="-_.!~*()"))}">'
@@ -272,11 +357,17 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
         f"<dd>{html.escape(display_value(item['value']))}</dd></div>"
         for item in recipe["properties"]
     )
+    title = str(recipe["title"])
     gallery = "".join(
-        f'<figure><img loading="lazy" src="../assets/images/{attr(quote(image, safe=""))}" '
-        f'alt="{attr(recipe["title"])} {index}"></figure>'
-        for index, image in enumerate(recipe["images"], start=1)
+        figure_html(image, f"{title} {index}") for index, image in enumerate(recipe["gallery"], 1)
     )
+    main_image = recipe["main_image"]
+    main = (
+        f'<figure class="recipe-main-image">{image_html(main_image, title, lazy=False)}</figure>'
+        if main_image
+        else ""
+    )
+    content = insert_section_images(str(recipe["content"]), recipe["section_images"], title)
     portions = recipe["portions"]
     return {
         "tags": tags,
@@ -288,8 +379,9 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
             ingredient_html(item, "li") for item in recipe["ingredient_list"]
         ),
         "gallery": gallery,
+        "main_image": main,
         # Last: inserted recipe content must not be scanned for other placeholders.
-        "content": insert_ingredients(str(recipe["content"]), recipe["ingredients"]),
+        "content": insert_ingredients(content, recipe["ingredients"]),
     }
 
 
@@ -311,6 +403,11 @@ def recipe_index_data(recipes: list[dict[str, object]]) -> str:
                 "excerpt": recipe["excerpt"],
                 "search": " ".join([*search_terms, str(recipe["excerpt"])]),
                 "lang": recipe["lang"],
+                "image": (
+                    f"assets/images/{quote(str(recipe['main_image']), safe='')}"
+                    if recipe["main_image"]
+                    else None
+                ),
             }
         )
     return json.dumps(entries, ensure_ascii=False)
@@ -351,13 +448,14 @@ def build(source: Path, destination: Path, title: str = "Recettes") -> int:
     recipes_dir.mkdir(parents=True, exist_ok=True)
     recipes = []
     recipe_slugs = {path.resolve(): recipe_slug(path) for path in paths}
+    images = assign_images(source, {path.stem for path in paths})
     seen = set()
     for path in paths:
         slug = recipe_slug(path)
         if slug in seen:
             fail(f"Recipe filenames must be unique: {path.name}")
         seen.add(slug)
-        recipe = recipe_page(path, image_dir, recipe_slugs)
+        recipe = recipe_page(path, image_dir, recipe_slugs, images[path.stem])
         recipes.append(recipe)
         page = render_template(
             templates / "recipe.html",

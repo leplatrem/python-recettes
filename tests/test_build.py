@@ -150,3 +150,40 @@ def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:
         'as="fetch" crossorigin>'
     ) in index
     assert not re.search(r"\{\{ \w+ \}\}", index + recipe)
+
+
+def test_images_are_placed_as_main_picture_in_sections_or_gallery(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "tarte.md").write_text(
+        "---\ntitle: Tarte\n---\n\n# Préparation\n\n## Étape 1\n\nÉtalez la pâte.\n\n"
+        "## Étape 2\n\nAjoutez {{ 3 pommes }}.\n",
+        encoding="utf-8",
+    )
+    (source / "tarte-citron.md").write_text("Une autre tarte.\n", encoding="utf-8")
+    for name in ("tarte.jpg", "tarte-etape-1.png", "tarte-inconnu.webp", "tarte-citron.jpg"):
+        (source / name).write_bytes(b"fake")
+    output = tmp_path / "site"
+
+    build(source, output)
+
+    recipe = (output / "recipes" / "tarte.html").read_text(encoding="utf-8")
+    main = '<figure class="recipe-main-image"><img src="../assets/images/tarte.jpg" alt="Tarte">'
+    assert main in recipe
+    assert recipe.index("ingredient-list") < recipe.index(main) < recipe.index("recipe-content")
+    step = (
+        '<p>Étalez la pâte.</p>\n<div class="recipe-step-images"><figure><img loading="lazy" '
+        'src="../assets/images/tarte-etape-1.png" alt="Tarte – Étape 1"></figure></div>\n'
+        "<h2>Étape 2</h2>"
+    )
+    assert step in recipe
+    gallery = recipe[recipe.index('id="recipe-gallery"') :]
+    assert "tarte-inconnu.webp" in gallery
+    assert "tarte-citron.jpg" not in recipe
+    index_data = {
+        entry["slug"]: entry
+        for entry in json.loads((output / "recipes.json").read_text(encoding="utf-8"))
+    }
+    assert index_data["tarte"]["image"] == "assets/images/tarte.jpg"
+    other = (output / "recipes" / "tarte-citron.html").read_text(encoding="utf-8")
+    assert 'src="../assets/images/tarte-citron.jpg"' in other

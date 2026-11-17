@@ -1,7 +1,7 @@
 ---
 title: Caramel
 cooking: 15min
-tags: tips, dessert
+tags: tips, dessert, vegan
 ---
 
 How to get it right every time.

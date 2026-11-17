@@ -45,6 +45,8 @@ Write ingredient amounts inside `{{ }}` in the recipe text.
 
 The optional `portions` property enables serving controls, and `lang` sets the recipe page's language for browsers and assistive technology.
 
+Link to another recipe with its Markdown file, e.g. `[caramel](caramel.md)`, and show a photo inline with `![photo](onion-soup-1.jpg)`. The build fails if a link points to a missing file.
+
 ## Create your own website
 
 To create your own recipe website, [fork](https://docs.github.com/articles/fork-a-repo) [Mat's recipes repository](https://github.com/leplatrem/recettes/) and replace the recipes in the `recipes/` folder with your own.

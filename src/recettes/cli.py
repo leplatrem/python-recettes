@@ -142,39 +142,42 @@ def recipe_slug(path: Path) -> str:
     return path.stem
 
 
-def rewrite_recipe_links(content: str, source_path: Path, recipe_slugs: dict[Path, str]) -> str:
-    def replace_href(match: re.Match[str]) -> str:
-        href = html.unescape(match.group(1))
-        parsed = urlsplit(href)
+def local_link_targets(paths: list[Path]) -> dict[Path, str]:
+    """Map source files that end up in the site to their URL from a recipe page."""
+    targets = {}
+    for path in paths:
+        targets[path.resolve()] = f"../recipes/{quote(recipe_slug(path), safe='-_')}.html"
+        for image in recipe_images(path):
+            targets[image.resolve()] = f"../assets/images/{quote(image.name, safe='-_.')}"
+    return targets
+
+
+def rewrite_local_links(content: str, source_path: Path, targets: dict[Path, str]) -> str:
+    def replace(match: re.Match[str]) -> str:
+        attribute, url = match.group(1), html.unescape(match.group(2))
+        parsed = urlsplit(url)
         if parsed.scheme or parsed.netloc or parsed.path.startswith("/") or not parsed.path:
             return match.group(0)
 
         target_path = (source_path.parent / unquote(parsed.path)).resolve()
         candidates = [target_path]
-        if target_path.suffix == "":
+        if target_path.suffix in ("", ".html"):
             candidates.append(target_path.with_suffix(".md"))
-        target_slug = next(
-            (recipe_slugs[candidate] for candidate in candidates if candidate in recipe_slugs),
-            None,
-        )
-        if target_slug is None:
-            return match.group(0)
-
-        target_url = urlunsplit(
-            (
-                "",
-                "",
-                f"../recipes/{quote(target_slug, safe='-_')}.html",
-                parsed.query,
-                parsed.fragment,
+        target = next((targets[path] for path in candidates if path in targets), None)
+        if target is None:
+            fail(
+                f"Recipe '{source_path.name}' links to missing file '{url}'. "
+                "Link to another recipe's Markdown file, or to a photo named "
+                "<recipe>-<number>.<ext>."
             )
-        )
-        return f'href="{html.escape(target_url, quote=True)}"'
 
-    return re.sub(r'href="([^"]*)"', replace_href, content)
+        target_url = urlunsplit(("", "", target, parsed.query, parsed.fragment))
+        return f'{attribute}="{html.escape(target_url, quote=True)}"'
+
+    return re.sub(r'\b(href|src)="([^"]*)"', replace, content)
 
 
-def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> dict[str, object]:
+def recipe_page(path: Path, image_dir: Path, link_targets: dict[Path, str]) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
     except (OSError, ValueError) as exc:
@@ -197,7 +200,7 @@ def recipe_page(path: Path, image_dir: Path, recipe_slugs: dict[Path, str]) -> d
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
     slug = recipe_slug(path)
     content, ingredients = markdown_with_ingredients(document.content)
-    content = rewrite_recipe_links(content, path, recipe_slugs)
+    content = rewrite_local_links(content, path, link_targets)
     images = recipe_images(path)
     for image in images:
         image_dir.mkdir(parents=True, exist_ok=True)
@@ -380,14 +383,14 @@ def build(
     recipes_dir = destination / "recipes"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     recipes = []
-    recipe_slugs = {path.resolve(): recipe_slug(path) for path in paths}
+    link_targets = local_link_targets(paths)
     seen = set()
     for path in paths:
         slug = recipe_slug(path)
         if slug in seen:
             fail(f"Recipe filenames must be unique: {path.name}")
         seen.add(slug)
-        recipe = recipe_page(path, image_dir, recipe_slugs)
+        recipe = recipe_page(path, image_dir, link_targets)
         recipes.append(recipe)
         page = render_template(
             templates / "recipe.html",

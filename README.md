@@ -70,6 +70,14 @@ python -m http.server --directory site/ 8000
 
 Open <http://127.0.0.1:8000>.
 
+Recipe pages show an edit button linking to the recipe file on your Git forge. When building on GitHub Actions or GitLab CI, its URL is guessed from the CI environment. Elsewhere (e.g. Codeberg, or locally), pass the URL of the recipes folder in the forge's editor with `--edit-url`; the recipe filename is appended to it:
+
+```sh
+recettes build examples/ --edit-url https://codeberg.org/USER/REPO/_edit/main/examples/
+```
+
+Without an edit URL, the button is not shown.
+
 ## Development
 
 ```sh

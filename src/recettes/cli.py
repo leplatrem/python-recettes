@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import html
 import json
+import os
 import re
 import shutil
 import unicodedata
@@ -191,40 +192,43 @@ def recipe_slug(path: Path) -> str:
     return path.stem
 
 
-def rewrite_recipe_links(content: str, source_path: Path, recipe_slugs: dict[Path, str]) -> str:
-    def replace_href(match: re.Match[str]) -> str:
-        href = html.unescape(match.group(1))
-        parsed = urlsplit(href)
+def local_link_targets(paths: list[Path], images: dict[str, list[Path]]) -> dict[Path, str]:
+    """Map source files that end up in the site to their URL from a recipe page."""
+    targets = {}
+    for path in paths:
+        targets[path.resolve()] = f"../recipes/{quote(recipe_slug(path), safe='-_')}.html"
+        for image in images[path.stem]:
+            targets[image.resolve()] = f"../assets/images/{quote(image.name, safe='-_.')}"
+    return targets
+
+
+def rewrite_local_links(content: str, source_path: Path, targets: dict[Path, str]) -> str:
+    def replace(match: re.Match[str]) -> str:
+        attribute, url = match.group(1), html.unescape(match.group(2))
+        parsed = urlsplit(url)
         if parsed.scheme or parsed.netloc or parsed.path.startswith("/") or not parsed.path:
             return match.group(0)
 
         target_path = (source_path.parent / unquote(parsed.path)).resolve()
         candidates = [target_path]
-        if target_path.suffix == "":
+        if target_path.suffix in ("", ".html"):
             candidates.append(target_path.with_suffix(".md"))
-        target_slug = next(
-            (recipe_slugs[candidate] for candidate in candidates if candidate in recipe_slugs),
-            None,
-        )
-        if target_slug is None:
-            return match.group(0)
-
-        target_url = urlunsplit(
-            (
-                "",
-                "",
-                f"../recipes/{quote(target_slug, safe='-_')}.html",
-                parsed.query,
-                parsed.fragment,
+        target = next((targets[path] for path in candidates if path in targets), None)
+        if target is None:
+            fail(
+                f"Recipe '{source_path.name}' links to missing file '{url}'. "
+                "Link to another recipe's Markdown file, or to a photo named "
+                "<recipe>.<ext> or <recipe>-<suffix>.<ext>."
             )
-        )
-        return f'href="{html.escape(target_url, quote=True)}"'
 
-    return re.sub(r'href="([^"]*)"', replace_href, content)
+        target_url = urlunsplit(("", "", target, parsed.query, parsed.fragment))
+        return f'{attribute}="{html.escape(target_url, quote=True)}"'
+
+    return re.sub(r'\b(href|src)="([^"]*)"', replace, content)
 
 
 def recipe_page(
-    path: Path, image_dir: Path, recipe_slugs: dict[Path, str], images: list[Path]
+    path: Path, image_dir: Path, link_targets: dict[Path, str], images: list[Path]
 ) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
@@ -248,7 +252,7 @@ def recipe_page(
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
     slug = recipe_slug(path)
     content, ingredients = markdown_with_ingredients(document.content)
-    content = rewrite_recipe_links(content, path, recipe_slugs)
+    content = rewrite_local_links(content, path, link_targets)
     main_image, section_images, gallery = classify_images(path.stem, images, content)
     for image in images:
         image_dir.mkdir(parents=True, exist_ok=True)
@@ -420,7 +424,36 @@ def render_template(path: Path, **values: str) -> str:
     return template
 
 
-def build(source: Path, destination: Path, title: str = "Recettes") -> int:
+def edit_link(edit_url: str | None, path: Path) -> str:
+    if not edit_url:
+        return ""
+    url = edit_url.rstrip("/") + "/" + quote(path.name)
+    return f'<a href="{attr(url)}" aria-label="Edit" title="Edit">✎</a>'
+
+
+def ci_edit_url(source: Path) -> str | None:
+    """Guess the edit URL of the recipes folder from GitHub Actions or GitLab CI variables."""
+    env = os.environ
+    if env.get("GITHUB_ACTIONS"):
+        repo_url = f"{env.get('GITHUB_SERVER_URL')}/{env.get('GITHUB_REPOSITORY')}"
+        edit, ref, workspace = "edit", env.get("GITHUB_REF_NAME"), env.get("GITHUB_WORKSPACE")
+    elif env.get("GITLAB_CI"):
+        repo_url = env.get("CI_PROJECT_URL")
+        edit, ref, workspace = "-/edit", env.get("CI_COMMIT_REF_NAME"), env.get("CI_PROJECT_DIR")
+    else:
+        return None
+    if not (repo_url and ref and workspace):
+        return None
+    try:
+        folder = source.resolve().relative_to(Path(workspace).resolve()).as_posix()
+    except ValueError:
+        return None
+    return "/".join(part for part in (repo_url, edit, ref, folder) if part not in ("", "."))
+
+
+def build(
+    source: Path, destination: Path, title: str = "Recettes", edit_url: str | None = None
+) -> int:
     source = source.resolve()
     destination = destination.resolve()
     if not source.is_dir():
@@ -447,20 +480,21 @@ def build(source: Path, destination: Path, title: str = "Recettes") -> int:
     recipes_dir = destination / "recipes"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     recipes = []
-    recipe_slugs = {path.resolve(): recipe_slug(path) for path in paths}
     images = assign_images(source, {path.stem for path in paths})
+    link_targets = local_link_targets(paths, images)
     seen = set()
     for path in paths:
         slug = recipe_slug(path)
         if slug in seen:
             fail(f"Recipe filenames must be unique: {path.name}")
         seen.add(slug)
-        recipe = recipe_page(path, image_dir, recipe_slugs, images[path.stem])
+        recipe = recipe_page(path, image_dir, link_targets, images[path.stem])
         recipes.append(recipe)
         page = render_template(
             templates / "recipe.html",
             title=html.escape(str(recipe["title"])),
             lang=html.escape(str(recipe["lang"]), quote=True),
+            edit_link=edit_link(edit_url, path),
             **versions,
             **recipe_html_parts(recipe),
         )
@@ -493,9 +527,18 @@ def build_command(
     title: Annotated[
         str, typer.Option("--title", help="Title for the home page")
     ] = "Recettes",
+    edit_url: Annotated[
+        str | None,
+        typer.Option(
+            "--edit-url",
+            help="Base URL to edit recipe files on a Git forge; the filename is appended. "
+            "Guessed automatically on GitHub Actions and GitLab CI",
+        ),
+    ] = None,
 ) -> None:
     """Build the static recipe website."""
-    count = build(source, destination, title)
+    edit_url = edit_url or ci_edit_url(source)
+    count = build(source, destination, title, edit_url)
     typer.echo(f"Built {count} recipes into {destination}")
 
 

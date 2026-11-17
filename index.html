@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Recipes</title>
-    <link rel="stylesheet" href="assets/style.css?v=c76fd36895">
-    <link rel="preload" id="recipes-data" href="recipes.json?v=b9a1380c8b" as="fetch" crossorigin>
+    <link rel="stylesheet" href="assets/style.css?v=318840e155">
+    <link rel="preload" id="recipes-data" href="recipes.json?v=7f14ca04c5" as="fetch" crossorigin>
     <link rel="prefetch" href="recipes/buckwheat-crepes.html">
     <link rel="prefetch" href="recipes/caramel.html">
     <link rel="prefetch" href="recipes/crackers.html">
@@ -15,7 +15,7 @@
     <link rel="prefetch" href="recipes/lemon-tart.html">
     <link rel="prefetch" href="recipes/onion-soup.html">
     <link rel="prefetch" href="recipes/walnut-cake.html">
-    <script type="module" src="assets/app.js?v=6b6a6d3ff7"></script>
+    <script type="module" src="assets/app.js?v=4feb30c392"></script>
   </head>
   <body>
     <main class="recipe-index">
@@ -43,9 +43,12 @@
     <template id="recipe-card-template">
       <article class="recipe-card">
         <a>
-          <h2 data-recipe-title></h2>
-          <p class="card-excerpt" data-recipe-excerpt></p>
-          <div class="recipe-tags" data-recipe-tags></div>
+          <div class="card-body">
+            <h2 data-recipe-title></h2>
+            <p class="card-excerpt" data-recipe-excerpt></p>
+            <div class="recipe-tags" data-recipe-tags></div>
+          </div>
+          <img class="card-image" data-recipe-image alt="" loading="lazy" hidden>
           <span class="card-arrow" aria-hidden="true">↗</span>
         </a>
       </article>

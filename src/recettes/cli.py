@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import html
 import json
+import os
 import re
 import shutil
 from fractions import Fraction
@@ -323,7 +324,36 @@ def render_template(path: Path, **values: str) -> str:
     return template
 
 
-def build(source: Path, destination: Path, title: str = "Recettes") -> int:
+def edit_link(edit_url: str | None, path: Path) -> str:
+    if not edit_url:
+        return ""
+    url = edit_url.rstrip("/") + "/" + quote(path.name)
+    return f'<a href="{attr(url)}" aria-label="Edit" title="Edit">✎</a>'
+
+
+def ci_edit_url(source: Path) -> str | None:
+    """Guess the edit URL of the recipes folder from GitHub Actions or GitLab CI variables."""
+    env = os.environ
+    if env.get("GITHUB_ACTIONS"):
+        repo_url = f"{env.get('GITHUB_SERVER_URL')}/{env.get('GITHUB_REPOSITORY')}"
+        edit, ref, workspace = "edit", env.get("GITHUB_REF_NAME"), env.get("GITHUB_WORKSPACE")
+    elif env.get("GITLAB_CI"):
+        repo_url = env.get("CI_PROJECT_URL")
+        edit, ref, workspace = "-/edit", env.get("CI_COMMIT_REF_NAME"), env.get("CI_PROJECT_DIR")
+    else:
+        return None
+    if not (repo_url and ref and workspace):
+        return None
+    try:
+        folder = source.resolve().relative_to(Path(workspace).resolve()).as_posix()
+    except ValueError:
+        return None
+    return "/".join(part for part in (repo_url, edit, ref, folder) if part not in ("", "."))
+
+
+def build(
+    source: Path, destination: Path, title: str = "Recettes", edit_url: str | None = None
+) -> int:
     source = source.resolve()
     destination = destination.resolve()
     if not source.is_dir():
@@ -363,6 +393,7 @@ def build(source: Path, destination: Path, title: str = "Recettes") -> int:
             templates / "recipe.html",
             title=html.escape(str(recipe["title"])),
             lang=html.escape(str(recipe["lang"]), quote=True),
+            edit_link=edit_link(edit_url, path),
             **versions,
             **recipe_html_parts(recipe),
         )
@@ -395,9 +426,18 @@ def build_command(
     title: Annotated[
         str, typer.Option("--title", help="Title for the home page")
     ] = "Recettes",
+    edit_url: Annotated[
+        str | None,
+        typer.Option(
+            "--edit-url",
+            help="Base URL to edit recipe files on a Git forge; the filename is appended. "
+            "Guessed automatically on GitHub Actions and GitLab CI",
+        ),
+    ] = None,
 ) -> None:
     """Build the static recipe website."""
-    count = build(source, destination, title)
+    edit_url = edit_url or ci_edit_url(source)
+    count = build(source, destination, title, edit_url)
     typer.echo(f"Built {count} recipes into {destination}")
 
 

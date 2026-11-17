@@ -3,7 +3,9 @@ import json
 import re
 from pathlib import Path
 
-from recettes.cli import aggregate_ingredients, build, parse_quantity
+import pytest
+
+from recettes.cli import aggregate_ingredients, build, ci_edit_url, parse_quantity
 
 
 def test_parse_quantity_and_guessed_count_unit() -> None:
@@ -150,3 +152,48 @@ def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:
         'as="fetch" crossorigin>'
     ) in index
     assert not re.search(r"\{\{ \w+ \}\}", index + recipe)
+
+
+def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "soupe oignon.md").write_text("Hello", encoding="utf-8")
+
+    build(source, tmp_path / "plain")
+    plain = (tmp_path / "plain" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
+    assert "{{ edit_link }}" not in plain
+    assert 'aria-label="Edit"' not in plain
+
+    build(source, tmp_path / "edit", edit_url="https://codeberg.org/me/recipes/_edit/main/r/")
+    page = (tmp_path / "edit" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
+    assert (
+        '<a href="https://codeberg.org/me/recipes/_edit/main/r/soupe%20oignon.md" '
+        'aria-label="Edit" title="Edit">✎</a>'
+    ) in page
+
+
+@pytest.fixture
+def no_ci_env(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
+    for name in ("GITHUB_ACTIONS", "GITLAB_CI"):
+        monkeypatch.delenv(name, raising=False)
+    return monkeypatch
+
+
+def test_ci_edit_url_from_github_actions(tmp_path: Path, no_ci_env: pytest.MonkeyPatch) -> None:
+    assert ci_edit_url(tmp_path / "recipes") is None
+    no_ci_env.setenv("GITHUB_ACTIONS", "true")
+    no_ci_env.setenv("GITHUB_SERVER_URL", "https://github.com")
+    no_ci_env.setenv("GITHUB_REPOSITORY", "me/recipes")
+    no_ci_env.setenv("GITHUB_REF_NAME", "main")
+    no_ci_env.setenv("GITHUB_WORKSPACE", str(tmp_path))
+    assert ci_edit_url(tmp_path / "recipes") == "https://github.com/me/recipes/edit/main/recipes"
+    assert ci_edit_url(tmp_path) == "https://github.com/me/recipes/edit/main"
+    assert ci_edit_url(Path("/elsewhere")) is None
+
+
+def test_ci_edit_url_from_gitlab_ci(tmp_path: Path, no_ci_env: pytest.MonkeyPatch) -> None:
+    no_ci_env.setenv("GITLAB_CI", "true")
+    no_ci_env.setenv("CI_PROJECT_URL", "https://gitlab.com/me/recipes")
+    no_ci_env.setenv("CI_COMMIT_REF_NAME", "main")
+    no_ci_env.setenv("CI_PROJECT_DIR", str(tmp_path))
+    assert ci_edit_url(tmp_path / "r") == "https://gitlab.com/me/recipes/-/edit/main/r"

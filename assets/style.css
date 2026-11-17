@@ -236,6 +236,8 @@ input {
 }
 
 .detail-nav {
+  display: flex;
+  justify-content: space-between;
   width: min(100% - 36px, 760px);
   margin: 0 auto;
   padding-top: 12px;

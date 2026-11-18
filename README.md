@@ -2,9 +2,13 @@
 
 *Recettes* turns Markdown files into a small, static recipe website. Recipes remain easy to edit in GitHub; the generated site is mobile-friendly and needs no application server.
 
-## [Example](https://leplatrem.github.io/python-recettes/)
+## Examples
 
 Look at the [examples/](./examples/) folder and how it turned into [this website](https://leplatrem.github.io/python-recettes/).
+
+* [Mat's recipes](https://leplatrem.github.io/recettes/)
+* [Alex's recipes](https://recettes.notmyidea.org/)
+* [Nyota33's recipes](https://nyota33.github.io/python-recettes/)
 
 ## Recipe format
 

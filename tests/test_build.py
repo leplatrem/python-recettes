@@ -242,7 +242,7 @@ def test_images_are_placed_as_main_picture_in_sections_or_gallery(tmp_path: Path
         entry["slug"]: entry
         for entry in json.loads((output / "recipes.json").read_text(encoding="utf-8"))
     }
-    assert index_data["tarte"]["image"] == "assets/images/tarte.jpg"
+    assert index_data["tarte"]["image"] == "assets/images/thumbnails/tarte.jpg"
     other = (output / "recipes" / "tarte-citron.html").read_text(encoding="utf-8")
     assert 'src="../assets/images/tarte-citron.jpg"' in other
 

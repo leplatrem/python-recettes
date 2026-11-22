@@ -87,6 +87,12 @@ recettes build examples/ --edit-url https://codeberg.org/USER/REPO/_edit/main/ex
 
 Without an edit URL, the button is not shown.
 
+When building, pictures are downscaled. Desired size can be specified from CLI:
+
+```sh
+recettes build examples/ --image-width 760 --thumbnail-width 112
+```
+
 ## Development
 
 ```sh

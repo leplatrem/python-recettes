@@ -18,7 +18,12 @@ classifiers = [
     "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
 ]
 keywords = ["recipes", "markdown", "static site"]
-dependencies = ["typer>=0.12", "python-frontmatter>=1.1", "markdown-it-py>=3"]
+dependencies = [
+    "typer>=0.12",
+    "python-frontmatter>=1.1",
+    "markdown-it-py>=3",
+    "pillow>=10",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]

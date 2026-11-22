@@ -16,7 +16,10 @@ import frontmatter
 import typer
 from markdown_it import MarkdownIt
 
+from recettes.images import export_image
+
 app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from Markdown.")
+
 INGREDIENT_RE = re.compile(r"\{\{\s*(.*?)\s*\}\}")
 QUANTITY_RE = re.compile(
     r"^(?P<amount>\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)?)"
@@ -29,6 +32,10 @@ TOKEN_RE = re.compile(r"RECIPEINGREDIENTTOKEN(\d+)END")
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"}
 HEADING_RE = re.compile(r"<h([1-6])>(.*?)</h\1>", re.S)
 MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
+# Defaults are twice the stylesheet sizes (recipe page column width, home page card
+# thumbnail), so pictures stay sharp on high-density (retina) screens.
+DEFAULT_IMAGE_WIDTH = 2 * 760
+DEFAULT_THUMBNAIL_WIDTH = 2 * 112
 
 
 @app.callback()
@@ -237,7 +244,12 @@ def rewrite_local_links(content: str, source_path: Path, targets: dict[Path, str
 
 
 def recipe_page(
-    path: Path, image_dir: Path, link_targets: dict[Path, str], images: list[Path]
+    path: Path,
+    image_dir: Path,
+    link_targets: dict[Path, str],
+    images: list[Path],
+    image_width: int = DEFAULT_IMAGE_WIDTH,
+    thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
 ) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
@@ -264,8 +276,9 @@ def recipe_page(
     content = rewrite_local_links(content, path, link_targets)
     main_image, section_images, gallery = classify_images(path.stem, images, content)
     for image in images:
-        image_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(image, image_dir / image.name)
+        export_image(image, image_dir / image.name, image_width)
+        if image.name == main_image:
+            export_image(image, image_dir / "thumbnails" / image.name, thumbnail_width, True)
 
     excluded = {"title", "tags", "portions"}
     properties = [
@@ -417,7 +430,7 @@ def recipe_index_data(recipes: list[dict[str, object]]) -> str:
                 "search": " ".join([*search_terms, str(recipe["excerpt"])]),
                 "lang": recipe["lang"],
                 "image": (
-                    f"assets/images/{quote(str(recipe['main_image']), safe='')}"
+                    f"assets/images/thumbnails/{quote(str(recipe['main_image']), safe='')}"
                     if recipe["main_image"]
                     else None
                 ),
@@ -461,7 +474,12 @@ def ci_edit_url(source: Path) -> str | None:
 
 
 def build(
-    source: Path, destination: Path, title: str = "Recipes", edit_url: str | None = None
+    source: Path,
+    destination: Path,
+    title: str = "Recipes",
+    edit_url: str | None = None,
+    image_width: int = DEFAULT_IMAGE_WIDTH,
+    thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
 ) -> int:
     source = source.resolve()
     destination = destination.resolve()
@@ -497,7 +515,9 @@ def build(
         if slug in seen:
             fail(f"Recipe filenames must be unique: {path.name}")
         seen.add(slug)
-        recipe = recipe_page(path, image_dir, link_targets, images[path.stem])
+        recipe = recipe_page(
+            path, image_dir, link_targets, images[path.stem], image_width, thumbnail_width
+        )
         recipes.append(recipe)
         page = render_template(
             templates / "recipe.html",
@@ -542,10 +562,22 @@ def build_command(
             "Guessed automatically on GitHub Actions and GitLab CI",
         ),
     ] = None,
+    image_width: Annotated[
+        int,
+        typer.Option(
+            "--image-width", min=1, help="Downscale recipe pictures wider than this (pixels)"
+        ),
+    ] = DEFAULT_IMAGE_WIDTH,
+    thumbnail_width: Annotated[
+        int,
+        typer.Option(
+            "--thumbnail-width", min=1, help="Size of the square home page thumbnails (pixels)"
+        ),
+    ] = DEFAULT_THUMBNAIL_WIDTH,
 ) -> None:
     """Build the static recipe website."""
     edit_url = edit_url or ci_edit_url(source)
-    count = build(source, destination, title, edit_url)
+    count = build(source, destination, title, edit_url, image_width, thumbnail_width)
     typer.echo(f"Built {count} recipes into {destination}")
 
 

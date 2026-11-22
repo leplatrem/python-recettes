@@ -97,3 +97,53 @@ def test_heic_images_are_converted_to_jpeg(tmp_path: Path) -> None:
     assert "heic" not in recipe.lower()
     index = (output / "recipes.json").read_text(encoding="utf-8")
     assert "assets/images/thumbnails/gnocchi.jpg" in index
+
+
+def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> None:
+    from recettes import images as images_module
+
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "tarte.md").write_text("Une tarte.\n", encoding="utf-8")
+    Image.new("RGB", (2000, 1000), "red").save(source / "tarte.jpg")
+    Image.new("RGB", (2000, 1000), "blue").save(source / "tarte-1.png")
+    cache = tmp_path / "cache"
+    calls = []
+    original = images_module.export_image
+
+    def counting_export(source_path, destination, width, square=False):
+        calls.append((source_path.name, width, square))
+        original(source_path, destination, width, square)
+
+    monkeypatch.setattr(images_module, "export_image", counting_export)
+
+    build(source, tmp_path / "site", image_width=800, thumbnail_width=100, cache_dir=cache)
+    assert sorted(calls) == [
+        ("tarte-1.png", 800, False),
+        ("tarte.jpg", 100, True),
+        ("tarte.jpg", 800, False),
+    ]
+    assert len(list(cache.iterdir())) == 3
+
+    # A fresh output directory is filled from the cache.
+    calls.clear()
+    output = tmp_path / "site2"
+    build(source, output, image_width=800, thumbnail_width=100, cache_dir=cache)
+    assert calls == []
+    with Image.open(output / "assets" / "images" / "tarte.jpg") as image:
+        assert image.size == (800, 400)
+    with Image.open(output / "assets" / "images" / "thumbnails" / "tarte.jpg") as image:
+        assert image.size == (100, 100)
+
+    # Only changed pictures (or settings) are processed again; stale entries are pruned.
+    Image.new("RGB", (2000, 1000), "green").save(source / "tarte-1.png")
+    build(source, output, image_width=800, thumbnail_width=100, cache_dir=cache)
+    assert calls == [("tarte-1.png", 800, False)]
+    assert len(list(cache.iterdir())) == 3
+    with Image.open(output / "assets" / "images" / "tarte-1.png") as image:
+        assert image.getpixel((0, 0)) == (0, 128, 0)
+
+    calls.clear()
+    build(source, output, image_width=600, thumbnail_width=100, cache_dir=cache)
+    assert sorted(calls) == [("tarte-1.png", 600, False), ("tarte.jpg", 600, False)]
+    assert len(list(cache.iterdir())) == 3

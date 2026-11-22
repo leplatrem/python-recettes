@@ -17,7 +17,7 @@ import frontmatter
 import typer
 from markdown_it import MarkdownIt
 
-from recettes.images import export_image, output_name
+from recettes.images import cached_export_image, output_name, prune_cache
 
 app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from Markdown.")
 
@@ -329,6 +329,8 @@ def recipe_page(
     image_width: int = DEFAULT_IMAGE_WIDTH,
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
     simple_mode: bool = True,
+    cache_dir: Path | None = None,
+    used_cache: set[Path] | None = None,
 ) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
@@ -343,11 +345,16 @@ def recipe_page(
     content, ingredients = markdown_with_ingredients(body)
     content = rewrite_local_links(content, path, link_targets)
     main_image, section_images, gallery = classify_images(path.stem, images, content)
+    exports = []
     for image in images:
         name = output_name(image)
-        export_image(image, image_dir / name, image_width)
+        exports.append((image, image_dir / name, image_width, False))
         if name == main_image:
-            export_image(image, image_dir / "thumbnails" / name, thumbnail_width, True)
+            exports.append((image, image_dir / "thumbnails" / name, thumbnail_width, True))
+    for image, target, width, square in exports:
+        entry = cached_export_image(image, target, width, square, cache_dir)
+        if entry is not None and used_cache is not None:
+            used_cache.add(entry)
 
     ingredient_list = aggregate_ingredients(ingredients)
     if simple_mode:
@@ -570,9 +577,11 @@ def build(
     image_width: int = DEFAULT_IMAGE_WIDTH,
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
     simple_mode: bool = True,
+    cache_dir: Path | None = None,
 ) -> int:
     source = source.resolve()
     destination = destination.resolve()
+    cache_dir = cache_dir.resolve() if cache_dir else None
     if not source.is_dir():
         fail(f"Recipe directory does not exist: {source}")
     if source == destination or source in destination.parents:
@@ -580,6 +589,11 @@ def build(
     paths = sorted(path for path in source.glob("*.md") if path.is_file())
     if not paths:
         fail(f"No Markdown recipes found in {source}")
+    # Only the top level of the source directory is read, so the cache can be a subdirectory.
+    if cache_dir and (
+        cache_dir == source or cache_dir == destination or destination in cache_dir.parents
+    ):
+        fail("Cache directory must be outside the output directory")
 
     package_dir = Path(__file__).parent
     static = package_dir / "static"
@@ -600,6 +614,7 @@ def build(
     images = assign_images(source, {path.stem for path in paths})
     link_targets = local_link_targets(paths, images)
     seen = set()
+    used_cache: set[Path] = set()
     for path in paths:
         slug = recipe_slug(path)
         if slug in seen:
@@ -613,6 +628,8 @@ def build(
             image_width,
             thumbnail_width,
             simple_mode,
+            cache_dir,
+            used_cache,
         )
         recipes.append(recipe)
         page = render_template(
@@ -640,6 +657,8 @@ def build(
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
     (destination / "recipes.json").write_text(index_data, encoding="utf-8")
+    if cache_dir:
+        prune_cache(cache_dir, used_cache)
     return len(recipes)
 
 
@@ -677,10 +696,28 @@ def build_command(
             help="Offer a switch to measure ingredients with glasses and spoons instead of a scale",
         ),
     ] = True,
+    cache_dir: Annotated[
+        Path,
+        typer.Option(
+            "--cache-dir",
+            envvar="RECETTES_CACHE_DIR",
+            help="Keep resized pictures in this directory, so unchanged ones are not "
+            "processed again on the next build",
+        ),
+    ] = Path(".recettes-cache"),
 ) -> None:
     """Build the static recipe website."""
     edit_url = edit_url or ci_edit_url(source)
-    count = build(source, destination, title, edit_url, image_width, thumbnail_width, simple_mode)
+    count = build(
+        source,
+        destination,
+        title,
+        edit_url,
+        image_width,
+        thumbnail_width,
+        simple_mode,
+        cache_dir,
+    )
     typer.echo(f"Built {count} recipes into {destination}")
 
 

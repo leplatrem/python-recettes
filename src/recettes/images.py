@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import re
 import shutil
 from pathlib import Path
 
+import PIL
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 
@@ -10,6 +13,9 @@ register_heif_opener()
 
 # Browsers mostly cannot display these, so they are always converted to JPEG.
 CONVERTED_TO_JPEG = {".heic", ".heif"}
+# Bump when the export logic changes, so cached pictures are generated again.
+CACHE_VERSION = "1"
+CACHE_ENTRY_RE = re.compile(r"^[0-9a-f]{64}\.[^.]+$")
 
 
 def output_name(source: Path) -> str:
@@ -63,3 +69,38 @@ def export_image(source: Path, destination: Path, width: int, square: bool = Fal
             return
         print(f"Could not resize {source}, skip: {exc}")
     shutil.copyfile(source, destination)
+
+
+def cached_export_image(
+    source: Path, destination: Path, width: int, square: bool, cache_dir: Path | None
+) -> Path | None:
+    """Export an image, reusing a previous result from `cache_dir` if the source is unchanged.
+
+    Returns the cache entry used, if any.
+    """
+    if cache_dir is None:
+        export_image(source, destination, width, square)
+        return None
+    digest = hashlib.sha256(f"{CACHE_VERSION}:{PIL.__version__}:{width}:{square}:".encode())
+    digest.update(source.read_bytes())
+    entry = cache_dir / f"{digest.hexdigest()}{Path(output_name(source)).suffix.lower()}"
+    if not entry.exists():
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        # Write to a temporary file, so an interrupted build never leaves a broken entry.
+        partial = entry.with_name(f".{entry.name}.partial")
+        export_image(source, partial, width, square)
+        if not partial.exists():  # Conversion failed and the picture was skipped.
+            return None
+        partial.replace(entry)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(entry, destination)
+    return entry
+
+
+def prune_cache(cache_dir: Path, used: set[Path]) -> None:
+    """Delete cache entries that were not used by the last build."""
+    if not cache_dir.is_dir():
+        return
+    for path in cache_dir.iterdir():
+        if path.is_file() and CACHE_ENTRY_RE.match(path.name) and path not in used:
+            path.unlink()

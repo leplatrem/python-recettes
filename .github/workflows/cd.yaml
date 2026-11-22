@@ -23,8 +23,25 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - name: Install Recettes
         run: uv sync --locked --no-dev
+      # Resized pictures from previous builds: only new or changed ones are processed.
+      - name: Restore picture cache
+        id: restore-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .recettes-cache
+          key: recettes-images-${{ github.sha }}
+          restore-keys: recettes-images-
       - name: Build recipe website
         run: uv run --locked recettes build examples --destination site --title "My Recipes"
+      - name: Compute picture cache key
+        id: cache-key
+        run: echo "key=recettes-images-${{ hashFiles('.recettes-cache/**') }}" >> "$GITHUB_OUTPUT"
+      - name: Save picture cache
+        if: steps.cache-key.outputs.key != steps.restore-cache.outputs.cache-matched-key
+        uses: actions/cache/save@v4
+        with:
+          path: .recettes-cache
+          key: ${{ steps.cache-key.outputs.key }}
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:

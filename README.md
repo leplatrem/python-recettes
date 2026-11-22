@@ -93,6 +93,14 @@ When building, pictures are downscaled. Desired size can be specified from CLI:
 recettes build examples/ --image-width 760 --thumbnail-width 112
 ```
 
+Resizing pictures takes time, so resized pictures are kept in a `.recettes-cache/` directory (relative to the current directory), and unchanged pictures are not processed again on the next build. Choose another location (outside the output directory) with `--cache-dir` or the `RECETTES_CACHE_DIR` environment variable:
+
+```sh
+recettes build examples/ --cache-dir ~/.cache/recettes/
+```
+
+On GitHub Actions, persist this directory between runs with [actions/cache](https://github.com/actions/cache), as in [this repository's workflow](.github/workflows/cd.yaml).
+
 Recipe pages offer a *Simple* switch to measure ingredients with glasses (🥛 = 200 ml) and spoons (🥄 = 15 ml) instead of a scale. Disable it with:
 
 ```sh

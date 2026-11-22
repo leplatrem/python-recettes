@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Cookies</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,13 +27,17 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" data-portions="9">
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count">9</strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="115.0" data-unit="g" data-name="of butter">115 g of butter</li><li data-ingredient data-amount="160.0" data-unit="g" data-name="of flour">160 g of flour</li><li data-ingredient>a pinch of salt</li><li data-ingredient data-amount="0.5" data-unit="tsp" data-name="of baking soda">0.5 tsp of baking soda</li><li data-ingredient data-amount="70.0" data-unit="g" data-name="of white sugar">70 g of white sugar</li><li data-ingredient data-amount="80.0" data-unit="g" data-name="of brown sugar">80 g of brown sugar</li><li data-ingredient data-amount="1.0" data-unit="" data-name="egg">1 egg</li><li data-ingredient data-amount="1.0" data-unit="tsp" data-name="of vanilla extract">1 tsp of vanilla extract</li><li data-ingredient>chocolate chips</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="115.0" data-unit="g" data-name="of butter" data-ml="126.37">115 g of butter</li><li data-ingredient data-amount="160.0" data-unit="g" data-name="of flour" data-ml="290.91">160 g of flour</li><li data-ingredient>a pinch of salt</li><li data-ingredient data-amount="0.5" data-unit="tsp" data-name="of baking soda" data-ml="2.5">0.5 tsp of baking soda</li><li data-ingredient data-amount="70.0" data-unit="g" data-name="of white sugar" data-ml="82.35">70 g of white sugar</li><li data-ingredient data-amount="80.0" data-unit="g" data-name="of brown sugar" data-ml="100.0">80 g of brown sugar</li><li data-ingredient data-amount="1.0" data-unit="" data-name="egg">1 egg</li><li data-ingredient data-amount="1.0" data-unit="tsp" data-name="of vanilla extract" data-ml="5.0">1 tsp of vanilla extract</li><li data-ingredient>chocolate chips</li></ul>
         </section>
         
         <div class="recipe-content" id="recipe-content"><p>Julia’s version.</p>
@@ -38,13 +45,13 @@
 <h2>Step 1</h2>
 <p>Preheat the oven to <em>200ºC</em>.</p>
 <h2>Step 2</h2>
-<p>Brown <span data-ingredient data-amount="115.0" data-unit="g" data-name="of butter">115 g of butter</span> in a pan (6-7min).</p>
+<p>Brown <span data-ingredient data-amount="115.0" data-unit="g" data-name="of butter" data-ml="126.37">115 g of butter</span> in a pan (6-7min).</p>
 <h2>Step 3</h2>
-<p>In a first bowl, mix <span data-ingredient data-amount="160.0" data-unit="g" data-name="of flour">160 g of flour</span>, <span data-ingredient>a pinch of salt</span>, and <span data-ingredient data-amount="0.5" data-unit="tsp" data-name="of baking soda">0.5 tsp of baking soda</span>.</p>
+<p>In a first bowl, mix <span data-ingredient data-amount="160.0" data-unit="g" data-name="of flour" data-ml="290.91">160 g of flour</span>, <span data-ingredient>a pinch of salt</span>, and <span data-ingredient data-amount="0.5" data-unit="tsp" data-name="of baking soda" data-ml="2.5">0.5 tsp of baking soda</span>.</p>
 <h2>Step 4</h2>
 <p>Wait for the butter to cool down.</p>
-<p>In a second bowl, mix <span data-ingredient data-amount="70.0" data-unit="g" data-name="of white sugar">70 g of white sugar</span> with <span data-ingredient data-amount="80.0" data-unit="g" data-name="of brown sugar">80 g of brown sugar</span>, and stir in the butter.</p>
-<p>Add <span data-ingredient data-amount="1.0" data-unit="" data-name="egg">1 egg</span> and <span data-ingredient data-amount="1.0" data-unit="tsp" data-name="of vanilla extract">1 tsp of vanilla extract</span>, and mix well.</p>
+<p>In a second bowl, mix <span data-ingredient data-amount="70.0" data-unit="g" data-name="of white sugar" data-ml="82.35">70 g of white sugar</span> with <span data-ingredient data-amount="80.0" data-unit="g" data-name="of brown sugar" data-ml="100.0">80 g of brown sugar</span>, and stir in the butter.</p>
+<p>Add <span data-ingredient data-amount="1.0" data-unit="" data-name="egg">1 egg</span> and <span data-ingredient data-amount="1.0" data-unit="tsp" data-name="of vanilla extract" data-ml="5.0">1 tsp of vanilla extract</span>, and mix well.</p>
 <h2>Step 5</h2>
 <p>Combine both bowls without overmixing, to keep some texture, then add the <span data-ingredient>chocolate chips</span>.</p>
 <h2>Step 6</h2>

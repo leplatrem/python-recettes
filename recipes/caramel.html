@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Caramel</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,19 +27,23 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" hidden>
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count"></strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="150.0" data-unit="g" data-name="of white sugar">150 g of white sugar</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of water">1 tbsp of water</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="150.0" data-unit="g" data-name="of white sugar" data-ml="176.47">150 g of white sugar</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of water" data-ml="15.0">1 tbsp of water</li></ul>
         </section>
         
         <div class="recipe-content" id="recipe-content"><p>How to get it right every time.</p>
 <h1>Preparation</h1>
 <h2>Step 1</h2>
-<p>Pour a third of the <span data-ingredient data-amount="150.0" data-unit="g" data-name="of white sugar">150 g of white sugar</span> with <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of water">1 tbsp of water</span> into a heavy-bottomed saucepan and heat over <em>medium heat</em>.</p>
+<p>Pour a third of the <span data-ingredient data-amount="150.0" data-unit="g" data-name="of white sugar" data-ml="176.47">150 g of white sugar</span> with <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of water" data-ml="15.0">1 tbsp of water</span> into a heavy-bottomed saucepan and heat over <em>medium heat</em>.</p>
 <h2>Step 2</h2>
 <p>As soon as it melts and turns liquid at the edges, add the second third. Then add the last third once the previous one has melted.</p>
 <h2>Step 3</h2>

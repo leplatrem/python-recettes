@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Walnut Cake</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,22 +27,26 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" hidden>
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count"></strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="250.0" data-unit="g" data-name="of walnuts">250 g of walnuts</li><li data-ingredient data-amount="6.0" data-unit="" data-name="egg yolks">6 egg yolks</li><li data-ingredient data-amount="200.0" data-unit="g" data-name="of sugar">200 g of sugar</li><li data-ingredient data-amount="50.0" data-unit="g" data-name="of breadcrumbs">50 g of breadcrumbs</li><li data-ingredient data-amount="6.0" data-unit="" data-name="egg whites">6 egg whites</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="250.0" data-unit="g" data-name="of walnuts" data-ml="555.56">250 g of walnuts</li><li data-ingredient data-amount="6.0" data-unit="" data-name="egg yolks">6 egg yolks</li><li data-ingredient data-amount="200.0" data-unit="g" data-name="of sugar" data-ml="235.29">200 g of sugar</li><li data-ingredient data-amount="50.0" data-unit="g" data-name="of breadcrumbs" data-ml="111.11">50 g of breadcrumbs</li><li data-ingredient data-amount="6.0" data-unit="" data-name="egg whites">6 egg whites</li></ul>
         </section>
         
         <div class="recipe-content" id="recipe-content"><p>From Mamie Lucette.</p>
 <h1>Preparation</h1>
 <p>Preheat the oven to <em>180ºC</em>.</p>
 <h2>Step 1</h2>
-<p>Blend <span data-ingredient data-amount="250.0" data-unit="g" data-name="of walnuts">250 g of walnuts</span>.</p>
+<p>Blend <span data-ingredient data-amount="250.0" data-unit="g" data-name="of walnuts" data-ml="555.56">250 g of walnuts</span>.</p>
 <h2>Step 2</h2>
-<p>Beat the <span data-ingredient data-amount="6.0" data-unit="" data-name="egg yolks">6 egg yolks</span> with <span data-ingredient data-amount="200.0" data-unit="g" data-name="of sugar">200 g of sugar</span>. Stir in the walnuts and <span data-ingredient data-amount="50.0" data-unit="g" data-name="of breadcrumbs">50 g of breadcrumbs</span>.</p>
+<p>Beat the <span data-ingredient data-amount="6.0" data-unit="" data-name="egg yolks">6 egg yolks</span> with <span data-ingredient data-amount="200.0" data-unit="g" data-name="of sugar" data-ml="235.29">200 g of sugar</span>. Stir in the walnuts and <span data-ingredient data-amount="50.0" data-unit="g" data-name="of breadcrumbs" data-ml="111.11">50 g of breadcrumbs</span>.</p>
 <h2>Step 3</h2>
 <p>Gently fold in <span data-ingredient data-amount="6.0" data-unit="" data-name="egg whites">6 egg whites</span> beaten to stiff peaks.</p>
 <h2>Step 4</h2>

@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Lemon Ginger Syrup</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,24 +27,28 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" data-portions="20">
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count">20</strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="0.5" data-unit="l" data-name="of lemon juice">0.5 l of lemon juice</li><li data-ingredient data-amount="300.0" data-unit="g" data-name="of fresh ginger">300 g of fresh ginger</li><li data-ingredient data-amount="0.5" data-unit="l" data-name="of water">0.5 l of water</li><li data-ingredient data-amount="100.0" data-unit="g" data-name="of sugar">100 g of sugar</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="0.5" data-unit="l" data-name="of lemon juice" data-ml="500.0">0.5 l of lemon juice</li><li data-ingredient data-amount="300.0" data-unit="g" data-name="of fresh ginger">300 g of fresh ginger</li><li data-ingredient data-amount="0.5" data-unit="l" data-name="of water" data-ml="500.0">0.5 l of water</li><li data-ingredient data-amount="100.0" data-unit="g" data-name="of sugar" data-ml="117.65">100 g of sugar</li></ul>
         </section>
         
         <div class="recipe-content" id="recipe-content"><h1>Preparation</h1>
 <h2>Step 1</h2>
-<p>Squeeze <span data-ingredient data-amount="0.5" data-unit="l" data-name="of lemon juice">0.5 l of lemon juice</span>.</p>
+<p>Squeeze <span data-ingredient data-amount="0.5" data-unit="l" data-name="of lemon juice" data-ml="500.0">0.5 l of lemon juice</span>.</p>
 <div class="recipe-step-images"><figure><img loading="lazy" src="../assets/images/lemon-ginger-syrup-step-1.jpeg" alt="Lemon Ginger Syrup – Step 1"></figure></div>
 <h2>Step 2</h2>
 <p>Peel <span data-ingredient data-amount="300.0" data-unit="g" data-name="of fresh ginger">300 g of fresh ginger</span> and grind it in a food processor.</p>
 <div class="recipe-step-images"><figure><img loading="lazy" src="../assets/images/lemon-ginger-syrup-step-2.jpeg" alt="Lemon Ginger Syrup – Step 2"></figure></div>
 <h2>Step 3</h2>
-<p>Simmer the mixture over low heat with <span data-ingredient data-amount="0.5" data-unit="l" data-name="of water">0.5 l of water</span> and <span data-ingredient data-amount="100.0" data-unit="g" data-name="of sugar">100 g of sugar</span>.</p>
+<p>Simmer the mixture over low heat with <span data-ingredient data-amount="0.5" data-unit="l" data-name="of water" data-ml="500.0">0.5 l of water</span> and <span data-ingredient data-amount="100.0" data-unit="g" data-name="of sugar" data-ml="117.65">100 g of sugar</span>.</p>
 <div class="recipe-step-images"><figure><img loading="lazy" src="../assets/images/lemon-ginger-syrup-step-3.jpeg" alt="Lemon Ginger Syrup – Step 3"></figure></div>
 <h2>Step 4</h2>
 <p>Blend the result.</p>

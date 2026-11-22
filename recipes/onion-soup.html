@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Onion Soup</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,13 +27,17 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" data-portions="4">
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count">4</strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="4.0" data-unit="" data-name="onions">4 onions</li><li data-ingredient data-amount="50.0" data-unit="g" data-name="of butter">50 g of butter</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of oil">1 tbsp of oil</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of flour">1 tbsp of flour</li><li data-ingredient data-amount="1.0" data-unit="l" data-name="of hot water">1 l of hot water</li><li data-ingredient data-amount="250.0" data-unit="ml" data-name="of white wine">250 ml of white wine</li><li data-ingredient data-amount="6.0" data-unit="" data-name="slices of bread">6 slices of bread</li><li data-ingredient data-amount="4.0" data-unit="" data-name="small ovenproof bowls">4 small ovenproof bowls</li><li data-ingredient>grated Comté</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="4.0" data-unit="" data-name="onions">4 onions</li><li data-ingredient data-amount="50.0" data-unit="g" data-name="of butter" data-ml="54.95">50 g of butter</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of oil" data-ml="15.0">1 tbsp of oil</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of flour" data-ml="15.0">1 tbsp of flour</li><li data-ingredient data-amount="1.0" data-unit="l" data-name="of hot water" data-ml="1000.0">1 l of hot water</li><li data-ingredient data-amount="250.0" data-unit="ml" data-name="of white wine" data-ml="250.0">250 ml of white wine</li><li data-ingredient data-amount="6.0" data-unit="" data-name="slices of bread">6 slices of bread</li><li data-ingredient data-amount="4.0" data-unit="" data-name="small ovenproof bowls">4 small ovenproof bowls</li><li data-ingredient>grated Comté</li></ul>
         </section>
         <figure class="recipe-main-image"><img src="../assets/images/onion-soup.jpeg" alt="Onion Soup"></figure>
         <div class="recipe-content" id="recipe-content"><p>A winter classic that always pleases.</p>
@@ -38,9 +45,9 @@
 <h2>Step 1</h2>
 <p>Peel and thinly slice the <span data-ingredient data-amount="4.0" data-unit="" data-name="onions">4 onions</span>.</p>
 <h2>Step 2</h2>
-<p>Cook them in <span data-ingredient data-amount="50.0" data-unit="g" data-name="of butter">50 g of butter</span> and <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of oil">1 tbsp of oil</span> until tender and golden brown.</p>
+<p>Cook them in <span data-ingredient data-amount="50.0" data-unit="g" data-name="of butter" data-ml="54.95">50 g of butter</span> and <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of oil" data-ml="15.0">1 tbsp of oil</span> until tender and golden brown.</p>
 <h2>Step 3</h2>
-<p>Sprinkle with <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of flour">1 tbsp of flour</span>, pour in <span data-ingredient data-amount="1.0" data-unit="l" data-name="of hot water">1 l of hot water</span> and <span data-ingredient data-amount="250.0" data-unit="ml" data-name="of white wine">250 ml of white wine</span>, and season.</p>
+<p>Sprinkle with <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of flour" data-ml="15.0">1 tbsp of flour</span>, pour in <span data-ingredient data-amount="1.0" data-unit="l" data-name="of hot water" data-ml="1000.0">1 l of hot water</span> and <span data-ingredient data-amount="250.0" data-unit="ml" data-name="of white wine" data-ml="250.0">250 ml of white wine</span>, and season.</p>
 <h2>Step 4</h2>
 <p>Cover and simmer gently for 20 minutes.</p>
 <h2>Step 5</h2>

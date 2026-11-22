@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Lemon Tart</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,26 +27,30 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" data-portions="6">
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count">6</strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="75.0" data-unit="g" data-name="of sugar">75 g of sugar</li><li data-ingredient data-amount="2.0" data-unit="" data-name="whole eggs">2 whole eggs</li><li data-ingredient data-amount="3.0" data-unit="" data-name="egg yolks">3 egg yolks</li><li data-ingredient data-amount="200.0" data-unit="ml" data-name="of lemon juice">200 ml of lemon juice</li><li data-ingredient>lemon zest</li><li data-ingredient data-amount="105.0" data-unit="g" data-name="of melted butter">105 g of melted butter</li><li data-ingredient data-amount="25.0" data-unit="g" data-name="of cornstarch">25 g of cornstarch</li><li data-ingredient data-amount="200.0" data-unit="g" data-name="of speculoos biscuits">200 g of speculoos biscuits</li><li data-ingredient>tart dish</li><li data-ingredient data-amount="3.0" data-unit="" data-name="egg whites">3 egg whites</li><li data-ingredient data-amount="1.0" data-unit="" data-name="pinch of salt">1 pinch of salt</li><li data-ingredient data-amount="150.0" data-unit="g" data-name="of icing sugar">150 g of icing sugar</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="75.0" data-unit="g" data-name="of sugar" data-ml="88.24">75 g of sugar</li><li data-ingredient data-amount="2.0" data-unit="" data-name="whole eggs">2 whole eggs</li><li data-ingredient data-amount="3.0" data-unit="" data-name="egg yolks">3 egg yolks</li><li data-ingredient data-amount="200.0" data-unit="ml" data-name="of lemon juice" data-ml="200.0">200 ml of lemon juice</li><li data-ingredient>lemon zest</li><li data-ingredient data-amount="105.0" data-unit="g" data-name="of melted butter" data-ml="115.38">105 g of melted butter</li><li data-ingredient data-amount="25.0" data-unit="g" data-name="of cornstarch" data-ml="41.67">25 g of cornstarch</li><li data-ingredient data-amount="200.0" data-unit="g" data-name="of speculoos biscuits">200 g of speculoos biscuits</li><li data-ingredient>tart dish</li><li data-ingredient data-amount="3.0" data-unit="" data-name="egg whites">3 egg whites</li><li data-ingredient data-amount="1.0" data-unit="" data-name="pinch of salt">1 pinch of salt</li><li data-ingredient data-amount="150.0" data-unit="g" data-name="of icing sugar" data-ml="267.86">150 g of icing sugar</li></ul>
         </section>
         <figure class="recipe-main-image"><img src="../assets/images/lemon-tart.jpeg" alt="Lemon Tart"></figure>
         <div class="recipe-content" id="recipe-content"><h1>Preparation</h1>
 <h2>Step 1</h2>
-<p>Beat <span data-ingredient data-amount="75.0" data-unit="g" data-name="of sugar">75 g of sugar</span> with <span data-ingredient data-amount="2.0" data-unit="" data-name="whole eggs">2 whole eggs</span> and <span data-ingredient data-amount="3.0" data-unit="" data-name="egg yolks">3 egg yolks</span>.</p>
+<p>Beat <span data-ingredient data-amount="75.0" data-unit="g" data-name="of sugar" data-ml="88.24">75 g of sugar</span> with <span data-ingredient data-amount="2.0" data-unit="" data-name="whole eggs">2 whole eggs</span> and <span data-ingredient data-amount="3.0" data-unit="" data-name="egg yolks">3 egg yolks</span>.</p>
 <h2>Step 2</h2>
-<p>Add <span data-ingredient data-amount="200.0" data-unit="ml" data-name="of lemon juice">200 ml of lemon juice</span>, some <span data-ingredient>lemon zest</span>, <span data-ingredient data-amount="30.0" data-unit="g" data-name="of melted butter">30 g of melted butter</span>, and <span data-ingredient data-amount="25.0" data-unit="g" data-name="of cornstarch">25 g of cornstarch</span> diluted in a little water. Bring to the boil, stirring constantly, until it thickens.</p>
+<p>Add <span data-ingredient data-amount="200.0" data-unit="ml" data-name="of lemon juice" data-ml="200.0">200 ml of lemon juice</span>, some <span data-ingredient>lemon zest</span>, <span data-ingredient data-amount="30.0" data-unit="g" data-name="of melted butter" data-ml="32.97">30 g of melted butter</span>, and <span data-ingredient data-amount="25.0" data-unit="g" data-name="of cornstarch" data-ml="41.67">25 g of cornstarch</span> diluted in a little water. Bring to the boil, stirring constantly, until it thickens.</p>
 <h2>Step 3</h2>
-<p>Crush <span data-ingredient data-amount="200.0" data-unit="g" data-name="of speculoos biscuits">200 g of speculoos biscuits</span> and mix them with <span data-ingredient data-amount="75.0" data-unit="g" data-name="of melted butter">75 g of melted butter</span>.
+<p>Crush <span data-ingredient data-amount="200.0" data-unit="g" data-name="of speculoos biscuits">200 g of speculoos biscuits</span> and mix them with <span data-ingredient data-amount="75.0" data-unit="g" data-name="of melted butter" data-ml="82.42">75 g of melted butter</span>.
 Spread over the bottom of a 20-25cm <span data-ingredient>tart dish</span> and refrigerate for 30min.</p>
 <h2>Step 4</h2>
 <p>Make a meringue with the <span data-ingredient data-amount="3.0" data-unit="" data-name="egg whites">3 egg whites</span> and <span data-ingredient data-amount="1.0" data-unit="" data-name="pinch of salt">1 pinch of salt</span>.</p>
-<p>Beat the whites to stiff peaks and gradually add <span data-ingredient data-amount="150.0" data-unit="g" data-name="of icing sugar">150 g of icing sugar</span>.</p>
+<p>Beat the whites to stiff peaks and gradually add <span data-ingredient data-amount="150.0" data-unit="g" data-name="of icing sugar" data-ml="267.86">150 g of icing sugar</span>.</p>
 <h2>Step 5</h2>
 <p>Assemble.</p>
 <h2>Step 6</h2>

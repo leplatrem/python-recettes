@@ -3,9 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>Crunchy Granola</title>
-    <link rel="stylesheet" href="../assets/style.css?v=793c1bb4d5">
-    <script type="module" src="../assets/recipe.js?v=911730d1f5"></script>
+    <link rel="stylesheet" href="../assets/style.css?v=94e42c5910">
+    <script type="module" src="../assets/recipe.js?v=ecb6df48c8"></script>
   </head>
   <body>
     <nav class="detail-nav">
@@ -24,21 +27,25 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control" hidden>
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count"></strong>×</span>
               <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
             </div>
           </div>
-          <ul id="ingredient-list"><li data-ingredient data-amount="3.0" data-unit="" data-name="mugs of rolled oats">3 mugs of rolled oats</li><li data-ingredient data-amount="4.0" data-unit="tbsp" data-name="of pure cocoa">4 tbsp of pure cocoa</li><li data-ingredient data-amount="3.0" data-unit="tbsp" data-name="of grated coconut">3 tbsp of grated coconut</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of sesame seeds">1 tbsp of sesame seeds</li><li data-ingredient data-amount="2.0" data-unit="tbsp" data-name="of flaked almonds">2 tbsp of flaked almonds</li><li data-ingredient data-amount="0.5" data-unit="" data-name="mug of coconut oil">0.5 mug of coconut oil</li><li data-ingredient data-amount="0.25" data-unit="" data-name="mug of rice syrup">0.25 mug of rice syrup</li><li data-ingredient data-amount="0.25" data-unit="" data-name="mug of agave syrup">0.25 mug of agave syrup</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of vanilla extract">1 tbsp of vanilla extract</li><li data-ingredient>baking paper</li></ul>
+          <ul id="ingredient-list"><li data-ingredient data-amount="3.0" data-unit="" data-name="mugs of rolled oats">3 mugs of rolled oats</li><li data-ingredient data-amount="4.0" data-unit="tbsp" data-name="of pure cocoa" data-ml="60.0">4 tbsp of pure cocoa</li><li data-ingredient data-amount="3.0" data-unit="tbsp" data-name="of grated coconut" data-ml="45.0">3 tbsp of grated coconut</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of sesame seeds" data-ml="15.0">1 tbsp of sesame seeds</li><li data-ingredient data-amount="2.0" data-unit="tbsp" data-name="of flaked almonds" data-ml="30.0">2 tbsp of flaked almonds</li><li data-ingredient data-amount="0.5" data-unit="" data-name="mug of coconut oil">0.5 mug of coconut oil</li><li data-ingredient data-amount="0.25" data-unit="" data-name="mug of rice syrup">0.25 mug of rice syrup</li><li data-ingredient data-amount="0.25" data-unit="" data-name="mug of agave syrup">0.25 mug of agave syrup</li><li data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of vanilla extract" data-ml="15.0">1 tbsp of vanilla extract</li><li data-ingredient>baking paper</li></ul>
         </section>
         
         <div class="recipe-content" id="recipe-content"><p>A budget-friendly classic.</p>
 <h1>Preparation</h1>
 <h2>Step 1</h2>
-<p>Mix <span data-ingredient data-amount="3.0" data-unit="" data-name="mugs of rolled oats">3 mugs of rolled oats</span>, <span data-ingredient data-amount="4.0" data-unit="tbsp" data-name="of pure cocoa">4 tbsp of pure cocoa</span>, <span data-ingredient data-amount="3.0" data-unit="tbsp" data-name="of grated coconut">3 tbsp of grated coconut</span>, <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of sesame seeds">1 tbsp of sesame seeds</span>, <span data-ingredient data-amount="2.0" data-unit="tbsp" data-name="of flaked almonds">2 tbsp of flaked almonds</span>.</p>
+<p>Mix <span data-ingredient data-amount="3.0" data-unit="" data-name="mugs of rolled oats">3 mugs of rolled oats</span>, <span data-ingredient data-amount="4.0" data-unit="tbsp" data-name="of pure cocoa" data-ml="60.0">4 tbsp of pure cocoa</span>, <span data-ingredient data-amount="3.0" data-unit="tbsp" data-name="of grated coconut" data-ml="45.0">3 tbsp of grated coconut</span>, <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of sesame seeds" data-ml="15.0">1 tbsp of sesame seeds</span>, <span data-ingredient data-amount="2.0" data-unit="tbsp" data-name="of flaked almonds" data-ml="30.0">2 tbsp of flaked almonds</span>.</p>
 <h2>Step 2</h2>
-<p>Stir in <span data-ingredient data-amount="0.5" data-unit="" data-name="mug of coconut oil">0.5 mug of coconut oil</span>, <span data-ingredient data-amount="0.25" data-unit="" data-name="mug of rice syrup">0.25 mug of rice syrup</span>, <span data-ingredient data-amount="0.25" data-unit="" data-name="mug of agave syrup">0.25 mug of agave syrup</span>, <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of vanilla extract">1 tbsp of vanilla extract</span>.</p>
+<p>Stir in <span data-ingredient data-amount="0.5" data-unit="" data-name="mug of coconut oil">0.5 mug of coconut oil</span>, <span data-ingredient data-amount="0.25" data-unit="" data-name="mug of rice syrup">0.25 mug of rice syrup</span>, <span data-ingredient data-amount="0.25" data-unit="" data-name="mug of agave syrup">0.25 mug of agave syrup</span>, <span data-ingredient data-amount="1.0" data-unit="tbsp" data-name="of vanilla extract" data-ml="15.0">1 tbsp of vanilla extract</span>.</p>
 <h2>Step 3</h2>
 <p>Spread on <span data-ingredient>baking paper</span> and bake at 180ºC for 10min.</p>
 <h2>Step 4</h2>

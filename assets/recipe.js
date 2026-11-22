@@ -25,7 +25,8 @@ const FRACTIONS = [
 function formatFraction(value) {
   let whole = Math.floor(value);
   const [fraction, glyph] = FRACTIONS.reduce((best, candidate) =>
-    Math.abs(candidate[0] - (value - whole)) < Math.abs(best[0] - (value - whole))
+    Math.abs(candidate[0] - (value - whole)) <
+    Math.abs(best[0] - (value - whole))
       ? candidate
       : best,
   );

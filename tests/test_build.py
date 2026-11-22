@@ -6,7 +6,14 @@ from pathlib import Path
 import pytest
 import typer
 
-from recettes.cli import aggregate_ingredients, build, ci_edit_url, parse_quantity
+from recettes.cli import (
+    aggregate_ingredients,
+    build,
+    ci_edit_url,
+    find_density,
+    parse_quantity,
+    volume_ml,
+)
 
 
 @pytest.mark.parametrize(
@@ -72,6 +79,95 @@ def test_aggregate_repeated_ingredients_by_name_and_unit() -> None:
     ]
 
 
+@pytest.mark.parametrize(
+    ("name", "density"),
+    [
+        ("of flour", 0.55),
+        ("de farine de sarrasin", 0.55),
+        ("di zucchero", 0.85),
+        ("de azúcar glas", 0.56),
+        ("de sucre glace", 0.56),
+        ("of icing sugar", 0.56),
+        ("of walnuts", 0.45),
+        ("de noix de coco râpée", 0.35),
+        ("de pépites de chocolat", 0.7),
+        ("of salted peanuts", None),
+        ("of fresh ginger", None),
+    ],
+)
+def test_find_density_in_several_languages(name: str, density: float | None) -> None:
+    assert find_density(name) == density
+
+
+@pytest.mark.parametrize(
+    ("amount", "unit", "name", "ml"),
+    [
+        (110, "g", "of flour", 200),
+        (1, "kg", "de beurre", 1000 / 0.91),
+        (1, "c. à s.", "d'huile", 15),
+        (2, "tsp", "of anything", 10),
+        (0.5, "l", "of water", 500),
+        (50, "g", "of fresh ginger", None),
+        (4, "", "eggs", None),
+        (None, "", "lemon zest", None),
+    ],
+)
+def test_volume_ml_for_simple_mode(
+    amount: float | None, unit: str, name: str, ml: float | None
+) -> None:
+    assert volume_ml(amount, unit, name) == (pytest.approx(ml) if ml else None)
+
+
+def test_simple_mode_volumes_and_unknown_density_warning(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "cake.md").write_text(
+        "Mix {{ 110g of flour }}, {{ 1 tbsp of oil }}, {{ 3 eggs }} and {{ 50g of ginger }}.\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "site"
+
+    build(source, output)
+
+    recipe = (output / "recipes" / "cake.html").read_text(encoding="utf-8")
+    assert '<label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml">' in recipe
+    assert 'data-name="of flour" data-ml="200.0">' in recipe
+    assert 'data-name="of oil" data-ml="15.0">' in recipe
+    assert 'data-name="eggs">' in recipe
+    assert 'data-name="of ginger">' in recipe
+    assert "'cake.md': unknown density for 'of ginger'" in capsys.readouterr().err
+
+
+def test_simple_toggle_hidden_without_measurable_ingredients(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "eggs.md").write_text("Boil {{ 2 eggs }}.\n", encoding="utf-8")
+    output = tmp_path / "site"
+
+    build(source, output)
+
+    recipe = (output / "recipes" / "eggs.html").read_text(encoding="utf-8")
+    assert '<label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml" hidden>' in recipe
+
+
+def test_simple_mode_can_be_disabled(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "cake.md").write_text(
+        "Mix {{ 110g of flour }} and {{ 50g of ginger }}.\n", encoding="utf-8"
+    )
+    output = tmp_path / "site"
+
+    build(source, output, simple_mode=False)
+
+    recipe = (output / "recipes" / "cake.html").read_text(encoding="utf-8")
+    assert '<label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml" hidden>' in recipe
+    assert "data-ml" not in recipe
+    assert "unknown density" not in capsys.readouterr().err
+
+
 def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path: Path) -> None:
     source = tmp_path / "recipes"
     source.mkdir()
@@ -106,15 +202,15 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert (
         '<ul id="ingredient-list">'
         '<li data-ingredient data-amount="4.0" data-unit="" data-name="oignons">4 oignons</li>'
-        '<li data-ingredient data-amount="70.0" data-unit="g" data-name="de beurre">'
-        "70 g de beurre</li>"
-        '<li data-ingredient data-amount="1.0" data-unit="c. à c." data-name="de sel">'
-        "1 c. à c. de sel</li>"
+        '<li data-ingredient data-amount="70.0" data-unit="g" data-name="de beurre" '
+        'data-ml="76.92">70 g de beurre</li>'
+        '<li data-ingredient data-amount="1.0" data-unit="c. à c." data-name="de sel" '
+        'data-ml="5.0">1 c. à c. de sel</li>'
         "</ul>"
     ) in recipe
     assert (
-        'Ajoutez <span data-ingredient data-amount="20.0" data-unit="g" data-name="de beurre">'
-        "20 g de beurre</span>"
+        'Ajoutez <span data-ingredient data-amount="20.0" data-unit="g" '
+        'data-name="de beurre" data-ml="21.98">20 g de beurre</span>'
     ) in recipe
     assert "RECIPEINGREDIENTTOKEN" not in recipe
     index_data = json.loads((output / "recipes.json").read_text(encoding="utf-8"))

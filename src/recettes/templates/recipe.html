@@ -24,6 +24,10 @@
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">Ingredients</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml"{{ simple_hidden }}>
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>Simple</span>
+            </label>
             <div class="servings" id="servings-control"{{ servings_attrs }}>
               <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
               <span><strong id="servings-count">{{ portions }}</strong>×</span>

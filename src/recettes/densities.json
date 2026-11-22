@@ -1,0 +1,43 @@
+{
+  "flour": { "density": 0.55, "names": ["flour", "farine", "farina", "harina"] },
+  "almond flour": { "density": 0.4, "names": ["almond flour", "ground almonds", "almond meal", "poudre d'amande", "amande en poudre", "farine d'amande", "farina di mandorle", "mandorle tritate", "harina de almendra", "almendra molida"] },
+  "cornstarch": { "density": 0.6, "names": ["cornstarch", "cornflour", "corn starch", "maïzena", "fécule de maïs", "amido di mais", "maizena", "almidón de maíz", "fécula de maíz"] },
+  "semolina": { "density": 0.65, "names": ["semolina", "semoule", "semola", "sémola"] },
+  "polenta": { "density": 0.7, "names": ["polenta", "cornmeal", "harina de maíz"] },
+  "breadcrumbs": { "density": 0.45, "names": ["breadcrumbs", "bread crumbs", "chapelure", "pangrattato", "pan grattato", "pan rallado"] },
+  "cocoa": { "density": 0.45, "names": ["cocoa", "cacao", "cacao en poudre", "cacao amaro", "cacao en polvo"] },
+
+  "sugar": { "density": 0.85, "names": ["sugar", "sucre", "zucchero", "azúcar"] },
+  "brown sugar": { "density": 0.8, "names": ["brown sugar", "sucre roux", "cassonade", "sucre brun", "vergeoise", "zucchero di canna", "azúcar moreno", "azúcar morena"] },
+  "icing sugar": { "density": 0.56, "names": ["icing sugar", "powdered sugar", "confectioners sugar", "sucre glace", "zucchero a velo", "azúcar glas", "azúcar glass", "azúcar impalpable"] },
+  "honey": { "density": 1.42, "names": ["honey", "miel", "miele"] },
+  "syrup": { "density": 1.35, "names": ["syrup", "sirop", "sciroppo", "jarabe", "sirope"] },
+
+  "salt": { "density": 1.2, "names": ["salt", "sel", "sale", "sal"] },
+  "coarse salt": { "density": 1.0, "names": ["coarse salt", "sea salt", "gros sel", "fleur de sel", "sale grosso", "sal gruesa", "sal marina"] },
+  "baking powder": { "density": 0.9, "names": ["baking powder", "levure chimique", "lievito per dolci", "levadura química", "polvo de hornear"] },
+  "baking soda": { "density": 0.9, "names": ["baking soda", "bicarbonate", "bicarbonato"] },
+
+  "butter": { "density": 0.91, "names": ["butter", "beurre", "burro", "mantequilla", "manteca"] },
+  "oil": { "density": 0.92, "names": ["oil", "huile", "olio", "aceite"] },
+  "water": { "density": 1.0, "names": ["water", "eau", "acqua", "agua"] },
+  "milk": { "density": 1.03, "names": ["milk", "lait", "latte", "leche"] },
+  "cream": { "density": 1.0, "names": ["cream", "crème", "crème fraîche", "panna", "nata", "crema"] },
+  "yogurt": { "density": 1.05, "names": ["yogurt", "yoghurt", "yaourt", "yogourt", "yogur"] },
+  "wine": { "density": 1.0, "names": ["wine", "vin", "vino"] },
+  "juice": { "density": 1.03, "names": ["juice", "jus", "succo", "zumo", "jugo"] },
+
+  "rice": { "density": 0.85, "names": ["rice", "riz", "riso", "arroz"] },
+  "rolled oats": { "density": 0.4, "names": ["oats", "rolled oats", "oat flakes", "flocons d'avoine", "fiocchi d'avena", "copos de avena", "avena"] },
+  "couscous": { "density": 0.7, "names": ["couscous", "cuscús", "cous cous"] },
+  "quinoa": { "density": 0.75, "names": ["quinoa"] },
+  "lentils": { "density": 0.85, "names": ["lentils", "lentilles", "lenticchie", "lentejas"] },
+
+  "grated cheese": { "density": 0.4, "names": ["grated cheese", "fromage râpé", "gruyère râpé", "comté râpé", "emmental râpé", "parmesan râpé", "formaggio grattugiato", "parmigiano grattugiato", "queso rallado"] },
+  "grated coconut": { "density": 0.35, "names": ["grated coconut", "desiccated coconut", "shredded coconut", "noix de coco râpée", "coco râpée", "cocco grattugiato", "cocco rapé", "coco rallado"] },
+  "chocolate chips": { "density": 0.7, "names": ["chocolate chips", "pépites de chocolat", "gocce di cioccolato", "pepitas de chocolate", "chips de chocolate"] },
+  "raisins": { "density": 0.65, "names": ["raisins", "raisins secs", "uvetta", "uva passa", "pasas", "uvas pasas"] },
+  "nuts": { "density": 0.45, "names": ["walnuts", "nuts", "hazelnuts", "almonds", "noix", "noisettes", "amandes", "noci", "nocciole", "mandorle", "nueces", "avellanas", "almendras"] },
+  "flaked almonds": { "density": 0.35, "names": ["flaked almonds", "sliced almonds", "amandes effilées", "mandorle a lamelle", "almendras laminadas", "almendras fileteadas"] },
+  "seeds": { "density": 0.6, "names": ["seeds", "sunflower seeds", "pumpkin seeds", "sesame seeds", "graines", "graines de tournesol", "graines de courge", "graines de sésame", "sésame", "semi di girasole", "semi di zucca", "sesamo", "semillas", "pipas", "pepitas de calabaza", "sésamo"] }
+}

@@ -8,6 +8,7 @@ import re
 import shutil
 import unicodedata
 from fractions import Fraction
+from functools import cache
 from pathlib import Path
 from typing import Annotated
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
@@ -36,6 +37,17 @@ MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
 # thumbnail), so pictures stay sharp on high-density (retina) screens.
 DEFAULT_IMAGE_WIDTH = 2 * 760
 DEFAULT_THUMBNAIL_WIDTH = 2 * 112
+# Conversions to milliliters or grams, used by the "Simple" mode (glasses and spoons).
+VOLUME_UNITS_ML = {
+    "ml": 1,
+    "cl": 10,
+    "l": 1000,
+    "cups": 240,
+    "fl oz": 29.57,
+    **dict.fromkeys(["tbsp", "c. à s.", "EL", "cda", "Cc", "CC", "msk", "ss"], 15),
+    **dict.fromkeys(["tsp", "c. à c.", "TL", "cdita", "cc", "ct", "tsk", "ts"], 5),
+}
+MASS_UNITS_G = {"mg": 0.001, "g": 1, "kg": 1000, "oz": 28.35, "lb": 453.6}
 
 
 @app.callback()
@@ -80,6 +92,49 @@ def parse_quantity(value: str) -> tuple[float | None, str, str]:
     }
     unit = unit_map.get(normalized_unit, raw_unit if normalized_unit == "cc" else normalized_unit)
     return amount, unit, match.group("name").strip()
+
+
+def name_words(text: str) -> tuple[str, ...]:
+    """Lowercase words without accents nor plural "s" ("Pépites de chocolat" -> pepite, de...)."""
+    normalized = unicodedata.normalize("NFKD", text.casefold())
+    ascii_text = "".join(char for char in normalized if not unicodedata.combining(char))
+    words = re.findall(r"[a-z0-9]+", ascii_text)
+    return tuple(word[:-1] if len(word) > 3 and word.endswith("s") else word for word in words)
+
+
+@cache
+def densities() -> list[tuple[tuple[str, ...], float]]:
+    """Known ingredient names (as words) with their density, longest names first."""
+    path = Path(__file__).parent / "densities.json"
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    names = [
+        (name_words(name), float(entry["density"]))
+        for entry in entries.values()
+        for name in entry["names"]
+    ]
+    return sorted(names, key=lambda item: (len(item[0]), len(" ".join(item[0]))), reverse=True)
+
+
+def find_density(name: str) -> float | None:
+    words = name_words(name)
+    for candidate, density in densities():
+        size = len(candidate)
+        if any(words[i : i + size] == candidate for i in range(len(words) - size + 1)):
+            return density
+    return None
+
+
+def volume_ml(amount: float | None, unit: str, name: str) -> float | None:
+    """Volume of an ingredient in milliliters, if it can be measured with glasses and spoons."""
+    if amount is None:
+        return None
+    if unit in VOLUME_UNITS_ML:
+        return amount * VOLUME_UNITS_ML[unit]
+    if unit in MASS_UNITS_G:
+        density = find_density(name)
+        if density is not None:
+            return amount * MASS_UNITS_G[unit] / density
+    return None
 
 
 def parse_tags(value: object) -> list[str]:
@@ -250,6 +305,7 @@ def recipe_page(
     images: list[Path],
     image_width: int = DEFAULT_IMAGE_WIDTH,
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
+    simple_mode: bool = True,
 ) -> dict[str, object]:
     try:
         document = frontmatter.load(path)
@@ -280,6 +336,19 @@ def recipe_page(
         if image.name == main_image:
             export_image(image, image_dir / "thumbnails" / image.name, thumbnail_width, True)
 
+    ingredient_list = aggregate_ingredients(ingredients)
+    if simple_mode:
+        for ingredient in [*ingredients, *ingredient_list]:
+            amount, unit = ingredient["amount"], str(ingredient["unit"])
+            ingredient["ml"] = volume_ml(amount, unit, str(ingredient["name"]))
+        for ingredient in ingredient_list:
+            if ingredient["unit"] in MASS_UNITS_G and ingredient["ml"] is None:
+                typer.echo(
+                    f"Warning: '{path.name}': unknown density for '{ingredient['name']}', "
+                    "Simple mode will keep the weight",
+                    err=True,
+                )
+
     excluded = {"title", "tags", "portions"}
     properties = [
         {"name": str(key), "value": value} for key, value in metadata.items() if key not in excluded
@@ -293,7 +362,7 @@ def recipe_page(
         "excerpt": first_paragraph(document.content),
         "portions": portions,
         "ingredients": ingredients,
-        "ingredient_list": aggregate_ingredients(ingredients),
+        "ingredient_list": ingredient_list,
         "content": content,
         "main_image": main_image,
         "section_images": section_images,
@@ -316,9 +385,11 @@ def ingredient_html(ingredient: dict[str, object], tag: str) -> str:
         return f"<{tag} data-ingredient>{html.escape(text)}</{tag}>"
     unit, name = str(ingredient["unit"]), str(ingredient["name"])
     text = " ".join(part for part in (format_amount(float(amount)), unit, name) if part)
+    ml = ingredient.get("ml")
+    volume = f' data-ml="{attr(round(ml, 2))}"' if ml is not None else ""
     return (
         f'<{tag} data-ingredient data-amount="{attr(float(amount))}" '
-        f'data-unit="{attr(unit)}" data-name="{attr(name)}">{html.escape(text)}</{tag}>'
+        f'data-unit="{attr(unit)}" data-name="{attr(name)}"{volume}>{html.escape(text)}</{tag}>'
     )
 
 
@@ -400,6 +471,9 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
         "properties": properties,
         "properties_hidden": "" if properties else " hidden",
         "servings_attrs": f' data-portions="{portions}"' if portions else " hidden",
+        "simple_hidden": (
+            "" if any(item.get("ml") for item in recipe["ingredients"]) else " hidden"
+        ),
         "portions": str(portions or ""),
         "ingredient_list": "".join(
             ingredient_html(item, "li") for item in recipe["ingredient_list"]
@@ -480,6 +554,7 @@ def build(
     edit_url: str | None = None,
     image_width: int = DEFAULT_IMAGE_WIDTH,
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
+    simple_mode: bool = True,
 ) -> int:
     source = source.resolve()
     destination = destination.resolve()
@@ -516,7 +591,13 @@ def build(
             fail(f"Recipe filenames must be unique: {path.name}")
         seen.add(slug)
         recipe = recipe_page(
-            path, image_dir, link_targets, images[path.stem], image_width, thumbnail_width
+            path,
+            image_dir,
+            link_targets,
+            images[path.stem],
+            image_width,
+            thumbnail_width,
+            simple_mode,
         )
         recipes.append(recipe)
         page = render_template(
@@ -574,10 +655,17 @@ def build_command(
             "--thumbnail-width", min=1, help="Size of the square home page thumbnails (pixels)"
         ),
     ] = DEFAULT_THUMBNAIL_WIDTH,
+    simple_mode: Annotated[
+        bool,
+        typer.Option(
+            "--simple-mode/--no-simple-mode",
+            help="Offer a switch to measure ingredients with glasses and spoons instead of a scale",
+        ),
+    ] = True,
 ) -> None:
     """Build the static recipe website."""
     edit_url = edit_url or ci_edit_url(source)
-    count = build(source, destination, title, edit_url, image_width, thumbnail_width)
+    count = build(source, destination, title, edit_url, image_width, thumbnail_width, simple_mode)
     typer.echo(f"Built {count} recipes into {destination}")
 
 

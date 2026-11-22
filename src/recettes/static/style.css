@@ -418,6 +418,62 @@ input {
   line-height: 1.2;
 }
 
+.simple-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.simple-toggle[hidden] {
+  display: none;
+}
+
+.simple-toggle input {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--line);
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.simple-toggle input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.15s;
+}
+
+.simple-toggle input:checked {
+  background: var(--accent);
+}
+
+.simple-toggle input:checked::after {
+  transform: translateX(16px);
+}
+
+.simple-toggle input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.simple-toggle input:checked + span {
+  color: var(--ink);
+}
+
 .servings {
   display: flex;
   align-items: center;

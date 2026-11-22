@@ -35,7 +35,7 @@ Repository = "https://github.com/leplatrem/python-recettes"
 recettes = "recettes.cli:app"
 
 [tool.setuptools.package-data]
-recettes = ["static/*", "static/fonts/*", "templates/*"]
+recettes = ["densities.json", "static/*", "static/fonts/*", "templates/*"]
 
 [tool.setuptools_scm]
 # can be empty if no extra settings are needed, presence enables setuptools_scm

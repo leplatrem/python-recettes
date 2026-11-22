@@ -93,6 +93,12 @@ When building, pictures are downscaled. Desired size can be specified from CLI:
 recettes build examples/ --image-width 760 --thumbnail-width 112
 ```
 
+Recipe pages offer a *Simple* switch to measure ingredients with glasses (🥛 = 200 ml) and spoons (🥄 = 15 ml) instead of a scale. Disable it with:
+
+```sh
+recettes build examples/ --no-simple-mode
+```
+
 ## Development
 
 ```sh

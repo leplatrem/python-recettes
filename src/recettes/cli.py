@@ -303,6 +303,22 @@ def rewrite_local_links(content: str, source_path: Path, targets: dict[Path, str
     return re.sub(r'\b(href|src)="([^"]*)"', replace, content)
 
 
+def parse_portions(value: object) -> int | None:
+    """Return portions as a positive integer, or None when it is not one."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, float):
+        if not value.is_integer():
+            return None
+    elif not isinstance(value, (int, str)):
+        return None
+    try:
+        portions = int(value)
+    except ValueError:
+        return None
+    return portions if portions >= 1 else None
+
+
 def recipe_page(
     path: Path,
     image_dir: Path,
@@ -317,19 +333,7 @@ def recipe_page(
     except (OSError, ValueError) as exc:
         fail(f"Could not read recipe '{path.name}': {exc}")
     metadata = document.metadata
-    portions_value = metadata.get("portions")
-    portions = None
-    if portions_value not in (None, ""):
-        try:
-            portions = int(portions_value)
-        except (TypeError, ValueError):
-            fail(f"Recipe '{path.name}' has invalid portions; use a positive integer")
-        if isinstance(portions_value, bool) or (
-            isinstance(portions_value, float) and not portions_value.is_integer()
-        ):
-            fail(f"Recipe '{path.name}' has invalid portions; use a positive integer")
-        if portions < 1:
-            fail(f"Recipe '{path.name}' has invalid portions; use a positive integer")
+    portions = parse_portions(metadata.get("portions"))
 
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
     slug = recipe_slug(path)
@@ -354,7 +358,9 @@ def recipe_page(
                     err=True,
                 )
 
-    excluded = {"title", "tags", "portions"}
+    excluded = {"title", "tags"}
+    if portions is not None or metadata.get("portions") in (None, ""):
+        excluded.add("portions")
     properties = [
         {"name": str(key), "value": value} for key, value in metadata.items() if key not in excluded
     ]

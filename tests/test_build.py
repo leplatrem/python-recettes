@@ -252,6 +252,24 @@ def test_recipe_without_portions_has_no_toggle_and_properties_are_optional(
     assert "<p>Just a recipe.</p>" in recipe
 
 
+@pytest.mark.parametrize("value", ["4 à 6", "beaucoup", "2.5", "0"])
+def test_non_integer_portions_are_rendered_as_text_property(tmp_path: Path, value: str) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "simple.md").write_text(
+        f"---\ntitle: Simple\nportions: '{value}'\n---\n\nJust a recipe.\n", encoding="utf-8"
+    )
+    output = tmp_path / "site"
+
+    build(source, output)
+
+    recipe = (output / "recipes" / "simple.html").read_text(encoding="utf-8")
+    assert '<div class="servings" id="servings-control" hidden>' in recipe
+    assert '<dl class="recipe-properties" id="recipe-properties" hidden>' not in recipe
+    assert "portions" in recipe
+    assert value in recipe
+
+
 def test_local_markdown_recipe_links_resolve_to_recipe_pages(tmp_path: Path) -> None:
     source = tmp_path / "recipes"
     source.mkdir()

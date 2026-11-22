@@ -22,6 +22,7 @@ from recettes.images import export_image
 app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from Markdown.")
 
 INGREDIENT_RE = re.compile(r"\{\{\s*(.*?)\s*\}\}")
+HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 QUANTITY_RE = re.compile(
     r"^(?P<amount>\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)?)"
     r"\s*(?P<unit>(?:c\.?\s*à\.?\s*[sc]\.?|cas|càs|cac|càc|"
@@ -337,7 +338,8 @@ def recipe_page(
 
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
     slug = recipe_slug(path)
-    content, ingredients = markdown_with_ingredients(document.content)
+    body = HTML_COMMENT_RE.sub("", document.content)
+    content, ingredients = markdown_with_ingredients(body)
     content = rewrite_local_links(content, path, link_targets)
     main_image, section_images, gallery = classify_images(path.stem, images, content)
     for image in images:
@@ -370,7 +372,7 @@ def recipe_page(
         "lang": str(metadata.get("lang", "")),
         "tags": parse_tags(metadata.get("tags")),
         "properties": properties,
-        "excerpt": first_paragraph(document.content),
+        "excerpt": first_paragraph(body),
         "portions": portions,
         "ingredients": ingredients,
         "ingredient_list": ingredient_list,

@@ -270,6 +270,27 @@ def test_non_integer_portions_are_rendered_as_text_property(tmp_path: Path, valu
     assert value in recipe
 
 
+def test_html_comments_are_not_rendered(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "gnocchi.md").write_text(
+        "---\ntitle: Gnocchi\n---\n\n<!-- original (IMG_2469.HEIC):\nsecret notes -->\n\n"
+        "Mix {{250g ricotta}} <!-- inline note --> gently.\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "site"
+
+    build(source, output)
+
+    recipe = (output / "recipes" / "gnocchi.html").read_text(encoding="utf-8")
+    index = (output / "index.html").read_text(encoding="utf-8")
+    for page in (recipe, index):
+        assert "IMG_2469" not in page
+        assert "secret notes" not in page
+        assert "inline note" not in page
+    assert "ricotta" in recipe
+
+
 def test_local_markdown_recipe_links_resolve_to_recipe_pages(tmp_path: Path) -> None:
     source = tmp_path / "recipes"
     source.mkdir()

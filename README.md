@@ -22,7 +22,7 @@ examples/
 └── onion-soup-1.webp       # no matching heading: shown at the end of the recipe
 ```
 
-Section pictures use the slug of a heading: lowercase, accents removed, non-alphanumeric characters replaced by dashes (`## Étape 1` → `etape-1`).
+Section pictures use the slug of a heading: lowercase, accents removed, non-alphanumeric characters replaced by dashes (`## Étape 1` → `etape-1`). Supported formats are JPEG, PNG, WebP, AVIF, GIF and HEIC/HEIF (converted to JPEG, e.g. `onion-soup.heic` → `onion-soup.jpg`).
 
 Recipe properties go in YAML front matter. Tags can be a comma-separated string or a YAML list. All properties are optional:
 

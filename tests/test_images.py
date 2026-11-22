@@ -66,3 +66,34 @@ def test_resized_images_drop_exif_but_keep_color_profile(tmp_path: Path) -> None
             assert not image.getexif()
             assert "exif" not in image.info
             assert image.info["icc_profile"] == icc
+
+
+def test_heic_images_are_converted_to_jpeg(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "gnocchi.md").write_text(
+        "# Étape 1\n\nMélangez.\n\n![photo](gnocchi-extra.HEIC)\n", encoding="utf-8"
+    )
+    Image.new("RGB", (2000, 1000), "red").save(source / "gnocchi.heic", format="HEIF")
+    Image.new("RGB", (300, 200), "blue").save(source / "gnocchi-etape-1.heic", format="HEIF")
+    Image.new("RGB", (300, 200), "green").save(source / "gnocchi-extra.HEIC", format="HEIF")
+    output = tmp_path / "site"
+
+    build(source, output, image_width=800, thumbnail_width=100)
+
+    images = output / "assets" / "images"
+    with Image.open(images / "gnocchi.jpg") as image:
+        assert (image.format, image.size) == ("JPEG", (800, 400))
+    with Image.open(images / "thumbnails" / "gnocchi.jpg") as image:
+        assert (image.format, image.size) == ("JPEG", (100, 100))
+    with Image.open(images / "gnocchi-etape-1.jpg") as image:
+        assert (image.format, image.size) == ("JPEG", (300, 200))
+    with Image.open(images / "gnocchi-extra.jpg") as image:
+        assert image.format == "JPEG"
+    assert not list(images.rglob("*.heic")) and not list(images.rglob("*.HEIC"))
+    recipe = (output / "recipes" / "gnocchi.html").read_text(encoding="utf-8")
+    assert "gnocchi-etape-1.jpg" in recipe
+    assert "../assets/images/gnocchi-extra.jpg" in recipe
+    assert "heic" not in recipe.lower()
+    index = (output / "recipes.json").read_text(encoding="utf-8")
+    assert "assets/images/thumbnails/gnocchi.jpg" in index

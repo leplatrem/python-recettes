@@ -17,7 +17,7 @@ import frontmatter
 import typer
 from markdown_it import MarkdownIt
 
-from recettes.images import export_image
+from recettes.images import export_image, output_name
 
 app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from Markdown.")
 
@@ -32,7 +32,7 @@ QUANTITY_RE = re.compile(
     re.IGNORECASE,
 )
 TOKEN_RE = re.compile(r"RECIPEINGREDIENTTOKEN(\d+)END")
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif", ".heic", ".heif"}
 HEADING_RE = re.compile(r"<h([1-6])>(.*?)</h\1>", re.S)
 MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
 # Defaults are twice the stylesheet sizes (recipe page column width, home page card
@@ -256,12 +256,13 @@ def classify_images(
     gallery = []
     for image in images:
         suffix = image.stem[len(stem) + 1 :]
+        name = output_name(image)
         if image.stem == stem and main is None:
-            main = image.name
+            main = name
         elif suffix and suffix in heading_slugs:
-            sections.setdefault(suffix, []).append(image.name)
+            sections.setdefault(suffix, []).append(name)
         else:
-            gallery.append(image.name)
+            gallery.append(name)
     return main, sections, gallery
 
 
@@ -275,7 +276,7 @@ def local_link_targets(paths: list[Path], images: dict[str, list[Path]]) -> dict
     for path in paths:
         targets[path.resolve()] = f"../recipes/{quote(recipe_slug(path), safe='-_')}.html"
         for image in images[path.stem]:
-            targets[image.resolve()] = f"../assets/images/{quote(image.name, safe='-_.')}"
+            targets[image.resolve()] = f"../assets/images/{quote(output_name(image), safe='-_.')}"
     return targets
 
 
@@ -343,9 +344,10 @@ def recipe_page(
     content = rewrite_local_links(content, path, link_targets)
     main_image, section_images, gallery = classify_images(path.stem, images, content)
     for image in images:
-        export_image(image, image_dir / image.name, image_width)
-        if image.name == main_image:
-            export_image(image, image_dir / "thumbnails" / image.name, thumbnail_width, True)
+        name = output_name(image)
+        export_image(image, image_dir / name, image_width)
+        if name == main_image:
+            export_image(image, image_dir / "thumbnails" / name, thumbnail_width, True)
 
     ingredient_list = aggregate_ingredients(ingredients)
     if simple_mode:

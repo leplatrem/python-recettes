@@ -25,6 +25,7 @@ INGREDIENT_RE = re.compile(r"\{\{\s*(.*?)\s*\}\}")
 QUANTITY_RE = re.compile(
     r"^(?P<amount>\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)?)"
     r"\s*(?P<unit>(?:c\.?\s*à\.?\s*[sc]\.?|cas|càs|cac|càc|"
+    r"cucchiain[oi]|cucchiaio?|"
     r"cdita|cda|cc|ct|tl|el|tsk|msk|ts|ss|fl[_ ]?oz|tablespoons?|tbsp|teaspoons?|tsp|cups?|"
     r"ounces?|oz|pounds?|lbs?|kg|mg|g|ml|cl|l)(?![^\W\d_]))?\s*(?P<name>.*)$",
     re.IGNORECASE,
@@ -44,8 +45,12 @@ VOLUME_UNITS_ML = {
     "l": 1000,
     "cups": 240,
     "fl oz": 29.57,
-    **dict.fromkeys(["tbsp", "c. à s.", "EL", "cda", "Cc", "CC", "msk", "ss"], 15),
-    **dict.fromkeys(["tsp", "c. à c.", "TL", "cdita", "cc", "ct", "tsk", "ts"], 5),
+    **dict.fromkeys(
+        ["tbsp", "c. à s.", "EL", "cda", "Cc", "CC", "cucchiaio", "cucchiai", "msk", "ss"], 15
+    ),
+    **dict.fromkeys(
+        ["tsp", "c. à c.", "TL", "cdita", "cc", "ct", "cucchiaino", "cucchiaini", "tsk", "ts"], 5
+    ),
 }
 MASS_UNITS_G = {"mg": 0.001, "g": 1, "kg": 1000, "oz": 28.35, "lb": 453.6}
 

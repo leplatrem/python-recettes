@@ -27,6 +27,9 @@ from recettes.cli import (
         ("2 louches de bouillon", (2.0, "", "louches de bouillon")),
         ("0.5cac", (0.5, "c. à c.", "")),
         ("4 oignons", (4.0, "", "oignons")),
+        ("2 cucchiai di zucchero", (2.0, "cucchiai", "di zucchero")),
+        ("1/2 cucchiaino di sale", (0.5, "cucchiaino", "di sale")),
+        ("3 cucchiaiate di miele", (3.0, "", "cucchiaiate di miele")),
         ("comté râpé", (None, "", "comté râpé")),
     ],
 )
@@ -56,6 +59,10 @@ def test_parse_quantity_and_guessed_count_unit(text: str, parsed: tuple) -> None
         ("1 fl_oz", "fl oz"),
         ("1 floz", "fl oz"),
         ("1 fl oz", "fl oz"),
+        ("1 cucchiaio", "cucchiaio"),
+        ("1 cucchiai", "cucchiai"),
+        ("1 Cucchiaino", "cucchiaino"),
+        ("1 cucchiaini", "cucchiaini"),
     ],
 )
 def test_parse_localized_spoon_units(quantity: str, expected_unit: str) -> None:
@@ -106,6 +113,8 @@ def test_find_density_in_several_languages(name: str, density: float | None) -> 
         (1, "kg", "de beurre", 1000 / 0.91),
         (1, "c. à s.", "d'huile", 15),
         (2, "tsp", "of anything", 10),
+        (2, "cucchiai", "di olio", 30),
+        (1, "cucchiaino", "di sale", 5),
         (0.5, "l", "of water", 500),
         (50, "g", "of fresh ginger", None),
         (4, "", "eggs", None),

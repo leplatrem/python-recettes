@@ -9,6 +9,7 @@ Look at the [examples/](./examples/) folder and how it turned into [this website
 * [Mat's recipes](https://leplatrem.github.io/recettes/)
 * [Alex's recipes](https://recettes.notmyidea.org/)
 * [Nyota33's recipes](https://nyota33.github.io/python-recettes/)
+* [Ari's recipes](https://recetas.ariadnamvalls.com/)
 
 ## Recipe format
 
@@ -24,7 +25,7 @@ examples/
 
 Section pictures use the slug of a heading: lowercase, accents removed, non-alphanumeric characters replaced by dashes (`## Étape 1` → `etape-1`). Supported formats are JPEG, PNG, WebP, AVIF, GIF and HEIC/HEIF (converted to JPEG, e.g. `onion-soup.heic` → `onion-soup.jpg`).
 
-Recipe properties go in YAML front matter. Tags can be a comma-separated string or a YAML list. All properties are optional:
+Recipe properties go in YAML front matter. Tags can be a comma-separated string. All properties are optional:
 
 ```md
 ---
@@ -43,7 +44,9 @@ Peel and thinly slice {{ 4 onions }}.
 Cook them gently in {{ 50g of butter }} and {{ 1 tbsp of oil }}.
 Add {{ 1L of hot water }} and {{ 250ml of white wine }}.
 
-Simmer gently until tender.
+Simmer until tender.
+
+<!-- this comment will be hidden -->
 ```
 
 Write ingredient amounts inside `{{ }}` in the recipe text.
@@ -78,6 +81,12 @@ python -m http.server --directory site/ 8000
 ```
 
 Open <http://127.0.0.1:8000>.
+
+Check recipe Markdown and local links without generating the site:
+
+```sh
+recettes lint examples/
+```
 
 Recipe pages show an edit button linking to the recipe file on your Git forge. When building on GitHub Actions or GitLab CI, its URL is guessed from the CI environment. Elsewhere (e.g. Codeberg, or locally), pass the URL of the recipes folder in the forge's editor with `--edit-url`; the recipe filename is appended to it:
 

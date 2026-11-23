@@ -735,6 +735,36 @@ def build(
     return len(recipes)
 
 
+def lint(source: Path) -> int:
+    """Check recipe files and their local links without generating a website."""
+    source = source.resolve()
+    if not source.is_dir():
+        fail(f"Recipe directory does not exist: {source}")
+    paths = sorted(path for path in source.glob("*.md") if path.is_file())
+    if not paths:
+        fail(f"No Markdown recipes found in {source}")
+    images = assign_images(source, {path.stem for path in paths})
+    link_targets = local_link_targets(paths, images)
+    for path in paths:
+        try:
+            document = frontmatter.load(path)
+        except (OSError, ValueError) as exc:
+            fail(f"Could not read recipe '{path.name}': {exc}")
+        body = HTML_COMMENT_RE.sub("", document.content)
+        content, _ = markdown_with_ingredients(body)
+        rewrite_local_links(content, path, link_targets)
+    return len(paths)
+
+
+@app.command("lint")
+def lint_command(
+    source: Annotated[Path, typer.Argument(help="Directory containing recipe Markdown files")],
+) -> None:
+    """Check recipe content and local links without building the website."""
+    count = lint(source)
+    typer.echo(f"Checked {count} recipes in {source}")
+
+
 @app.command("build")
 def build_command(
     source: Annotated[Path, typer.Argument(help="Directory containing recipe Markdown files")],

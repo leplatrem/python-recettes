@@ -20,6 +20,8 @@ jobs:
         run: uv sync --locked --extra dev
       - name: Lint with Ruff
         run: uv run --locked ruff check .
+      - name: Check recipe content
+        run: uv run --locked recettes lint recipes/
       - name: Run tests
         run: uv run --locked pytest
       - name: Check JavaScript and CSS formatting

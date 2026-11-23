@@ -33,11 +33,22 @@
   "quinoa": { "density": 0.75, "names": ["quinoa"] },
   "lentils": { "density": 0.85, "names": ["lentils", "lentilles", "lenticchie", "lentejas"] },
 
-  "grated cheese": { "density": 0.4, "names": ["grated cheese", "fromage râpé", "gruyère râpé", "comté râpé", "emmental râpé", "parmesan râpé", "formaggio grattugiato", "parmigiano grattugiato", "queso rallado"] },
+  "grated cheese": { "density": 0.4, "names": ["grated cheese", "fromage râpé", "gruyère râpé", "comté râpé", "emmental râpé", "parmesan râpé", "formaggio grattugiato", "parmigiano grattugiato", "parmigiano", "parmesan", "parmesano", "queso rallado", "gruyère rallado", "comté rallado", "emmental rallado", "parmesano rallado"] },
   "grated coconut": { "density": 0.35, "names": ["grated coconut", "desiccated coconut", "shredded coconut", "noix de coco râpée", "coco râpée", "cocco grattugiato", "cocco rapé", "coco rallado"] },
   "chocolate chips": { "density": 0.7, "names": ["chocolate chips", "pépites de chocolat", "gocce di cioccolato", "pepitas de chocolate", "chips de chocolate"] },
   "raisins": { "density": 0.65, "names": ["raisins", "raisins secs", "uvetta", "uva passa", "pasas", "uvas pasas"] },
   "nuts": { "density": 0.45, "names": ["walnuts", "nuts", "hazelnuts", "almonds", "noix", "noisettes", "amandes", "noci", "nocciole", "mandorle", "nueces", "avellanas", "almendras"] },
   "flaked almonds": { "density": 0.35, "names": ["flaked almonds", "sliced almonds", "amandes effilées", "mandorle a lamelle", "almendras laminadas", "almendras fileteadas"] },
+  "crushed tomatoes": { "density": 1.05, "names": ["crushed tomatoes", "tomates concassées", "polpa di pomodoro", "pomodori pelati", "tomate triturado"] },
+  "tahini": { "density": 0.96, "names": ["tahini", "tahin", "tahina", "crème de sésame"] },
+  "chocolate": { "density": 0.6, "names": ["chocolate", "chocolat", "cioccolato"] },
+
+  "feta": { "density": 0.6, "names": ["feta"] },
+  "halloumi": { "density": 0.6, "names": ["halloumi", "hallumi"] },
+  "blue cheese": { "density": 0.5, "names": ["gorgonzola", "roquefort", "blue cheese", "bleu", "queso azul"] },
+  "cream cheese": { "density": 1.0, "names": ["cream cheese", "philadelphia", "fromage frais", "queso crema"] },
+  "tofu": { "density": 0.6, "names": ["tofu"] },
+  "tempeh": { "density": 0.55, "names": ["tempeh"] },
+
   "seeds": { "density": 0.6, "names": ["seeds", "sunflower seeds", "pumpkin seeds", "sesame seeds", "graines", "graines de tournesol", "graines de courge", "graines de sésame", "sésame", "semi di girasole", "semi di zucca", "sesamo", "semillas", "pipas", "pepitas de calabaza", "sésamo"] }
 }

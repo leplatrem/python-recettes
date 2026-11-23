@@ -9,6 +9,7 @@ import typer
 from recettes.cli import (
     aggregate_ingredients,
     build,
+    ci_base_url,
     ci_edit_url,
     find_density,
     parse_quantity,
@@ -434,3 +435,63 @@ def test_ci_edit_url_from_gitlab_ci(tmp_path: Path, no_ci_env: pytest.MonkeyPatc
     no_ci_env.setenv("CI_COMMIT_REF_NAME", "main")
     no_ci_env.setenv("CI_PROJECT_DIR", str(tmp_path))
     assert ci_edit_url(tmp_path / "r") == "https://gitlab.com/me/recipes/-/edit/main/r"
+
+
+def test_ci_base_url_from_github_actions(no_ci_env: pytest.MonkeyPatch) -> None:
+    assert ci_base_url() is None
+    no_ci_env.setenv("GITHUB_ACTIONS", "true")
+    no_ci_env.setenv("GITHUB_SERVER_URL", "https://github.com")
+    no_ci_env.setenv("GITHUB_REPOSITORY", "Me/recipes")
+    assert ci_base_url() == "https://me.github.io/recipes/"
+    no_ci_env.setenv("GITHUB_REPOSITORY", "Me/me.github.io")
+    assert ci_base_url() == "https://me.github.io/"
+    no_ci_env.setenv("GITHUB_SERVER_URL", "https://github.example.com")
+    assert ci_base_url() is None
+
+
+def test_open_graph_tags(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "tarte.md").write_text(
+        '---\ntitle: Tarte "citron"\ntags: dessert, été\n---\n\nUne tarte acidulée.\n',
+        encoding="utf-8",
+    )
+    (source / "tarte.jpg").write_bytes(b"fake jpeg")
+    output = tmp_path / "site"
+
+    build(source, output, title="Mes recettes", base_url="https://example.com/recettes")
+
+    recipe = (output / "recipes" / "tarte.html").read_text(encoding="utf-8")
+    assert '<meta property="og:title" content="Tarte &quot;citron&quot;">' in recipe
+    assert '<meta property="og:type" content="article">' in recipe
+    assert '<meta property="og:site_name" content="Mes recettes">' in recipe
+    assert '<meta property="og:description" content="Une tarte acidulée.">' in recipe
+    assert '<meta name="description" content="Une tarte acidulée.">' in recipe
+    assert (
+        '<meta property="og:url" content="https://example.com/recettes/recipes/tarte.html">'
+        in recipe
+    )
+    assert (
+        '<meta property="og:image" content="https://example.com/recettes/assets/images/tarte.jpg">'
+        in recipe
+    )
+    assert '<meta property="article:tag" content="dessert">' in recipe
+    assert '<meta property="article:tag" content="été">' in recipe
+    index = (output / "index.html").read_text(encoding="utf-8")
+    assert '<meta property="og:type" content="website">' in index
+    assert '<meta property="og:url" content="https://example.com/recettes/">' in index
+
+
+def test_open_graph_tags_without_base_url(tmp_path: Path, no_ci_env: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "tarte.md").write_text("Une tarte.\n", encoding="utf-8")
+    (source / "tarte.jpg").write_bytes(b"fake jpeg")
+    output = tmp_path / "site"
+
+    build(source, output)
+
+    recipe = (output / "recipes" / "tarte.html").read_text(encoding="utf-8")
+    assert '<meta name="description" content="Une tarte.">' in recipe
+    assert "og:" not in recipe
+    assert "og:" not in (output / "index.html").read_text(encoding="utf-8")

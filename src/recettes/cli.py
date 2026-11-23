@@ -535,6 +535,39 @@ def recipe_index_data(recipes: list[dict[str, object]]) -> str:
     return json.dumps(entries, ensure_ascii=False)
 
 
+def meta_tags(
+    title: str,
+    page_type: str,
+    site_name: str,
+    base_url: str | None,
+    path: str,
+    description: str = "",
+    image: str | None = None,
+    tags: list[str] | None = None,
+) -> str:
+    """Description and Open Graph tags; the latter need a base URL, since og:url is absolute."""
+    tags_html = []
+    if description:
+        tags_html.append(f'<meta name="description" content="{attr(description)}">')
+    if base_url:
+        base = base_url.rstrip("/") + "/"
+        properties = [
+            ("og:title", title),
+            ("og:type", page_type),
+            ("og:site_name", site_name),
+            ("og:url", base + path),
+        ]
+        if description:
+            properties.append(("og:description", description))
+        if image:
+            properties.append(("og:image", base + f"assets/images/{quote(image, safe='')}"))
+        properties += [("article:tag", tag) for tag in tags or []]
+        tags_html += [
+            f'<meta property="{name}" content="{attr(value)}">' for name, value in properties
+        ]
+    return "\n    ".join(tags_html)
+
+
 def render_template(path: Path, **values: str) -> str:
     template = path.read_text(encoding="utf-8")
     for name, value in values.items():
@@ -569,6 +602,23 @@ def ci_edit_url(source: Path) -> str | None:
     return "/".join(part for part in (repo_url, edit, ref, folder) if part not in ("", "."))
 
 
+def ci_base_url() -> str | None:
+    """Guess the default GitHub Pages URL of the repository when building on GitHub Actions.
+
+    Sites published on a custom domain must pass their URL explicitly.
+    """
+    env = os.environ
+    repository = env.get("GITHUB_REPOSITORY", "")
+    if not env.get("GITHUB_ACTIONS") or env.get("GITHUB_SERVER_URL") != "https://github.com":
+        return None
+    owner, _, name = repository.partition("/")
+    if not (owner and name):
+        return None
+    host = f"{owner.lower()}.github.io"
+    # A repository named after the Pages host is served at the root.
+    return f"https://{host}/" if name.lower() == host else f"https://{host}/{name}/"
+
+
 def build(
     source: Path,
     destination: Path,
@@ -578,6 +628,7 @@ def build(
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
     simple_mode: bool = True,
     cache_dir: Path | None = None,
+    base_url: str | None = None,
 ) -> int:
     source = source.resolve()
     destination = destination.resolve()
@@ -637,6 +688,16 @@ def build(
             title=html.escape(str(recipe["title"])),
             lang=html.escape(str(recipe["lang"]), quote=True),
             edit_link=edit_link(edit_url, path),
+            meta_tags=meta_tags(
+                str(recipe["title"]),
+                "article",
+                title,
+                base_url,
+                f"recipes/{quote(slug, safe='-_')}.html",
+                str(recipe["excerpt"]),
+                recipe["main_image"],
+                recipe["tags"],
+            ),
             **versions,
             **recipe_html_parts(recipe),
         )
@@ -653,6 +714,7 @@ def build(
         title=html.escape(title),
         lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
         prefetch_links=prefetch_links,
+        meta_tags=meta_tags(title, "website", title, base_url, ""),
         **versions,
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
@@ -705,9 +767,20 @@ def build_command(
             "processed again on the next build",
         ),
     ] = Path(".recettes-cache"),
+    base_url: Annotated[
+        str | None,
+        typer.Option(
+            "--base-url",
+            envvar="RECETTES_BASE_URL",
+            help="Public URL of the website, used for absolute links in Open Graph tags "
+            "(link previews in social networks and messaging apps). "
+            "Defaults to the GitHub Pages URL of the repository on GitHub Actions",
+        ),
+    ] = None,
 ) -> None:
     """Build the static recipe website."""
     edit_url = edit_url or ci_edit_url(source)
+    base_url = base_url or ci_base_url()
     count = build(
         source,
         destination,
@@ -717,6 +790,7 @@ def build_command(
         thumbnail_width,
         simple_mode,
         cache_dir,
+        base_url,
     )
     typer.echo(f"Built {count} recipes into {destination}")
 

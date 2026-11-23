@@ -87,6 +87,12 @@ recettes build examples/ --edit-url https://codeberg.org/USER/REPO/_edit/main/ex
 
 Without an edit URL, the button is not shown.
 
+Pages include [Open Graph](https://ogp.me/) tags, for link previews in social networks and messaging apps. These tags need the public URL of the website, since their links must be absolute. When building on GitHub Actions, the GitHub Pages URL of the repository (`https://USER.github.io/REPO/`) is used. Elsewhere, or with a custom domain, pass the public URL of the website with `--base-url` (or the `RECETTES_BASE_URL` environment variable); without it, the tags are left out:
+
+```sh
+recettes build examples/ --base-url https://recipes.example.com/
+```
+
 When building, pictures are downscaled. Desired size can be specified from CLI:
 
 ```sh

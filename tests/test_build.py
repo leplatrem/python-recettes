@@ -495,3 +495,25 @@ def test_open_graph_tags_without_base_url(tmp_path: Path, no_ci_env: pytest.Monk
     assert '<meta name="description" content="Une tarte.">' in recipe
     assert "og:" not in recipe
     assert "og:" not in (output / "index.html").read_text(encoding="utf-8")
+
+
+def test_license_shown_in_footer(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "eggs.md").write_text("Boil {{ 2 eggs }}.\n", encoding="utf-8")
+
+    build(source, tmp_path / "default")
+    for page in ("index.html", "recipes/eggs.html"):
+        html = (tmp_path / "default" / page).read_text(encoding="utf-8")
+        assert (
+            '<a href="https://creativecommons.org/licenses/by/4.0/">Copyrights CC-BY</a> —'
+            " Built with"
+        ) in html
+
+    build(source, tmp_path / "custom", license="© *Me*")
+    html = (tmp_path / "custom" / "index.html").read_text(encoding="utf-8")
+    assert "© <em>Me</em> — Built with" in html
+
+    build(source, tmp_path / "none", license="")
+    html = (tmp_path / "none" / "index.html").read_text(encoding="utf-8")
+    assert "—" not in html.split('class="site-footer"')[1]

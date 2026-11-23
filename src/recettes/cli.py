@@ -39,6 +39,7 @@ MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
 # thumbnail), so pictures stay sharp on high-density (retina) screens.
 DEFAULT_IMAGE_WIDTH = 2 * 760
 DEFAULT_THUMBNAIL_WIDTH = 2 * 112
+DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
 # Conversions to milliliters or grams, used by the "Simple" mode (glasses and spoons).
 VOLUME_UNITS_ML = {
     "ml": 1,
@@ -568,6 +569,12 @@ def meta_tags(
     return "\n    ".join(tags_html)
 
 
+def license_html(license: str) -> str:
+    """Render the license Markdown for the footer, followed by a separator."""
+    license = license.strip()
+    return f"{MARKDOWN.renderInline(license)} —" if license else ""
+
+
 def render_template(path: Path, **values: str) -> str:
     template = path.read_text(encoding="utf-8")
     for name, value in values.items():
@@ -629,6 +636,7 @@ def build(
     simple_mode: bool = True,
     cache_dir: Path | None = None,
     base_url: str | None = None,
+    license: str = DEFAULT_LICENSE,
 ) -> int:
     source = source.resolve()
     destination = destination.resolve()
@@ -657,6 +665,7 @@ def build(
         shutil.copyfile(static / filename, assets / filename)
         digest = hashlib.sha256((static / filename).read_bytes()).hexdigest()[:10]
         versions[filename.replace(".", "_") + "_version"] = digest
+    footer_license = license_html(license)
     shutil.copytree(static / "fonts", assets / "fonts", dirs_exist_ok=True)
     image_dir = assets / "images"
     recipes_dir = destination / "recipes"
@@ -698,6 +707,7 @@ def build(
                 recipe["main_image"],
                 recipe["tags"],
             ),
+            license=footer_license,
             **versions,
             **recipe_html_parts(recipe),
         )
@@ -715,6 +725,7 @@ def build(
         lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
         prefetch_links=prefetch_links,
         meta_tags=meta_tags(title, "website", title, base_url, ""),
+        license=footer_license,
         **versions,
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
@@ -777,6 +788,14 @@ def build_command(
             "Defaults to the GitHub Pages URL of the repository on GitHub Actions",
         ),
     ] = None,
+    license: Annotated[
+        str,
+        typer.Option(
+            "--license",
+            help="License of the recipes, shown in the footer of every page (Markdown). "
+            "Pass an empty string to hide it",
+        ),
+    ] = DEFAULT_LICENSE,
 ) -> None:
     """Build the static recipe website."""
     edit_url = edit_url or ci_edit_url(source)
@@ -791,6 +810,7 @@ def build_command(
         simple_mode,
         cache_dir,
         base_url,
+        license,
     )
     typer.echo(f"Built {count} recipes into {destination}")
 

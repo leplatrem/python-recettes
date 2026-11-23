@@ -32,7 +32,7 @@ jobs:
           key: recettes-images-${{ github.sha }}
           restore-keys: recettes-images-
       - name: Build recipe website
-        run: uv run --locked recettes build examples --destination site --title "My Recipes"
+        run: uv run --locked recettes build examples --destination site --title "My Recipes" --license "[CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)"
       - name: Compute picture cache key
         id: cache-key
         run: echo "key=recettes-images-${{ hashFiles('.recettes-cache/**') }}" >> "$GITHUB_OUTPUT"

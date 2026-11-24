@@ -20,6 +20,8 @@ jobs:
         run: uv sync --locked
       - name: Lint with Ruff
         run: uv run --locked ruff check .
+      - name: Check types with mypy
+        run: uv run --locked mypy
       - name: Check recipe content
         run: uv run --locked recettes lint examples/
       - name: Check JavaScript and CSS formatting

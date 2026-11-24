@@ -43,7 +43,8 @@ def render_ingredient(
     options: OptionsDict,
     env: EnvType,
 ) -> str:
-    return env["render_ingredient"](tokens[index].meta["ingredient"])
+    render: Callable[[Ingredient], str] = env["render_ingredient"]
+    return render(tokens[index].meta["ingredient"])
 
 
 MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
@@ -64,9 +65,9 @@ def parse(markdown: str) -> list[Token]:
 
 
 def render(tokens: list[Token], ingredient_html: Callable[[Ingredient], str]) -> str:
-    return MARKDOWN.renderer.render(
-        tokens, MARKDOWN.options, {"render_ingredient": ingredient_html}
-    )
+    env = {"render_ingredient": ingredient_html}
+    html: str = MARKDOWN.renderer.render(tokens, MARKDOWN.options, env)
+    return html
 
 
 def inline_tokens(tokens: list[Token]) -> list[Token]:
@@ -130,7 +131,7 @@ def rewrite_local_links(tokens: list[Token], source_path: Path, targets: dict[Pa
     for token in inline_tokens(tokens):
         attribute = {"link_open": "href", "image": "src"}.get(token.type)
         url = token.attrGet(attribute) if attribute else None
-        if not isinstance(url, str):
+        if attribute is None or not isinstance(url, str):
             continue
         parsed = urlsplit(url)
         if parsed.scheme or parsed.netloc or parsed.path.startswith("/") or not parsed.path:

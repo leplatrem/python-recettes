@@ -146,7 +146,8 @@ def build(
         lang = recipe.lang or site_lang
         export_images(recipe, image_dir, options, used_cache)
         page = render_template(
-            templates / "recipe.html",
+            templates,
+            "recipe.html",
             root="../",
             title=html.escape(recipe.title),
             lang=attr(lang),
@@ -169,7 +170,8 @@ def build(
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
     index = render_template(
-        templates / "index.html",
+        templates,
+        "index.html",
         root="",
         title=html.escape(options.title),
         lang=attr(site_lang),

@@ -297,22 +297,22 @@ PARTIAL_RE = re.compile(r"^\{\{> ([\w.-]+) \}\}\n", re.M)
 PLACEHOLDER_RE = re.compile(r"\{\{ (\w+) \}\}")
 
 
-def render_template(path: Traversable, **values: str) -> str:
+def render_template(templates: Traversable, filename: str, /, **values: str) -> str:
     """Fill a template: `{{> file }}` includes a partial, `{{ name }}` inserts a value.
 
     Values are inserted in a single pass, so they are never scanned for placeholders.
     """
 
     def include(match: re.Match[str]) -> str:
-        return (path.parent / "partials" / match.group(1)).read_text(encoding="utf-8")
+        return (templates / "partials" / match.group(1)).read_text(encoding="utf-8")
 
     def value(match: re.Match[str]) -> str:
         name = match.group(1)
         if name not in values:
-            raise KeyError(f"Missing value '{name}' for template {path.name}")
+            raise KeyError(f"Missing value '{name}' for template {filename}")
         return values[name]
 
-    template = PARTIAL_RE.sub(include, path.read_text(encoding="utf-8"))
+    template = PARTIAL_RE.sub(include, (templates / filename).read_text(encoding="utf-8"))
     return PLACEHOLDER_RE.sub(value, template)
 
 

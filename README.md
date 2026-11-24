@@ -144,6 +144,7 @@ recettes build examples/ --no-simple-mode
 uv sync
 uv run recettes --help
 uv run ruff check .
+uv run mypy
 uv run pytest
 npx prettier@3.6.2 --check "src/recettes/static/**/*.{js,css}"
 ```

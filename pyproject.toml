@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = ["mypy>=1.13", "pytest>=8", "ruff>=0.6"]
 
 [project.urls]
 Repository = "https://github.com/leplatrem/python-recettes"
@@ -54,6 +54,14 @@ recettes = ["densities.json", "static/*", "static/fonts/*", "templates/*", "temp
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["frontmatter", "pillow_heif"]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100

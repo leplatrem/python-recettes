@@ -13,7 +13,7 @@ def ci_edit_url(source: Path) -> str | None:
         repo_url = f"{env.get('GITHUB_SERVER_URL')}/{env.get('GITHUB_REPOSITORY')}"
         edit, ref, workspace = "edit", env.get("GITHUB_REF_NAME"), env.get("GITHUB_WORKSPACE")
     elif env.get("GITLAB_CI"):
-        repo_url = env.get("CI_PROJECT_URL")
+        repo_url = env.get("CI_PROJECT_URL", "")
         edit, ref, workspace = "-/edit", env.get("CI_COMMIT_REF_NAME"), env.get("CI_PROJECT_DIR")
     else:
         return None

@@ -1,0 +1,22 @@
+# Checks run in CI. Run them with `uv run pre-commit run --all-files`,
+# or before each commit with `uv run pre-commit install`.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: Lint with Ruff
+        entry: uv run --locked ruff check
+        language: system
+        types: [python]
+      - id: mypy
+        name: Check types with mypy
+        entry: uv run --locked mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: prettier
+        name: Check JavaScript and CSS formatting
+        entry: prettier --check
+        language: node
+        additional_dependencies: ["prettier@3.6.2"]
+        files: ^src/recettes/static/.*\.(js|css)$

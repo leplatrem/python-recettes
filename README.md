@@ -143,10 +143,8 @@ recettes build examples/ --no-simple-mode
 ```sh
 uv sync
 uv run recettes --help
-uv run ruff check .
-uv run mypy
 uv run pytest
-npx prettier@3.6.2 --check "src/recettes/static/**/*.{js,css}"
+uv run pre-commit run --all-files  # Ruff, mypy and Prettier
 ```
 
 ## Release

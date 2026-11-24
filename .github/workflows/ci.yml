@@ -21,14 +21,10 @@ jobs:
           python-version: "3.12"
       - name: Install project and development tools
         run: uv sync --locked
-      - name: Lint with Ruff
-        run: uv run --locked ruff check .
-      - name: Check types with mypy
-        run: uv run --locked mypy
+      - name: Lint Python, JavaScript and CSS
+        run: uv run --locked pre-commit run --all-files --show-diff-on-failure
       - name: Check recipe content
         run: uv run --locked recettes lint examples/
-      - name: Check JavaScript and CSS formatting
-        run: npx --yes prettier@3.6.2 --check "src/recettes/static/**/*.{js,css}"
 
   test:
     runs-on: ubuntu-latest

@@ -14,9 +14,8 @@ from recettes.markdown import (
     TOKEN_RE,
     heading_text,
 )
-from recettes.quantities import (
-    format_amount,
-)
+from recettes.quantities import Ingredient, format_amount
+from recettes.recipes import Recipe
 from recettes.text import slugify
 
 
@@ -24,14 +23,11 @@ def attr(value: object) -> str:
     return html.escape(str(value), quote=True)
 
 
-def ingredient_html(ingredient: dict[str, object], tag: str) -> str:
-    amount = ingredient["amount"]
+def ingredient_html(ingredient: Ingredient, tag: str) -> str:
+    amount, unit, name, ml = ingredient.amount, ingredient.unit, ingredient.name, ingredient.ml
     if amount is None:
-        text = str(ingredient["name"] or ingredient["raw"])
-        return f"<{tag} data-ingredient>{html.escape(text)}</{tag}>"
-    unit, name = str(ingredient["unit"]), str(ingredient["name"])
-    text = " ".join(part for part in (format_amount(float(amount)), unit, name) if part)
-    ml = ingredient.get("ml")
+        return f"<{tag} data-ingredient>{html.escape(name or ingredient.raw)}</{tag}>"
+    text = " ".join(part for part in (format_amount(amount), unit, name) if part)
     volume = f' data-ml="{attr(round(ml, 2))}"' if ml is not None else ""
     return (
         f'<{tag} data-ingredient data-amount="{attr(float(amount))}" '
@@ -39,7 +35,7 @@ def ingredient_html(ingredient: dict[str, object], tag: str) -> str:
     )
 
 
-def insert_ingredients(content: str, ingredients: list[dict[str, object]]) -> str:
+def insert_ingredients(content: str, ingredients: list[Ingredient]) -> str:
     def replace(match: re.Match[str]) -> str:
         return ingredient_html(ingredients[int(match.group(1))], "span")
 
@@ -111,68 +107,64 @@ def insert_section_images(content: str, section_images: dict[str, list[str]], ti
     return content
 
 
-def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
+def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
     tags = "".join(
         f'<a class="tag" href="../index.html?tag={attr(quote(tag, safe="-_.!~*()"))}">'
         f"{html.escape(tag)}</a>"
-        for tag in recipe["tags"]
+        for tag in recipe.tags
     )
     properties = "".join(
-        f'<div class="recipe-property"><dt>{html.escape(property_name(str(item["name"])))}</dt>'
-        f"<dd>{html.escape(property_value(str(item['name']), item['value']))}</dd></div>"
-        for item in recipe["properties"]
+        f'<div class="recipe-property"><dt>{html.escape(property_name(item.name))}</dt>'
+        f"<dd>{html.escape(property_value(item.name, item.value))}</dd></div>"
+        for item in recipe.properties
     )
-    title = str(recipe["title"])
+    title = recipe.title
     gallery = "".join(
-        figure_html(image, f"{title} {index}") for index, image in enumerate(recipe["gallery"], 1)
+        figure_html(image, f"{title} {index}") for index, image in enumerate(recipe.gallery, 1)
     )
-    main_image = recipe["main_image"]
     main = (
-        f'<figure class="recipe-main-image">{image_html(main_image, title, lazy=False)}</figure>'
-        if main_image
+        f'<figure class="recipe-main-image">'
+        f"{image_html(recipe.main_image, title, lazy=False)}</figure>"
+        if recipe.main_image
         else ""
     )
-    content = insert_section_images(str(recipe["content"]), recipe["section_images"], title)
-    portions = recipe["portions"]
+    content = insert_section_images(recipe.content, recipe.section_images, title)
+    portions = recipe.portions
     return {
         "tags": tags,
         "properties": properties,
         "properties_hidden": "" if properties else " hidden",
         "servings_attrs": f' data-portions="{portions}"' if portions else " hidden",
-        "simple_hidden": (
-            "" if any(item.get("ml") for item in recipe["ingredients"]) else " hidden"
-        ),
+        "simple_hidden": ("" if any(item.ml for item in recipe.ingredients) else " hidden"),
         "portions": str(portions or ""),
-        "ingredient_list": "".join(
-            ingredient_html(item, "li") for item in recipe["ingredient_list"]
-        ),
+        "ingredient_list": "".join(ingredient_html(item, "li") for item in recipe.ingredient_list),
         "gallery": gallery,
         "main_image": main,
         # Last: inserted recipe content must not be scanned for other placeholders.
-        "content": insert_ingredients(content, recipe["ingredients"]),
+        "content": insert_ingredients(content, recipe.ingredients),
     }
 
 
-def recipe_index_data(recipes: list[dict[str, object]]) -> str:
+def recipe_index_data(recipes: list[Recipe]) -> str:
     entries = []
     for recipe in recipes:
         search_terms = [
-            str(recipe["title"]),
-            *recipe["tags"],
-            str(recipe["text"]),
-            *(f"{property_['name']} {property_['value']}" for property_ in recipe["properties"]),
+            recipe.title,
+            *recipe.tags,
+            recipe.text,
+            *(f"{item.name} {item.value}" for item in recipe.properties),
         ]
         entries.append(
             {
-                "slug": recipe["slug"],
-                "title": recipe["title"],
-                "tags": recipe["tags"],
-                "excerpt": recipe["excerpt"],
+                "slug": recipe.slug,
+                "title": recipe.title,
+                "tags": recipe.tags,
+                "excerpt": recipe.excerpt,
                 "search": " ".join(search_terms),
-                "lang": recipe["lang"],
+                "lang": recipe.lang,
                 "image": (
-                    f"assets/images/thumbnails/{quote(str(recipe['main_image']), safe='')}"
-                    if recipe["main_image"]
+                    f"assets/images/thumbnails/{quote(recipe.main_image, safe='')}"
+                    if recipe.main_image
                     else None
                 ),
             }

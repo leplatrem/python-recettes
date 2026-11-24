@@ -104,18 +104,18 @@ def build(
         recipes.append(recipe)
         page = render_template(
             templates / "recipe.html",
-            title=html.escape(str(recipe["title"])),
-            lang=html.escape(str(recipe["lang"]), quote=True),
+            title=html.escape(recipe.title),
+            lang=html.escape(recipe.lang, quote=True),
             edit_link=edit_link(edit_url, path),
             meta_tags=meta_tags(
-                str(recipe["title"]),
+                recipe.title,
                 "article",
                 title,
                 base_url,
                 f"recipes/{quote(slug, safe='-_')}.html",
-                str(recipe["excerpt"]),
-                recipe["main_image"],
-                recipe["tags"],
+                recipe.excerpt,
+                recipe.main_image,
+                recipe.tags,
             ),
             license=footer_license,
             **versions,
@@ -123,12 +123,12 @@ def build(
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
     prefetch_links = "\n    ".join(
-        f'<link rel="prefetch" href="recipes/{quote(str(recipe["slug"]), safe="-_")}.html">'
+        f'<link rel="prefetch" href="recipes/{quote(recipe.slug, safe="-_")}.html">'
         for recipe in recipes
     )
     index_data = recipe_index_data(recipes)
     versions["recipes_json_version"] = hashlib.sha256(index_data.encode()).hexdigest()[:10]
-    languages = {str(recipe["lang"]) for recipe in recipes if recipe["lang"]}
+    languages = {recipe.lang for recipe in recipes if recipe.lang}
     index = render_template(
         templates / "index.html",
         title=html.escape(title),

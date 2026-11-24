@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 from urllib.parse import quote
 
@@ -19,11 +20,7 @@ from recettes.markdown import (
     plain_text,
     rewrite_local_links,
 )
-from recettes.quantities import (
-    MASS_UNITS_G,
-    aggregate_ingredients,
-    volume_ml,
-)
+from recettes.quantities import MASS_UNITS_G, Ingredient, aggregate_ingredients, volume_ml
 from recettes.text import natural_key, slugify
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif", ".heic", ".heif"}
@@ -31,6 +28,39 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif", ".heic", 
 # thumbnail), so pictures stay sharp on high-density (retina) screens.
 DEFAULT_IMAGE_WIDTH = 2 * 760
 DEFAULT_THUMBNAIL_WIDTH = 2 * 112
+
+
+@dataclasses.dataclass
+class Property:
+    """Front matter property shown on the recipe page, e.g. `preparation: 45`."""
+
+    name: str
+    value: object
+
+
+@dataclasses.dataclass
+class Recipe:
+    path: Path
+    title: str
+    lang: str
+    tags: list[str]
+    properties: list[Property]
+    # Start of the first paragraph, and the whole text without markup.
+    excerpt: str
+    text: str
+    portions: int | None
+    # As they appear in the text, and summed up for the ingredient list.
+    ingredients: list[Ingredient]
+    ingredient_list: list[Ingredient]
+    content: str
+    # Published picture names.
+    main_image: str | None
+    section_images: dict[str, list[str]]
+    gallery: list[str]
+
+    @property
+    def slug(self) -> str:
+        return self.path.stem
 
 
 def parse_tags(value: object) -> list[str]:
@@ -130,7 +160,7 @@ def recipe_page(
     simple_mode: bool = True,
     cache_dir: Path | None = None,
     used_cache: set[Path] | None = None,
-) -> dict[str, object]:
+) -> Recipe:
     try:
         document = frontmatter.load(path)
     except (OSError, ValueError) as exc:
@@ -140,7 +170,6 @@ def recipe_page(
     lang = str(metadata.get("lang", ""))
 
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
-    slug = path.stem
     body = HTML_COMMENT_RE.sub("", document.content)
     content, ingredients = markdown_with_ingredients(body)
     content = rewrite_local_links(content, path, link_targets)
@@ -159,12 +188,11 @@ def recipe_page(
     ingredient_list = aggregate_ingredients(ingredients)
     if simple_mode:
         for ingredient in [*ingredients, *ingredient_list]:
-            amount, unit = ingredient["amount"], str(ingredient["unit"])
-            ingredient["ml"] = volume_ml(amount, unit, str(ingredient["name"]), lang)
+            ingredient.ml = volume_ml(ingredient.amount, ingredient.unit, ingredient.name, lang)
         for ingredient in ingredient_list:
-            if ingredient["unit"] in MASS_UNITS_G and ingredient["ml"] is None:
+            if ingredient.unit in MASS_UNITS_G and ingredient.ml is None:
                 typer.echo(
-                    f"Warning: '{path.name}': unknown density for '{ingredient['name']}', "
+                    f"Warning: '{path.name}': unknown density for '{ingredient.name}', "
                     "Simple mode will keep the weight",
                     err=True,
                 )
@@ -173,21 +201,21 @@ def recipe_page(
     if portions is not None or metadata.get("portions") in (None, ""):
         excluded.add("portions")
     properties = [
-        {"name": str(key), "value": value} for key, value in metadata.items() if key not in excluded
+        Property(str(key), value) for key, value in metadata.items() if key not in excluded
     ]
-    return {
-        "slug": slug,
-        "title": title,
-        "lang": lang,
-        "tags": parse_tags(metadata.get("tags")),
-        "properties": properties,
-        "excerpt": first_paragraph(body),
-        "text": plain_text(body),
-        "portions": portions,
-        "ingredients": ingredients,
-        "ingredient_list": ingredient_list,
-        "content": content,
-        "main_image": main_image,
-        "section_images": section_images,
-        "gallery": gallery,
-    }
+    return Recipe(
+        path=path,
+        title=title,
+        lang=lang,
+        tags=parse_tags(metadata.get("tags")),
+        properties=properties,
+        excerpt=first_paragraph(body),
+        text=plain_text(body),
+        portions=portions,
+        ingredients=ingredients,
+        ingredient_list=ingredient_list,
+        content=content,
+        main_image=main_image,
+        section_images=section_images,
+        gallery=gallery,
+    )

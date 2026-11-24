@@ -10,9 +10,7 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 from markdown_it import MarkdownIt
 
 from recettes.errors import fail
-from recettes.quantities import (
-    parse_quantity,
-)
+from recettes.quantities import Ingredient
 
 INGREDIENT_RE = re.compile(r"\{\{\s*(.*?)\s*\}\}")
 HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
@@ -21,13 +19,11 @@ HEADING_RE = re.compile(r"<h([1-6])>(.*?)</h\1>", re.S)
 MARKDOWN = MarkdownIt("default", {"html": False, "typographer": True})
 
 
-def markdown_with_ingredients(markdown: str) -> tuple[str, list[dict[str, object]]]:
-    ingredients: list[dict[str, object]] = []
+def markdown_with_ingredients(markdown: str) -> tuple[str, list[Ingredient]]:
+    ingredients: list[Ingredient] = []
 
     def replace(match: re.Match[str]) -> str:
-        raw = match.group(1).strip()
-        amount, unit, name = parse_quantity(raw)
-        ingredients.append({"amount": amount, "unit": unit, "name": name, "raw": raw})
+        ingredients.append(Ingredient.parse(match.group(1).strip()))
         return f"RECIPEINGREDIENTTOKEN{len(ingredients) - 1}END"
 
     rendered = MARKDOWN.render(INGREDIENT_RE.sub(replace, markdown))

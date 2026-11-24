@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 from fractions import Fraction
@@ -117,23 +118,33 @@ def volume_ml(amount: float | None, unit: str, name: str, lang: str = "") -> flo
     return None
 
 
-def aggregate_ingredients(ingredients: list[dict[str, object]]) -> list[dict[str, object]]:
-    grouped: dict[tuple[str, str], dict[str, object]] = {}
+@dataclasses.dataclass
+class Ingredient:
+    """An ingredient written as `{{ raw }}` in a recipe, e.g. `{{ 50g of butter }}`."""
+
+    raw: str
+    amount: float | None
+    unit: str
+    name: str
+    # Volume in milliliters, for the "Simple" mode.
+    ml: float | None = None
+
+    @classmethod
+    def parse(cls, raw: str) -> Ingredient:
+        amount, unit, name = parse_quantity(raw)
+        return cls(raw=raw, amount=amount, unit=unit, name=name)
+
+
+def aggregate_ingredients(ingredients: list[Ingredient]) -> list[Ingredient]:
+    """Sum the amounts of ingredients with the same unit and name."""
+    grouped: dict[tuple[str, str], Ingredient] = {}
     for ingredient in ingredients:
-        amount = ingredient["amount"]
-        unit = str(ingredient["unit"])
-        name = str(ingredient["name"])
-        normalized_name = " ".join(name.casefold().split())
-        if amount is None:
-            key = ("plain", normalized_name)
-        elif normalized_name:
-            key = (unit, normalized_name)
-        else:
-            key = (unit, "")
+        normalized_name = " ".join(ingredient.name.casefold().split())
+        key = ("plain" if ingredient.amount is None else ingredient.unit, normalized_name)
         if key not in grouped:
-            grouped[key] = dict(ingredient)
-        elif amount is not None:
-            grouped[key]["amount"] = float(grouped[key]["amount"]) + float(amount)
+            grouped[key] = dataclasses.replace(ingredient)
+        elif ingredient.amount is not None:
+            grouped[key].amount = (grouped[key].amount or 0) + ingredient.amount
     return list(grouped.values())
 
 

@@ -7,7 +7,13 @@ import pytest
 
 from recettes.ci import ci_base_url, ci_edit_url
 from recettes.errors import RecettesError
-from recettes.quantities import aggregate_ingredients, find_density, parse_quantity, volume_ml
+from recettes.quantities import (
+    Ingredient,
+    aggregate_ingredients,
+    find_density,
+    parse_quantity,
+    volume_ml,
+)
 from recettes.site import build
 
 
@@ -67,15 +73,15 @@ def test_parse_localized_spoon_units(quantity: str, expected_unit: str) -> None:
 
 def test_aggregate_repeated_ingredients_by_name_and_unit() -> None:
     ingredients = [
-        {"amount": 50.0, "unit": "g", "name": "de beurre", "raw": "50g de beurre"},
-        {"amount": 20.0, "unit": "g", "name": "de beurre", "raw": "20g de beurre"},
-        {"amount": 0.5, "unit": "cac", "name": "de sel", "raw": "1/2 cac de sel"},
-        {"amount": 0.5, "unit": "cac", "name": "de sel", "raw": "0.5cac de sel"},
+        Ingredient(raw="50g de beurre", amount=50.0, unit="g", name="de beurre"),
+        Ingredient(raw="20g de beurre", amount=20.0, unit="g", name="de beurre"),
+        Ingredient(raw="1/2 cac de sel", amount=0.5, unit="cac", name="de sel"),
+        Ingredient(raw="0.5cac de sel", amount=0.5, unit="cac", name="de sel"),
     ]
 
     aggregated = aggregate_ingredients(ingredients)
 
-    assert [(item["amount"], item["unit"], item["name"]) for item in aggregated] == [
+    assert [(item.amount, item.unit, item.name) for item in aggregated] == [
         (70.0, "g", "de beurre"),
         (1.0, "cac", "de sel"),
     ]

@@ -210,12 +210,7 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert '<html lang="fr">' in recipe
     assert "<title>Soupe à l&#x27;oignon</title>" in recipe
     assert '<a class="tag" href="../index.html?tag=hiver">hiver</a>' in recipe
-    properties = [
-        ("Preparation", "45 min"),
-        ("Cuisson", "15 min"),
-        ("Lang", "fr"),
-        ("Auteur", "Test"),
-    ]
+    properties = [("preparation", "45"), ("cuisson", "15"), ("lang", "fr"), ("auteur", "Test")]
     for name, value in properties:
         assert f"<dt>{name}</dt><dd>{value}</dd>" in recipe
     assert '<div class="servings" id="servings-control" data-portions="4">' in recipe
@@ -280,7 +275,7 @@ def test_non_integer_portions_are_rendered_as_text_property(tmp_path: Path, valu
     recipe = (output / "recipes" / "simple.html").read_text(encoding="utf-8")
     assert '<div class="servings" id="servings-control" hidden>' in recipe
     assert '<dl class="recipe-properties" id="recipe-properties" hidden>' not in recipe
-    assert "<dt>Portions</dt>" in recipe
+    assert "<dt>portions</dt>" in recipe
     assert value in recipe
 
 

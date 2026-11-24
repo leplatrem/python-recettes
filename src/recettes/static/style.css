@@ -599,10 +599,10 @@ input {
 
 .recipe-schema {
   width: max-content;
-  max-width: calc(100vw - 36px);
+  /* Aligned with the text, wide diagrams extend into the right page margin. */
+  max-width: calc(50vw + 50% - 18px);
   overflow-x: auto;
-  margin: 0 0 24px 50%;
-  transform: translateX(-50%);
+  margin: 0 0 24px;
   border: 2px solid var(--accent);
 }
 

@@ -44,7 +44,12 @@
         <figure class="recipe-main-image">{{ picture(recipe, recipe.main_image, recipe.title, lazy=False) }}</figure>
 {% endif %}
         <div class="recipe-content" id="recipe-content">{{ content }}</div>
-        <div class="recipe-schema">{{ diagram }}</div>
+{% if diagram %}
+        <section class="recipe-summary">
+          <h2 class="summary-title">{{ t.summary }}</h2>
+          <div class="recipe-schema">{{ diagram }}</div>
+        </section>
+{% endif %}
         <div class="recipe-gallery" id="recipe-gallery">
           {%- for image in recipe.gallery %}{{ figure(recipe, image, gallery_alt(recipe, image, loop.index, lang)) }}{% endfor -%}
         </div>

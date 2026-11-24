@@ -567,7 +567,8 @@ input {
 
 .recipe-content h1,
 .recipe-content h2,
-.recipe-content h3 {
+.recipe-content h3,
+.summary-title {
   margin: 30px 0 10px;
   font-family: var(--serif);
   font-size: 1.5rem;
@@ -603,10 +604,6 @@ input {
   margin: 0 0 24px 50%;
   transform: translateX(-50%);
   border: 2px solid var(--accent);
-}
-
-.recipe-schema:empty {
-  display: none;
 }
 
 .schema-step,

@@ -398,8 +398,9 @@ def build_one(tmp_path: Path, markdown: str, diagrams: bool = True) -> str:
     build(source, tmp_path / "site", BuildOptions(diagrams=diagrams))
     page = (tmp_path / "site" / "recipes" / "recipe.html").read_text(encoding="utf-8")
     match = re.search(r'<div class="recipe-schema">(.*)</div>\n', page)
-    assert match
-    return match.group(1)
+    # The summary title is only shown with a diagram.
+    assert bool(match) == ('<h2 class="summary-title">' in page)
+    return match.group(1) if match else ""
 
 
 def test_diagram_nests_each_step_around_the_one_before(tmp_path: Path) -> None:

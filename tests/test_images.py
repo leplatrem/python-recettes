@@ -28,6 +28,14 @@ def test_images_are_downscaled_and_main_picture_has_a_thumbnail(tmp_path: Path) 
     assert not (images / "thumbnails" / "tarte-etape-1.png").exists()
     with Image.open(source / "tarte.jpg") as image:
         assert image.size == (2000, 1000)
+    with Image.open(images / "small" / "tarte.jpg") as image:
+        assert image.size == (400, 200)
+    assert not (images / "small" / "tarte-etape-1.png").exists()
+    recipe = (output / "recipes" / "tarte.html").read_text(encoding="utf-8")
+    assert (
+        'srcset="../assets/images/small/tarte.jpg 400w, ../assets/images/tarte.jpg 800w"'
+    ) in recipe
+    assert 'src="../assets/images/tarte-etape-1.png" width="300" height="600"' in recipe
 
 
 def test_multi_picture_jpegs_from_phones_are_downscaled(tmp_path: Path) -> None:
@@ -124,12 +132,16 @@ def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> N
         tmp_path / "site",
         BuildOptions(image_width=800, thumbnail_width=100, cache_dir=cache),
     )
+    # Each picture also has a small version, half as wide.
     assert sorted(calls) == [
+        ("tarte-1.png", 400, False),
         ("tarte-1.png", 800, False),
+        ("tarte.jpg", 50, True),
         ("tarte.jpg", 100, True),
+        ("tarte.jpg", 400, False),
         ("tarte.jpg", 800, False),
     ]
-    assert len(list(cache.iterdir())) == 3
+    assert len(list(cache.iterdir())) == 6
 
     # A fresh output directory is filled from the cache.
     calls.clear()
@@ -144,15 +156,20 @@ def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> N
     # Only changed pictures (or settings) are processed again; stale entries are pruned.
     Image.new("RGB", (2000, 1000), "green").save(source / "tarte-1.png")
     build(source, output, BuildOptions(image_width=800, thumbnail_width=100, cache_dir=cache))
-    assert calls == [("tarte-1.png", 800, False)]
-    assert len(list(cache.iterdir())) == 3
+    assert calls == [("tarte-1.png", 800, False), ("tarte-1.png", 400, False)]
+    assert len(list(cache.iterdir())) == 6
     with Image.open(output / "assets" / "images" / "tarte-1.png") as image:
         assert image.getpixel((0, 0)) == (0, 128, 0)
 
     calls.clear()
     build(source, output, BuildOptions(image_width=600, thumbnail_width=100, cache_dir=cache))
-    assert sorted(calls) == [("tarte-1.png", 600, False), ("tarte.jpg", 600, False)]
-    assert len(list(cache.iterdir())) == 3
+    assert sorted(calls) == [
+        ("tarte-1.png", 300, False),
+        ("tarte-1.png", 600, False),
+        ("tarte.jpg", 300, False),
+        ("tarte.jpg", 600, False),
+    ]
+    assert len(list(cache.iterdir())) == 6
 
 
 def test_unreadable_picture_warns_on_stderr(

@@ -71,11 +71,32 @@ def size_attributes(recipe: Recipe, path: str) -> str:
     return f' width="{size[0]}" height="{size[1]}"' if size else ""
 
 
+# Displayed width of recipe page pictures, see `.recipe-page` in the stylesheet.
+PICTURE_SIZES = "(min-width: 796px) 760px, calc(100vw - 36px)"
+THUMBNAIL_SIZES = "(max-width: 480px) 88px, 112px"
+
+
+def srcset_attributes(recipe: Recipe, folder: str, url: str, image: str, sizes: str) -> str:
+    """Let browsers pick the small version of a picture when it is sharp enough.
+
+    `folder` is the picture folder within the images folder, `url` the URL of the latter.
+    """
+    small, large = (
+        recipe.picture_sizes.get(f"{path}{image}") for path in (f"{folder}small/", folder)
+    )
+    if not (small and large):
+        return ""
+    name = quote(image, safe="")
+    srcset = f"{url}{folder}small/{name} {small[0]}w, {url}{folder}{name} {large[0]}w"
+    return f' srcset="{attr(srcset)}" sizes="{sizes}"'
+
+
 def image_html(recipe: Recipe, image: str, alt: str, lazy: bool = True) -> str:
     loading = ' loading="lazy"' if lazy else ""
     src = f"../assets/images/{quote(image, safe='')}"
+    srcset = srcset_attributes(recipe, "", "../assets/images/", image, PICTURE_SIZES)
     dimensions = size_attributes(recipe, image)
-    return f'<img{loading} src="{attr(src)}"{dimensions} alt="{attr(alt)}">'
+    return f'<img{loading} src="{attr(src)}"{srcset}{dimensions} alt="{attr(alt)}">'
 
 
 def gallery_alt(recipe: Recipe, image: str, index: int) -> str:
@@ -167,12 +188,14 @@ def recipe_card_html(recipe: Recipe) -> str:
     classes = "recipe-card has-image" if recipe.main_image else "recipe-card"
     excerpt = f'<p class="card-excerpt">{html.escape(recipe.excerpt)}</p>' if recipe.excerpt else ""
     tags = "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in recipe.tags)
-    image = (
-        f'<img class="card-image" src="{attr(thumbnail_url(recipe.main_image))}"'
-        f'{size_attributes(recipe, f"thumbnails/{recipe.main_image}")} alt="" loading="lazy">'
-        if recipe.main_image
-        else ""
-    )
+    image = ""
+    if recipe.main_image:
+        name = recipe.main_image
+        image = (
+            f'<img class="card-image" src="{attr(thumbnail_url(name))}"'
+            f"{srcset_attributes(recipe, 'thumbnails/', 'assets/images/', name, THUMBNAIL_SIZES)}"
+            f'{size_attributes(recipe, f"thumbnails/{name}")} alt="" loading="lazy">'
+        )
     return (
         f'<article class="{classes}"{lang} data-search="{attr(search_text(recipe))}" '
         f'data-tags="{attr(json.dumps(recipe.tags, ensure_ascii=False))}">'

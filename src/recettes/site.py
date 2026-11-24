@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import hashlib
 import html
@@ -53,20 +54,34 @@ def export_images(
     options: BuildOptions,
     used_cache: set[Path],
 ) -> None:
-    """Publish the recipe pictures, and a square thumbnail of the main one."""
+    """Publish the recipe pictures, and a square thumbnail of the main one.
+
+    Each picture also gets a version half as wide in a `small/` folder, for screens that do
+    not have a high density.
+    """
     for image in recipe.images:
         name = output_name(image)
-        exports = [(name, options.image_width, False)]
+        exports = [("", options.image_width, False)]
         if name == recipe.main_image:
-            exports.append((f"thumbnails/{name}", options.thumbnail_width, True))
-        for path, width, square in exports:
-            target = image_dir / path
-            entry = cached_export_image(image, target, width, square, options.cache_dir)
-            if entry is not None:
-                used_cache.add(entry)
-            size = image_size(target) if target.exists() else None
-            if size:
-                recipe.picture_sizes[path] = size
+            exports.append(("thumbnails/", options.thumbnail_width, True))
+        for folder, width, square in exports:
+            for path, variant_width in ((folder, width), (f"{folder}small/", max(1, width // 2))):
+                target = image_dir / path / name
+                entry = cached_export_image(image, target, variant_width, square, options.cache_dir)
+                if entry is not None:
+                    used_cache.add(entry)
+                size = image_size(target) if target.exists() else None
+                if size:
+                    recipe.picture_sizes[f"{path}{name}"] = size
+            # Small pictures are not downscaled: no need for a small version.
+            small, large = (
+                recipe.picture_sizes.get(f"{path}{name}") for path in (f"{folder}small/", folder)
+            )
+            if small and (not large or small[0] >= large[0]):
+                (image_dir / folder / "small" / name).unlink()
+                with contextlib.suppress(OSError):  # Only when empty.
+                    (image_dir / folder / "small").rmdir()
+                del recipe.picture_sizes[f"{folder}small/{name}"]
 
 
 def build(

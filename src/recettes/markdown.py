@@ -108,8 +108,11 @@ def first_paragraph(tokens: list[Token], limit: int = 180) -> str:
         inline = tokens[index + 1]
         if token.type == "paragraph_open" and inline.type == "inline":
             text = inline_text(inline)
+            if len(text) > limit:
+                # Cut between words, and show that the text goes on.
+                text = text[: limit + 1].rsplit(" ", 1)[0].rstrip(" ,;:.") + "…"
             if text:
-                return text[:limit].rstrip()
+                return text
     return ""
 
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from recettes import markdown
 from recettes.ci import ci_base_url, ci_edit_url
 from recettes.errors import RecettesError
 from recettes.quantities import (
@@ -404,7 +405,7 @@ def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
     build(source, tmp_path / "plain")
     plain = (tmp_path / "plain" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
     assert "{{ edit_link }}" not in plain
-    assert "aria-label=\"Edit" not in plain
+    assert 'aria-label="Edit' not in plain
 
     build(
         source,
@@ -598,3 +599,13 @@ def test_lint_checks_links_and_densities(
     (source / "soup.md").write_text("Serve with [bread](bread.md).\n", encoding="utf-8")
     with pytest.raises(RecettesError, match="links to missing file 'bread.md'"):
         lint(source)
+
+
+def test_long_excerpt_is_cut_between_words() -> None:
+    tokens = markdown.parse("Whisk the eggs with sugar, then fold in the flour gently.")
+
+    assert markdown.first_paragraph(tokens, limit=30) == "Whisk the eggs with sugar…"
+    assert (
+        markdown.first_paragraph(tokens)
+        == "Whisk the eggs with sugar, then fold in the flour gently."
+    )

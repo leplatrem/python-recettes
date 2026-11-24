@@ -300,15 +300,11 @@ def classify_images(
     return main, sections, gallery
 
 
-def recipe_slug(path: Path) -> str:
-    return path.stem
-
-
 def local_link_targets(paths: list[Path], images: dict[str, list[Path]]) -> dict[Path, str]:
     """Map source files that end up in the site to their URL from a recipe page."""
     targets = {}
     for path in paths:
-        targets[path.resolve()] = f"../recipes/{quote(recipe_slug(path), safe='-_')}.html"
+        targets[path.resolve()] = f"../recipes/{quote(path.stem, safe='-_')}.html"
         for image in images[path.stem]:
             targets[image.resolve()] = f"../assets/images/{quote(output_name(image), safe='-_.')}"
     return targets
@@ -375,7 +371,7 @@ def recipe_page(
     lang = str(metadata.get("lang", ""))
 
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
-    slug = recipe_slug(path)
+    slug = path.stem
     body = HTML_COMMENT_RE.sub("", document.content)
     content, ingredients = markdown_with_ingredients(body)
     content = rewrite_local_links(content, path, link_targets)
@@ -733,13 +729,9 @@ def build(
     recipes = []
     images = assign_images(source, {path.stem for path in paths})
     link_targets = local_link_targets(paths, images)
-    seen = set()
     used_cache: set[Path] = set()
     for path in paths:
-        slug = recipe_slug(path)
-        if slug in seen:
-            fail(f"Recipe filenames must be unique: {path.name}")
-        seen.add(slug)
+        slug = path.stem
         recipe = recipe_page(
             path,
             image_dir,

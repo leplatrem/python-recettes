@@ -406,7 +406,7 @@ def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
     page = (tmp_path / "edit" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
     assert (
         '<a href="https://codeberg.org/me/recipes/_edit/main/r/soupe%20oignon.md" '
-        'aria-label="Edit" title="Edit">✎</a>'
+        'aria-label="Edit" title="Edit" target="_blank">✎</a>'
     ) in page
 
 

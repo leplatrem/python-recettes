@@ -226,6 +226,8 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     index_data = json.loads((output / "recipes.json").read_text(encoding="utf-8"))
     assert "4 oignons" in index_data[0]["search"]
     assert "auteur Test" in index_data[0]["search"]
+    assert "<" not in index_data[0]["search"]
+    assert "TOKEN" not in index_data[0]["search"]
     assert index_data[0]["excerpt"] == "Mélangez 4 oignons et 50g de beurre."
     assert (
         '<img loading="lazy" src="../assets/images/soupe-oignon-1.jpg" '

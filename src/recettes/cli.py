@@ -187,6 +187,22 @@ def markdown_with_ingredients(markdown: str) -> tuple[str, list[dict[str, object
     return rendered, ingredients
 
 
+def plain_text(markdown: str) -> str:
+    """Text of the recipe without markup, ingredients written as in the source."""
+    parts = []
+    for token in MARKDOWN.parse(markdown):
+        if token.type in {"fence", "code_block"}:
+            parts.append(token.content)
+        for child in token.children or []:
+            if child.type in {"text", "code_inline"}:
+                parts.append(child.content)
+            elif child.type in {"softbreak", "hardbreak"}:
+                parts.append(" ")
+        parts.append(" ")
+    text = INGREDIENT_RE.sub(lambda match: match.group(1), "".join(parts))
+    return " ".join(text.split())
+
+
 def first_paragraph(markdown: str, limit: int = 180) -> str:
     tokens = MARKDOWN.parse(markdown)
     for index, token in enumerate(tokens):
@@ -383,6 +399,7 @@ def recipe_page(
         "tags": parse_tags(metadata.get("tags")),
         "properties": properties,
         "excerpt": first_paragraph(body),
+        "text": plain_text(body),
         "portions": portions,
         "ingredients": ingredients,
         "ingredient_list": ingredient_list,
@@ -514,8 +531,7 @@ def recipe_index_data(recipes: list[dict[str, object]]) -> str:
         search_terms = [
             str(recipe["title"]),
             *recipe["tags"],
-            str(recipe["content"]),
-            *(str(ingredient["raw"]) for ingredient in recipe["ingredients"]),
+            str(recipe["text"]),
             *(f"{property_['name']} {property_['value']}" for property_ in recipe["properties"]),
         ]
         entries.append(
@@ -524,7 +540,7 @@ def recipe_index_data(recipes: list[dict[str, object]]) -> str:
                 "title": recipe["title"],
                 "tags": recipe["tags"],
                 "excerpt": recipe["excerpt"],
-                "search": " ".join([*search_terms, str(recipe["excerpt"])]),
+                "search": " ".join(search_terms),
                 "lang": recipe["lang"],
                 "image": (
                     f"assets/images/thumbnails/{quote(str(recipe['main_image']), safe='')}"

@@ -1,8 +1,10 @@
 from pathlib import Path
 
+import pytest
 from PIL import Image, ImageCms
 
 from recettes.cli import build
+from recettes.images import export_image
 
 
 def test_images_are_downscaled_and_main_picture_has_a_thumbnail(tmp_path: Path) -> None:
@@ -147,3 +149,16 @@ def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> N
     build(source, output, image_width=600, thumbnail_width=100, cache_dir=cache)
     assert sorted(calls) == [("tarte-1.png", 600, False), ("tarte.jpg", 600, False)]
     assert len(list(cache.iterdir())) == 3
+
+
+def test_unreadable_picture_warns_on_stderr(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "broken.jpg"
+    source.write_bytes(b"not an image")
+
+    export_image(source, tmp_path / "out" / "broken.jpg", 100)
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Warning: could not resize" in captured.err

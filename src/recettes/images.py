@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import re
 import shutil
+import sys
 from pathlib import Path
 
 import PIL
@@ -65,9 +66,9 @@ def export_image(source: Path, destination: Path, width: int, square: bool = Fal
                 return
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         if source.suffix.lower() in CONVERTED_TO_JPEG:
-            print(f"Could not convert {source} to JPEG, skip: {exc}")
+            print(f"Warning: could not convert {source} to JPEG, skip: {exc}", file=sys.stderr)
             return
-        print(f"Could not resize {source}, skip: {exc}")
+        print(f"Warning: could not resize {source}, copy as is: {exc}", file=sys.stderr)
     shutil.copyfile(source, destination)
 
 

@@ -17,6 +17,7 @@
         <input id="recipe-search" type="search" aria-label="Search recipes" placeholder="{{ search_placeholder }}" autocomplete="off">
       </label>
       <div class="tag-cloud" id="tag-cloud" data-requires-js hidden>{{ tag_cloud }}</div>
+      <p class="search-status" id="search-status" role="status" data-none="No recipes found" data-one="{count} recipe" data-other="{count} recipes"></p>
       <div class="recipe-grid" id="recipe-grid">{{ recipe_cards }}</div>
     </main>
 {{> footer.html }}

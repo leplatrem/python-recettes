@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 from urllib.parse import quote
 
@@ -202,11 +203,27 @@ def license_html(license: str) -> str:
     return f"{markdown.MARKDOWN.renderInline(license)} —" if license else ""
 
 
+PARTIAL_RE = re.compile(r"^\{\{> ([\w.-]+) \}\}\n", re.M)
+PLACEHOLDER_RE = re.compile(r"\{\{ (\w+) \}\}")
+
+
 def render_template(path: Path, **values: str) -> str:
-    template = path.read_text(encoding="utf-8")
-    for name, value in values.items():
-        template = template.replace("{{ " + name + " }}", value)
-    return template
+    """Fill a template: `{{> file }}` includes a partial, `{{ name }}` inserts a value.
+
+    Values are inserted in a single pass, so they are never scanned for placeholders.
+    """
+
+    def include(match: re.Match[str]) -> str:
+        return (path.parent / "partials" / match.group(1)).read_text(encoding="utf-8")
+
+    def value(match: re.Match[str]) -> str:
+        name = match.group(1)
+        if name not in values:
+            raise KeyError(f"Missing value '{name}' for template {path.name}")
+        return values[name]
+
+    template = PARTIAL_RE.sub(include, path.read_text(encoding="utf-8"))
+    return PLACEHOLDER_RE.sub(value, template)
 
 
 def edit_link(edit_url: str | None, path: Path) -> str:

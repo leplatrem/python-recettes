@@ -1,14 +1,7 @@
 <!doctype html>
 <html lang="{{ lang }}">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
-    <title>{{ title }}</title>
-    {{ meta_tags }}
-    <link rel="stylesheet" href="../assets/style.css?v={{ style_css_version }}">
+{{> head.html }}
     <script type="module" src="../assets/recipe.js?v={{ recipe_js_version }}"></script>
   </head>
   <body>
@@ -45,10 +38,6 @@
         <div class="recipe-gallery" id="recipe-gallery">{{ gallery }}</div>
       </article>
     </main>
-    <footer class="site-footer">
-      {{ license }} Built with
-      <a href="https://github.com/leplatrem/python-recettes">Recettes</a>, the free software
-      that turns Markdown files into a recipes website.
-    </footer>
+{{> footer.html }}
   </body>
 </html>

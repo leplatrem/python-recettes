@@ -109,6 +109,7 @@ def build(
         export_images(recipe, image_dir, options, used_cache)
         page = render_template(
             templates / "recipe.html",
+            root="../",
             title=html.escape(recipe.title),
             lang=html.escape(recipe.lang, quote=True),
             edit_link=edit_link(options.edit_url, recipe.path),
@@ -136,6 +137,7 @@ def build(
     languages = {recipe.lang for recipe in recipes if recipe.lang}
     index = render_template(
         templates / "index.html",
+        root="",
         title=html.escape(options.title),
         lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
         prefetch_links=prefetch_links,

@@ -10,13 +10,9 @@ from urllib.parse import quote
 
 import frontmatter
 
+from recettes import markdown
 from recettes.errors import fail
 from recettes.images import prune_cache
-from recettes.markdown import (
-    HTML_COMMENT_RE,
-    markdown_with_ingredients,
-    rewrite_local_links,
-)
 from recettes.recipes import (
     DEFAULT_IMAGE_WIDTH,
     DEFAULT_THUMBNAIL_WIDTH,
@@ -160,7 +156,5 @@ def lint(source: Path) -> int:
             document = frontmatter.load(path)
         except (OSError, ValueError) as exc:
             fail(f"Could not read recipe '{path.name}': {exc}")
-        body = HTML_COMMENT_RE.sub("", document.content)
-        content, _ = markdown_with_ingredients(body)
-        rewrite_local_links(content, path, link_targets)
+        markdown.rewrite_local_links(markdown.parse(document.content), path, link_targets)
     return len(paths)

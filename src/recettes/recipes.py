@@ -8,18 +8,11 @@ from urllib.parse import quote
 
 import frontmatter
 import typer
+from markdown_it.token import Token
 
+from recettes import markdown
 from recettes.errors import fail
 from recettes.images import cached_export_image, output_name
-from recettes.markdown import (
-    HEADING_RE,
-    HTML_COMMENT_RE,
-    first_paragraph,
-    heading_text,
-    markdown_with_ingredients,
-    plain_text,
-    rewrite_local_links,
-)
 from recettes.quantities import MASS_UNITS_G, Ingredient, aggregate_ingredients, volume_ml
 from recettes.text import natural_key, slugify
 
@@ -52,7 +45,8 @@ class Recipe:
     # As they appear in the text, and summed up for the ingredient list.
     ingredients: list[Ingredient]
     ingredient_list: list[Ingredient]
-    content: str
+    # Parsed Markdown body.
+    tokens: list[Token]
     # Published picture names.
     main_image: str | None
     section_images: dict[str, list[str]]
@@ -103,12 +97,10 @@ def assign_images(source: Path, recipe_stems: set[str]) -> dict[str, list[Path]]
 
 
 def classify_images(
-    stem: str, images: list[Path], content: str
+    stem: str, images: list[Path], tokens: list[Token]
 ) -> tuple[str | None, dict[str, list[str]], list[str]]:
     """Split images into the main picture, per-heading pictures, and leftovers."""
-    heading_slugs = {
-        slugify(heading_text(match.group(2))) for match in HEADING_RE.finditer(content)
-    }
+    heading_slugs = {slugify(text) for _, text in markdown.headings(tokens)}
     main = None
     sections: dict[str, list[str]] = {}
     gallery = []
@@ -170,10 +162,10 @@ def recipe_page(
     lang = str(metadata.get("lang", ""))
 
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
-    body = HTML_COMMENT_RE.sub("", document.content)
-    content, ingredients = markdown_with_ingredients(body)
-    content = rewrite_local_links(content, path, link_targets)
-    main_image, section_images, gallery = classify_images(path.stem, images, content)
+    tokens = markdown.parse(document.content)
+    markdown.rewrite_local_links(tokens, path, link_targets)
+    ingredients = markdown.ingredients(tokens)
+    main_image, section_images, gallery = classify_images(path.stem, images, tokens)
     exports = []
     for image in images:
         name = output_name(image)
@@ -209,12 +201,12 @@ def recipe_page(
         lang=lang,
         tags=parse_tags(metadata.get("tags")),
         properties=properties,
-        excerpt=first_paragraph(body),
-        text=plain_text(body),
+        excerpt=markdown.first_paragraph(tokens),
+        text=markdown.plain_text(tokens),
         portions=portions,
         ingredients=ingredients,
         ingredient_list=ingredient_list,
-        content=content,
+        tokens=tokens,
         main_image=main_image,
         section_images=section_images,
         gallery=gallery,

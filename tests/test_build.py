@@ -562,3 +562,19 @@ def test_cc_is_cubic_centimeters_in_english() -> None:
     assert volume_ml(10, "cc", "of milk", "en-GB") == 10
     assert volume_ml(10, "cc", "de lait", "fr") == 50
     assert volume_ml(10, "cc", "de lait") == 50
+
+
+def test_ingredients_in_picture_descriptions_and_code(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "eggs.md").write_text(
+        "![Beaten {{ 2 eggs }}](eggs-1.jpg)\n\nWrite `{{ 1 egg }}` in recipes.\n",
+        encoding="utf-8",
+    )
+    (source / "eggs-1.jpg").write_bytes(b"fake jpeg")
+
+    build(source, tmp_path / "site")
+
+    recipe = (tmp_path / "site" / "recipes" / "eggs.html").read_text(encoding="utf-8")
+    assert 'alt="Beaten 2 eggs"' in recipe
+    assert "<code>{{ 1 egg }}</code>" in recipe

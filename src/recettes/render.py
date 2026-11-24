@@ -4,16 +4,12 @@ from __future__ import annotations
 
 import html
 import json
-import re
 from pathlib import Path
 from urllib.parse import quote
 
-from recettes.markdown import (
-    HEADING_RE,
-    MARKDOWN,
-    TOKEN_RE,
-    heading_text,
-)
+from markdown_it.token import Token
+
+from recettes import markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
 from recettes.text import slugify
@@ -33,15 +29,6 @@ def ingredient_html(ingredient: Ingredient, tag: str) -> str:
         f'<{tag} data-ingredient data-amount="{attr(float(amount))}" '
         f'data-unit="{attr(unit)}" data-name="{attr(name)}"{volume}>{html.escape(text)}</{tag}>'
     )
-
-
-def insert_ingredients(content: str, ingredients: list[Ingredient]) -> str:
-    def replace(match: re.Match[str]) -> str:
-        return ingredient_html(ingredients[int(match.group(1))], "span")
-
-    # Only substitute in text, never inside tags/attributes (e.g. image alt text).
-    parts = re.split(r"(<[^>]*>)", content)
-    return "".join(part if part.startswith("<") else TOKEN_RE.sub(replace, part) for part in parts)
 
 
 def display_value(value: object) -> str:
@@ -86,25 +73,30 @@ def figure_html(image: str, alt: str) -> str:
     return f"<figure>{image_html(image, alt)}</figure>"
 
 
-def insert_section_images(content: str, section_images: dict[str, list[str]], title: str) -> str:
+def insert_section_images(
+    tokens: list[Token], section_images: dict[str, list[str]], title: str
+) -> list[Token]:
     """Append each heading's images at the end of its section (before the next heading)."""
-    if not section_images:
-        return content
-    headings = list(HEADING_RE.finditer(content))
+    headings = markdown.headings(tokens)
     insertions: dict[int, str] = {}
     placed = set()
-    for index, heading in enumerate(headings):
-        text = heading_text(heading.group(2))
+    for number, (index, text) in enumerate(headings):
         slug = slugify(text)
         if slug not in section_images or slug in placed:
             continue
         placed.add(slug)
-        end = headings[index + 1].start() if index + 1 < len(headings) else len(content)
+        end = headings[number + 1][0] if number + 1 < len(headings) else len(tokens)
         figures = "".join(figure_html(image, f"{title} – {text}") for image in section_images[slug])
         insertions[end] = f'<div class="recipe-step-images">{figures}</div>\n'
-    for position in sorted(insertions, reverse=True):
-        content = content[:position] + insertions[position] + content[position:]
-    return content
+    result = []
+    for index, token in enumerate([*tokens, None]):
+        if index in insertions:
+            block = Token("html_block", "", 0)
+            block.content = insertions[index]
+            result.append(block)
+        if token is not None:
+            result.append(token)
+    return result
 
 
 def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
@@ -128,7 +120,7 @@ def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
         if recipe.main_image
         else ""
     )
-    content = insert_section_images(recipe.content, recipe.section_images, title)
+    tokens = insert_section_images(recipe.tokens, recipe.section_images, title)
     portions = recipe.portions
     return {
         "tags": tags,
@@ -140,8 +132,7 @@ def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
         "ingredient_list": "".join(ingredient_html(item, "li") for item in recipe.ingredient_list),
         "gallery": gallery,
         "main_image": main,
-        # Last: inserted recipe content must not be scanned for other placeholders.
-        "content": insert_ingredients(content, recipe.ingredients),
+        "content": markdown.render(tokens, lambda item: ingredient_html(item, "span")),
     }
 
 
@@ -208,7 +199,7 @@ def meta_tags(
 def license_html(license: str) -> str:
     """Render the license Markdown for the footer, followed by a separator."""
     license = license.strip()
-    return f"{MARKDOWN.renderInline(license)} —" if license else ""
+    return f"{markdown.MARKDOWN.renderInline(license)} —" if license else ""
 
 
 def render_template(path: Path, **values: str) -> str:

@@ -14,7 +14,7 @@ from recettes.quantities import (
     parse_quantity,
     volume_ml,
 )
-from recettes.site import build
+from recettes.site import build, lint
 
 
 @pytest.mark.parametrize(
@@ -578,3 +578,19 @@ def test_ingredients_in_picture_descriptions_and_code(tmp_path: Path) -> None:
     recipe = (tmp_path / "site" / "recipes" / "eggs.html").read_text(encoding="utf-8")
     assert 'alt="Beaten 2 eggs"' in recipe
     assert "<code>{{ 1 egg }}</code>" in recipe
+
+
+def test_lint_checks_links_and_densities(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "cake.md").write_text("Add {{ 50g of ginger }}.\n", encoding="utf-8")
+
+    assert lint(source) == 1
+    assert "unknown density for 'of ginger'" in capsys.readouterr().err
+    assert not (tmp_path / "site").exists()
+
+    (source / "soup.md").write_text("Serve with [bread](bread.md).\n", encoding="utf-8")
+    with pytest.raises(RecettesError, match="links to missing file 'bread.md'"):
+        lint(source)

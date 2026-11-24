@@ -8,17 +8,13 @@ import shutil
 from pathlib import Path
 from urllib.parse import quote
 
-import frontmatter
-
-from recettes import markdown
 from recettes.errors import fail
-from recettes.images import prune_cache
+from recettes.images import cached_export_image, output_name, prune_cache
 from recettes.recipes import (
     DEFAULT_IMAGE_WIDTH,
     DEFAULT_THUMBNAIL_WIDTH,
-    assign_images,
-    local_link_targets,
-    recipe_page,
+    Recipe,
+    load_recipes,
 )
 from recettes.render import (
     edit_link,
@@ -30,6 +26,26 @@ from recettes.render import (
 )
 
 DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
+
+
+def export_images(
+    recipe: Recipe,
+    image_dir: Path,
+    image_width: int,
+    thumbnail_width: int,
+    cache_dir: Path | None,
+    used_cache: set[Path],
+) -> None:
+    """Publish the recipe pictures, and a square thumbnail of the main one."""
+    for image in recipe.images:
+        name = output_name(image)
+        exports = [(image_dir / name, image_width, False)]
+        if name == recipe.main_image:
+            exports.append((image_dir / "thumbnails" / name, thumbnail_width, True))
+        for target, width, square in exports:
+            entry = cached_export_image(image, target, width, square, cache_dir)
+            if entry is not None:
+                used_cache.add(entry)
 
 
 def build(
@@ -47,18 +63,14 @@ def build(
     source = source.resolve()
     destination = destination.resolve()
     cache_dir = cache_dir.resolve() if cache_dir else None
-    if not source.is_dir():
-        fail(f"Recipe directory does not exist: {source}")
     if source == destination or source in destination.parents:
         fail("Output directory must be outside the recipe source directory")
-    paths = sorted(path for path in source.glob("*.md") if path.is_file())
-    if not paths:
-        fail(f"No Markdown recipes found in {source}")
     # Only the top level of the source directory is read, so the cache can be a subdirectory.
     if cache_dir and (
         cache_dir == source or cache_dir == destination or destination in cache_dir.parents
     ):
         fail("Cache directory must be outside the output directory")
+    recipes = load_recipes(source, simple_mode)
 
     package_dir = Path(__file__).parent
     static = package_dir / "static"
@@ -80,29 +92,15 @@ def build(
     shutil.copytree(static / "fonts", assets / "fonts", dirs_exist_ok=True)
     image_dir = assets / "images"
     recipes_dir.mkdir(parents=True, exist_ok=True)
-    recipes = []
-    images = assign_images(source, {path.stem for path in paths})
-    link_targets = local_link_targets(paths, images)
     used_cache: set[Path] = set()
-    for path in paths:
-        slug = path.stem
-        recipe = recipe_page(
-            path,
-            image_dir,
-            link_targets,
-            images[path.stem],
-            image_width,
-            thumbnail_width,
-            simple_mode,
-            cache_dir,
-            used_cache,
-        )
-        recipes.append(recipe)
+    for recipe in recipes:
+        slug = recipe.slug
+        export_images(recipe, image_dir, image_width, thumbnail_width, cache_dir, used_cache)
         page = render_template(
             templates / "recipe.html",
             title=html.escape(recipe.title),
             lang=html.escape(recipe.lang, quote=True),
-            edit_link=edit_link(edit_url, path),
+            edit_link=edit_link(edit_url, recipe.path),
             meta_tags=meta_tags(
                 recipe.title,
                 "article",
@@ -143,18 +141,4 @@ def build(
 
 def lint(source: Path) -> int:
     """Check recipe files and their local links without generating a website."""
-    source = source.resolve()
-    if not source.is_dir():
-        fail(f"Recipe directory does not exist: {source}")
-    paths = sorted(path for path in source.glob("*.md") if path.is_file())
-    if not paths:
-        fail(f"No Markdown recipes found in {source}")
-    images = assign_images(source, {path.stem for path in paths})
-    link_targets = local_link_targets(paths, images)
-    for path in paths:
-        try:
-            document = frontmatter.load(path)
-        except (OSError, ValueError) as exc:
-            fail(f"Could not read recipe '{path.name}': {exc}")
-        markdown.rewrite_local_links(markdown.parse(document.content), path, link_targets)
-    return len(paths)
+    return len(load_recipes(source.resolve()))

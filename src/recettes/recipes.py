@@ -12,7 +12,7 @@ from markdown_it.token import Token
 
 from recettes import markdown
 from recettes.errors import fail
-from recettes.images import cached_export_image, output_name
+from recettes.images import output_name
 from recettes.quantities import MASS_UNITS_G, Ingredient, aggregate_ingredients, volume_ml
 from recettes.text import natural_key, slugify
 
@@ -47,7 +47,8 @@ class Recipe:
     ingredient_list: list[Ingredient]
     # Parsed Markdown body.
     tokens: list[Token]
-    # Published picture names.
+    # Source pictures, and their published names.
+    images: list[Path]
     main_image: str | None
     section_images: dict[str, list[str]]
     gallery: list[str]
@@ -142,16 +143,23 @@ def parse_portions(value: object) -> int | None:
     return portions if portions >= 1 else None
 
 
-def recipe_page(
+def load_recipes(source: Path, simple_mode: bool = True) -> list[Recipe]:
+    """Read and check all recipes of the source directory (its top level only)."""
+    if not source.is_dir():
+        fail(f"Recipe directory does not exist: {source}")
+    paths = sorted(path for path in source.glob("*.md") if path.is_file())
+    if not paths:
+        fail(f"No Markdown recipes found in {source}")
+    images = assign_images(source, {path.stem for path in paths})
+    link_targets = local_link_targets(paths, images)
+    return [load_recipe(path, link_targets, images[path.stem], simple_mode) for path in paths]
+
+
+def load_recipe(
     path: Path,
-    image_dir: Path,
     link_targets: dict[Path, str],
     images: list[Path],
-    image_width: int = DEFAULT_IMAGE_WIDTH,
-    thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
     simple_mode: bool = True,
-    cache_dir: Path | None = None,
-    used_cache: set[Path] | None = None,
 ) -> Recipe:
     try:
         document = frontmatter.load(path)
@@ -166,16 +174,6 @@ def recipe_page(
     markdown.rewrite_local_links(tokens, path, link_targets)
     ingredients = markdown.ingredients(tokens)
     main_image, section_images, gallery = classify_images(path.stem, images, tokens)
-    exports = []
-    for image in images:
-        name = output_name(image)
-        exports.append((image, image_dir / name, image_width, False))
-        if name == main_image:
-            exports.append((image, image_dir / "thumbnails" / name, thumbnail_width, True))
-    for image, target, width, square in exports:
-        entry = cached_export_image(image, target, width, square, cache_dir)
-        if entry is not None and used_cache is not None:
-            used_cache.add(entry)
 
     ingredient_list = aggregate_ingredients(ingredients)
     if simple_mode:
@@ -207,6 +205,7 @@ def recipe_page(
         ingredients=ingredients,
         ingredient_list=ingredient_list,
         tokens=tokens,
+        images=images,
         main_image=main_image,
         section_images=section_images,
         gallery=gallery,

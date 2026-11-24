@@ -87,6 +87,14 @@ def build_command(
             "Defaults to the GitHub Pages URL of the repository on GitHub Actions",
         ),
     ] = None,
+    description: Annotated[
+        str,
+        typer.Option(
+            "--description",
+            help="Description of the home page, for search engines and link previews. "
+            "Defaults to the number of recipes",
+        ),
+    ] = "",
     lang: Annotated[
         str,
         typer.Option(
@@ -117,6 +125,7 @@ def build_command(
         simple_mode=simple_mode,
         cache_dir=cache_dir,
         lang=lang,
+        description=description,
     )
     count = build(source, destination, options)
     typer.echo(f"Built {count} recipes into {destination}")

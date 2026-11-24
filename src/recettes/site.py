@@ -48,6 +48,8 @@ class BuildOptions:
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH
     simple_mode: bool = True
     cache_dir: Path | None = None
+    # Home page description for search engines and link previews, guessed when empty.
+    description: str = ""
     # Language of the interface and of recipes without `lang`, guessed when empty.
     lang: str = ""
 
@@ -152,6 +154,7 @@ def build(
                 options.title,
                 options.base_url,
                 f"recipes/{quote(slug, safe='-_')}.html",
+                lang,
                 recipe.excerpt,
                 recipe.main_image,
                 recipe.tags,
@@ -172,7 +175,15 @@ def build(
         ),
         tag_cloud=tag_cloud_html(recipes),
         recipe_cards="".join(recipe_card_html(recipe) for recipe in recipes),
-        meta_tags=meta_tags(options.title, "website", options.title, options.base_url, ""),
+        meta_tags=meta_tags(
+            options.title,
+            "website",
+            options.title,
+            options.base_url,
+            "",
+            site_lang,
+            options.description or i18n.recipes_count(site_lang, len(recipes)),
+        ),
         license=footer_license,
         **versions,
         **interface_values(site_lang),

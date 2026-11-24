@@ -234,21 +234,31 @@ def meta_tags(
     site_name: str,
     base_url: str | None,
     path: str,
+    lang: str,
     description: str = "",
     image: str | None = None,
     tags: list[str] | None = None,
 ) -> str:
-    """Description and Open Graph tags; the latter need a base URL, since og:url is absolute."""
+    """Description, canonical URL and Open Graph tags.
+
+    The last two need the base URL of the website, since they are absolute.
+    """
     tags_html = []
     if description:
         tags_html.append(f'<meta name="description" content="{attr(description)}">')
     if base_url:
         base = base_url.rstrip("/") + "/"
+        tags_html.append(f'<link rel="canonical" href="{attr(base + path)}">')
+        tags_html.append(
+            f'<meta name="twitter:card" content="{"summary_large_image" if image else "summary"}">'
+        )
         properties = [
             ("og:title", title),
             ("og:type", page_type),
             ("og:site_name", site_name),
             ("og:url", base + path),
+            # Open Graph locales use underscores ("fr_CA").
+            ("og:locale", lang.replace("-", "_")),
         ]
         if description:
             properties.append(("og:description", description))

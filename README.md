@@ -96,11 +96,13 @@ recettes build examples/ --edit-url https://codeberg.org/USER/REPO/_edit/main/ex
 
 Without an edit URL, the button is not shown.
 
-Pages include [Open Graph](https://ogp.me/) tags, for link previews in social networks and messaging apps. These tags need the public URL of the website, since their links must be absolute. When building on GitHub Actions, the GitHub Pages URL of the repository (`https://USER.github.io/REPO/`) is used. Elsewhere, or with a custom domain, pass the public URL of the website with `--base-url` (or the `RECETTES_BASE_URL` environment variable); without it, the tags are left out:
+Pages include [Open Graph](https://ogp.me/) tags, for link previews in social networks and messaging apps. These tags, and the canonical URL of pages, need the public URL of the website, since their links must be absolute. When building on GitHub Actions, the GitHub Pages URL of the repository (`https://USER.github.io/REPO/`) is used. Elsewhere, or with a custom domain, pass the public URL of the website with `--base-url` (or the `RECETTES_BASE_URL` environment variable); without it, the tags are left out:
 
 ```sh
 recettes build examples/ --base-url https://recipes.example.com/
 ```
+
+The home page description, for search engines and link previews, can be set with `--description` (the number of recipes by default).
 
 The footer of every page shows the license of the recipes, [Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/) by default. Pass another one, in Markdown, with `--license` (or an empty string to hide it):
 

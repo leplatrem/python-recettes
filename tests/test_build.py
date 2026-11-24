@@ -491,9 +491,18 @@ def test_open_graph_tags(tmp_path: Path) -> None:
     )
     assert '<meta property="article:tag" content="dessert">' in recipe
     assert '<meta property="article:tag" content="été">' in recipe
+    assert '<meta property="og:locale" content="en">' in recipe
+    assert '<meta name="twitter:card" content="summary_large_image">' in recipe
+    assert '<link rel="canonical" href="https://example.com/recettes/recipes/tarte.html">' in recipe
     index = (output / "index.html").read_text(encoding="utf-8")
     assert '<meta property="og:type" content="website">' in index
     assert '<meta property="og:url" content="https://example.com/recettes/">' in index
+    assert '<meta name="description" content="1 recipe">' in index
+    assert '<meta name="twitter:card" content="summary">' in index
+
+    build(source, output, BuildOptions(description="Family recipes", lang="fr-CA"))
+    index = (output / "index.html").read_text(encoding="utf-8")
+    assert '<meta name="description" content="Family recipes">' in index
 
 
 def test_open_graph_tags_without_base_url(tmp_path: Path, no_ci_env: pytest.MonkeyPatch) -> None:
@@ -509,6 +518,7 @@ def test_open_graph_tags_without_base_url(tmp_path: Path, no_ci_env: pytest.Monk
     assert '<meta name="description" content="Une tarte.">' in recipe
     assert "og:" not in recipe
     assert "og:" not in (output / "index.html").read_text(encoding="utf-8")
+    assert "canonical" not in recipe
 
 
 def test_license_shown_in_footer(tmp_path: Path) -> None:

@@ -94,6 +94,11 @@ STRINGS: dict[str, dict[str, str]] = {
 }
 
 
+def recipes_count(lang: str, count: int) -> str:
+    """ "1 recipe", "2 recipes"..."""
+    return strings(lang)["results_one" if count == 1 else "results_other"].format(count=count)
+
+
 def strings(lang: str) -> dict[str, str]:
     """Interface strings for a language tag ("fr-CA" -> French), English by default."""
     primary = lang.split("-")[0].casefold()

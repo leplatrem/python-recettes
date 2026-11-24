@@ -609,7 +609,7 @@ input {
 .schema-step,
 .schema-inputs {
   display: grid;
-  gap: 1px;
+  gap: 3px;
   background: var(--line-hover);
 }
 

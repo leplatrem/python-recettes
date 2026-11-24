@@ -221,7 +221,7 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert '<div class="servings" id="servings-control" data-portions="4">' in recipe
     assert '<strong id="servings-count">4</strong>' in recipe
     assert (
-        '<ul id="ingredient-list">'
+        '<ul class="ingredient-list">'
         '<li data-ingredient data-amount="4.0" data-unit="" data-name="oignons">4 oignons</li>'
         '<li data-ingredient data-amount="70.0" data-unit="g" data-name="de beurre" '
         'data-ml="76.92">70 g de beurre</li>'
@@ -262,7 +262,7 @@ def test_recipe_without_portions_has_no_toggle_and_properties_are_optional(
     recipe = (output / "recipes" / "simple.html").read_text(encoding="utf-8")
     assert '<div class="servings" id="servings-control" hidden>' in recipe
     assert '<dl class="recipe-properties" id="recipe-properties" hidden></dl>' in recipe
-    assert '<ul id="ingredient-list"></ul>' in recipe
+    assert '<ul class="ingredient-list"></ul>' in recipe
     assert "<p>Just a recipe.</p>" in recipe
 
 

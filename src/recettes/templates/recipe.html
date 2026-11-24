@@ -1,10 +1,8 @@
-<!doctype html>
-<html lang="{{ lang }}">
-  <head>
-{{> head.html }}
+{% extends "base.html" %}
+{% block head %}
     <script type="module" src="../assets/recipe.js?v={{ recipe_js_version }}"></script>
-  </head>
-  <body>
+{% endblock %}
+{% block body %}
     <nav class="detail-nav">
       <a href="../index.html" aria-label="{{ t_back }}">←</a>
       {{ edit_link }}
@@ -38,6 +36,4 @@
         <div class="recipe-gallery" id="recipe-gallery">{{ gallery }}</div>
       </article>
     </main>
-{{> footer.html }}
-  </body>
-</html>
+{% endblock %}

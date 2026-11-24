@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import html
 import json
-import re
 from collections import Counter
-from importlib.resources.abc import Traversable
 from pathlib import Path
 from urllib.parse import quote
 
+import jinja2
 from markdown_it.token import Token
+from markupsafe import Markup
 
 from recettes import __version__, i18n, markdown
 from recettes.quantities import Ingredient, format_amount
@@ -268,27 +268,20 @@ def license_html(license: str) -> str:
     return f"{markdown.MARKDOWN.renderInline(license)} —" if license else ""
 
 
-PARTIAL_RE = re.compile(r"^\{\{> ([\w.-]+) \}\}\n", re.M)
-PLACEHOLDER_RE = re.compile(r"\{\{ (\w+) \}\}")
+TEMPLATES = jinja2.Environment(
+    loader=jinja2.PackageLoader("recettes", "templates"),
+    autoescape=True,
+    # Fail on typos rather than rendering nothing.
+    undefined=jinja2.StrictUndefined,
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
 
 
-def render_template(templates: Traversable, filename: str, /, **values: str) -> str:
-    """Fill a template: `{{> file }}` includes a partial, `{{ name }}` inserts a value.
-
-    Values are inserted in a single pass, so they are never scanned for placeholders.
-    """
-
-    def include(match: re.Match[str]) -> str:
-        return (templates / "partials" / match.group(1)).read_text(encoding="utf-8")
-
-    def value(match: re.Match[str]) -> str:
-        name = match.group(1)
-        if name not in values:
-            raise KeyError(f"Missing value '{name}' for template {filename}")
-        return values[name]
-
-    template = PARTIAL_RE.sub(include, (templates / filename).read_text(encoding="utf-8"))
-    return PLACEHOLDER_RE.sub(value, template)
+def render_template(filename: str, /, **values: str) -> str:
+    """Fill a template; values are HTML already escaped."""
+    template = TEMPLATES.get_template(filename)
+    return template.render({name: Markup(value) for name, value in values.items()}) + "\n"
 
 
 PROJECT_URL = "https://github.com/leplatrem/python-recettes"

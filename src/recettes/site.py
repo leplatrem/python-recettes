@@ -118,7 +118,6 @@ def build(
 
     package = resources.files("recettes")
     static = package / "static"
-    templates = package / "templates"
     assets = destination / "assets"
     recipes_dir = destination / "recipes"
     # Remove previous outputs, so deleted recipes and pictures are not published anymore.
@@ -146,7 +145,6 @@ def build(
         lang = recipe.lang or site_lang
         export_images(recipe, image_dir, options, used_cache)
         page = render_template(
-            templates,
             "recipe.html",
             root="../",
             title=html.escape(recipe.title),
@@ -170,7 +168,6 @@ def build(
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
     index = render_template(
-        templates,
         "index.html",
         root="",
         title=html.escape(options.title),

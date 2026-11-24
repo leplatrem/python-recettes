@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="{{ lang }}">
+  <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
@@ -7,3 +10,12 @@
     {{ meta_tags }}
     <link rel="icon" href="{{ root }}assets/favicon.svg?v={{ favicon_svg_version }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ root }}assets/style.css?v={{ style_css_version }}">
+{% block head %}{% endblock %}
+  </head>
+  <body>
+{% block body %}{% endblock %}
+    <footer class="site-footer">
+      {{ license }} {{ t_built_with }}
+    </footer>
+  </body>
+</html>

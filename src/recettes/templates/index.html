@@ -1,14 +1,12 @@
-<!doctype html>
-<html lang="{{ lang }}">
-  <head>
-{{> head.html }}
+{% extends "base.html" %}
+{% block head %}
     <!-- Load recipe pages on hover or touch, where supported (Speculation Rules API). -->
     <script type="speculationrules">
       {"prefetch": [{"where": {"href_matches": "recipes/*"}, "eagerness": "moderate"}]}
     </script>
     <script type="module" src="assets/app.js?v={{ app_js_version }}"></script>
-  </head>
-  <body>
+{% endblock %}
+{% block body %}
     <main class="recipe-index">
       <h1>{{ title }}</h1>
       <!-- Search and tags need JavaScript: app.js shows them. -->
@@ -21,6 +19,4 @@
       <p class="search-status" id="search-status" role="status" data-none="{{ t_results_none }}" data-one="{{ t_results_one }}" data-other="{{ t_results_other }}"></p>
       <div class="recipe-grid" id="recipe-grid">{{ recipe_cards }}</div>
     </main>
-{{> footer.html }}
-  </body>
-</html>
+{% endblock %}

@@ -471,7 +471,7 @@ def test_open_graph_tags(tmp_path: Path) -> None:
     )
 
     recipe = (output / "recipes" / "tarte.html").read_text(encoding="utf-8")
-    assert '<meta property="og:title" content="Tarte &quot;citron&quot;">' in recipe
+    assert '<meta property="og:title" content="Tarte &#34;citron&#34;">' in recipe
     assert '<meta property="og:type" content="article">' in recipe
     assert '<meta property="og:site_name" content="Mes recettes">' in recipe
     assert '<meta property="og:description" content="Une tarte acidulée.">' in recipe

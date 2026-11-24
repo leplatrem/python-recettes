@@ -139,61 +139,6 @@ def recipe_url(recipe: Recipe) -> str:
     return f"recipes/{quote(recipe.slug, safe='-_')}.html"
 
 
-def meta_tags(
-    title: str,
-    page_type: str,
-    site_name: str,
-    base_url: str | None,
-    path: str,
-    lang: str,
-    description: str = "",
-    image: str | None = None,
-    tags: list[str] | None = None,
-) -> str:
-    """Description, canonical URL and Open Graph tags.
-
-    The last two need the base URL of the website, since they are absolute.
-    """
-    tags_html = []
-    if description:
-        tags_html.append(f'<meta name="description" content="{attr(description)}">')
-    if base_url:
-        base = base_url.rstrip("/") + "/"
-        tags_html.append(f'<link rel="canonical" href="{attr(base + path)}">')
-        tags_html.append(
-            f'<meta name="twitter:card" content="{"summary_large_image" if image else "summary"}">'
-        )
-        properties = [
-            ("og:title", title),
-            ("og:type", page_type),
-            ("og:site_name", site_name),
-            ("og:url", base + path),
-            # Open Graph locales use underscores ("fr_CA").
-            ("og:locale", lang.replace("-", "_")),
-        ]
-        if description:
-            properties.append(("og:description", description))
-        if image:
-            properties.append(("og:image", base + f"assets/images/{quote(image, safe='')}"))
-        properties += [("article:tag", tag) for tag in tags or []]
-        tags_html += [
-            f'<meta property="{name}" content="{attr(value)}">' for name, value in properties
-        ]
-    return "\n    ".join(tags_html)
-
-
-def sitemap_xml(base_url: str, recipes: list[Recipe]) -> str:
-    """List of the website pages, for search engines."""
-    base = base_url.rstrip("/") + "/"
-    urls = [base, *(base + recipe_url(recipe) for recipe in recipes)]
-    entries = "".join(f"  <url><loc>{html.escape(url)}</loc></url>\n" for url in urls)
-    return (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f"{entries}</urlset>\n"
-    )
-
-
 def license_html(license: str) -> str:
     """Render the license Markdown for the footer, followed by a separator."""
     license = license.strip()

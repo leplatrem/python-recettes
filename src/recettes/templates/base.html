@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>{{ title }}</title>
-    {{ meta_tags }}
+{% include "meta.html" %}
     <link rel="icon" href="{{ root }}assets/favicon.svg?v={{ favicon_svg_version }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ root }}assets/style.css?v={{ style_css_version }}">
 {% block head %}{% endblock %}

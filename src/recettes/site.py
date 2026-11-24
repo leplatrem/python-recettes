@@ -22,10 +22,8 @@ from recettes.render import (
     edit_link,
     interface_values,
     license_html,
-    meta_tags,
     recipe_content,
     render_template,
-    sitemap_xml,
     tag_counts,
 )
 from recettes.utils import fail
@@ -139,6 +137,7 @@ def build(
     recipes_dir.mkdir(parents=True, exist_ok=True)
     used_cache: set[Path] = set()
     site_lang = options.lang or common_language(recipes)
+    base_url = options.base_url.rstrip("/") + "/" if options.base_url else ""
     for recipe in recipes:
         slug = recipe.slug
         lang = recipe.lang or site_lang
@@ -151,19 +150,13 @@ def build(
             recipe=recipe,
             content=recipe_content(recipe),
             edit_url=edit_link(options.edit_url, recipe.path),
-            meta_tags=Markup(
-                meta_tags(
-                    recipe.title,
-                    "article",
-                    options.title,
-                    options.base_url,
-                    f"recipes/{quote(slug, safe='-_')}.html",
-                    lang,
-                    recipe.excerpt,
-                    recipe.main_image,
-                    recipe.tags,
-                )
-            ),
+            site_name=options.title,
+            base_url=base_url,
+            path=f"recipes/{quote(slug, safe='-_')}.html",
+            page_type="article",
+            description=recipe.excerpt,
+            image=recipe.main_image,
+            article_tags=recipe.tags,
             license=footer_license,
             **versions,
             **interface_values(lang),
@@ -177,17 +170,13 @@ def build(
         search_placeholder=i18n.strings(site_lang)["search_placeholder"].format(count=len(recipes)),
         tags=tag_counts(recipes),
         recipes=recipes,
-        meta_tags=Markup(
-            meta_tags(
-                options.title,
-                "website",
-                options.title,
-                options.base_url,
-                "",
-                site_lang,
-                options.description or i18n.recipes_count(site_lang, len(recipes)),
-            )
-        ),
+        site_name=options.title,
+        base_url=base_url,
+        path="",
+        page_type="website",
+        description=options.description or i18n.recipes_count(site_lang, len(recipes)),
+        image=None,
+        article_tags=[],
         license=footer_license,
         **versions,
         **interface_values(site_lang),
@@ -195,7 +184,9 @@ def build(
     (destination / "index.html").write_text(index, encoding="utf-8")
     sitemap = destination / "sitemap.xml"
     if options.base_url:
-        sitemap.write_text(sitemap_xml(options.base_url, recipes), encoding="utf-8")
+        sitemap.write_text(
+            render_template("sitemap.xml", base_url=base_url, recipes=recipes), encoding="utf-8"
+        )
     else:
         sitemap.unlink(missing_ok=True)
     if cache_dir:

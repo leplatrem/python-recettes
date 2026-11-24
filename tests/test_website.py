@@ -375,3 +375,17 @@ def test_interface_language(tmp_path: Path) -> None:
     assert '<html lang="fr-CA">' in index
     assert 'aria-label="Filtrer par étiquette"' in index
     assert 'aria-label="Retour"' in soup
+
+
+def test_build_reports_progress_of_pictures(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "soup.md").write_text("Hot.", encoding="utf-8")
+    (source / "soup.jpg").write_bytes(b"fake jpeg")
+    (source / "soup-1.jpg").write_bytes(b"fake jpeg")
+    (source / "cake.md").write_text("Sweet.", encoding="utf-8")
+    calls = []
+
+    build(source, tmp_path / "site", progress=lambda *args: calls.append(args))
+
+    assert calls == [(1, 2, "soup-1.jpg"), (2, 2, "soup.jpg")]

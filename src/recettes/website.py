@@ -8,6 +8,7 @@ import hashlib
 import json
 import shutil
 from collections import Counter
+from collections.abc import Callable
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,9 @@ from recettes.utils import (
     strings,
     strip_accents,
 )
+
+# Called with the number of pictures published, their total, and the last one's name.
+Progress = Callable[[int, int, str], None]
 
 DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
 # Defaults are twice the stylesheet sizes (recipe page column width, home page card
@@ -70,6 +74,7 @@ def export_images(
     image_dir: Path,
     options: BuildOptions,
     used_cache: set[Path],
+    on_picture: Callable[[Path], None] = lambda image: None,
 ) -> None:
     """Publish the recipe pictures, and a square thumbnail of the main one.
 
@@ -99,14 +104,19 @@ def export_images(
                 with contextlib.suppress(OSError):  # Only when empty.
                     (image_dir / folder / "small").rmdir()
                 del recipe.picture_sizes[f"{folder}small/{name}"]
+        on_picture(image)
 
 
 def build(
     source: Path,
     destination: Path,
     options: BuildOptions | None = None,
+    progress: Progress | None = None,
 ) -> int:
-    """Generate the website in `destination`, and return the number of recipes."""
+    """Generate the website in `destination`, and return the number of recipes.
+
+    Resizing pictures takes time: `progress` is called after each one is published.
+    """
     options = options or BuildOptions()
     source = source.resolve()
     destination = destination.resolve()
@@ -142,6 +152,15 @@ def build(
     image_dir = assets / "images"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     used_cache: set[Path] = set()
+    pictures_total = sum(len(recipe.images) for recipe in recipes)
+    pictures_done = 0
+
+    def on_picture(image: Path) -> None:
+        nonlocal pictures_done
+        pictures_done += 1
+        if progress:
+            progress(pictures_done, pictures_total, image.name)
+
     site_lang = options.lang or common_language(recipes)
     base_url = options.base_url.rstrip("/") + "/" if options.base_url else ""
     # Values used by the layout of all pages.
@@ -154,7 +173,7 @@ def build(
     for recipe in recipes:
         slug = recipe.slug
         lang = recipe.lang or site_lang
-        export_images(recipe, image_dir, options, used_cache)
+        export_images(recipe, image_dir, options, used_cache, on_picture)
         page = render_template(
             "recipe.html",
             root="../",

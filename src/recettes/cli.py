@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from rich.console import Console
+from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeElapsedColumn
 
 from recettes import __version__
 from recettes.utils import ci_base_url, ci_edit_url
@@ -141,7 +143,16 @@ def build_command(
         lang=lang,
         description=description,
     )
-    count = build(source, destination, options)
+    # On stderr, like warnings, which are shown above the bar. Not animated outside terminals.
+    columns = (TextColumn("{task.description}"), BarColumn(), MofNCompleteColumn())
+    with Progress(*columns, TimeElapsedColumn(), console=Console(stderr=True)) as bar:
+        task = bar.add_task("Pictures", total=None)
+
+        def report(done: int, total: int, name: str) -> None:
+            bar.update(task, completed=done, total=total, description=f"Pictures ({name})")
+
+        count = build(source, destination, options, progress=report)
+        bar.update(task, description="Pictures")
     typer.echo(f"Built {count} recipes into {destination}")
 
 

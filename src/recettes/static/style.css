@@ -131,7 +131,7 @@ input {
   color: var(--muted);
 }
 
-.search-box > span {
+.search-box > [aria-hidden] {
   font-size: 1.5rem;
   line-height: 1;
 }

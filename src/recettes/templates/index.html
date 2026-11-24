@@ -13,10 +13,11 @@
       <h1>{{ title }}</h1>
       <!-- Search and tags need JavaScript: app.js shows them. -->
       <label class="search-box" data-requires-js hidden>
+        <span class="visually-hidden">Search recipes</span>
         <span aria-hidden="true">⌕</span>
-        <input id="recipe-search" type="search" aria-label="Search recipes" placeholder="{{ search_placeholder }}" autocomplete="off">
+        <input id="recipe-search" type="search" placeholder="{{ search_placeholder }}" autocomplete="off">
       </label>
-      <div class="tag-cloud" id="tag-cloud" data-requires-js hidden>{{ tag_cloud }}</div>
+      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="Filter by tag" data-requires-js hidden>{{ tag_cloud }}</div>
       <p class="search-status" id="search-status" role="status" data-none="No recipes found" data-one="{count} recipe" data-other="{count} recipes"></p>
       <div class="recipe-grid" id="recipe-grid">{{ recipe_cards }}</div>
     </main>

@@ -203,7 +203,8 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert '<span class="tag">hiver</span>' in index
     assert 'data-tag="hiver" style="--tag-weight: 1">' in index
     assert 'placeholder="Search 1 recipes"' in index
-    assert '<link rel="prefetch" href="recipes/soupe-oignon.html">' in index
+    assert 'rel="prefetch"' not in index
+    assert '<script type="speculationrules">' in index
     assert '<h2 class="ingredients-title">Ingredients</h2>' in recipe
     assert '<html lang="fr">' in recipe
     assert "<title>Soupe à l&#x27;oignon</title>" in recipe

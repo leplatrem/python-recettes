@@ -130,17 +130,12 @@ def build(
             **recipe_html_parts(recipe),
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
-    prefetch_links = "\n    ".join(
-        f'<link rel="prefetch" href="recipes/{quote(recipe.slug, safe="-_")}.html">'
-        for recipe in recipes
-    )
     languages = {recipe.lang for recipe in recipes if recipe.lang}
     index = render_template(
         templates / "index.html",
         root="",
         title=html.escape(options.title),
         lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
-        prefetch_links=prefetch_links,
         search_placeholder=attr(f"Search {len(recipes)} recipes"),
         tag_cloud=tag_cloud_html(recipes),
         recipe_cards="".join(recipe_card_html(recipe) for recipe in recipes),

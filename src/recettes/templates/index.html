@@ -2,7 +2,10 @@
 <html lang="{{ lang }}">
   <head>
 {{> head.html }}
-    {{ prefetch_links }}
+    <!-- Load recipe pages on hover or touch, where supported (Speculation Rules API). -->
+    <script type="speculationrules">
+      {"prefetch": [{"where": {"href_matches": "recipes/*"}, "eagerness": "moderate"}]}
+    </script>
     <script type="module" src="assets/app.js?v={{ app_js_version }}"></script>
   </head>
   <body>

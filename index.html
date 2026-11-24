@@ -7,62 +7,66 @@
     <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>My Recipes</title>
+    <meta name="description" content="9 recipes">
+    <link rel="canonical" href="https://leplatrem.github.io/python-recettes/">
+    <meta name="twitter:card" content="summary">
     <meta property="og:title" content="My Recipes">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="My Recipes">
     <meta property="og:url" content="https://leplatrem.github.io/python-recettes/">
-    <link rel="stylesheet" href="assets/style.css?v=bd319ff2f6">
-    <link rel="preload" id="recipes-data" href="recipes.json?v=6b059f9e71" as="fetch" crossorigin>
-    <link rel="prefetch" href="recipes/buckwheat-crepes.html">
-    <link rel="prefetch" href="recipes/caramel.html">
-    <link rel="prefetch" href="recipes/crackers.html">
-    <link rel="prefetch" href="recipes/granola.html">
-    <link rel="prefetch" href="recipes/julia-cookies.html">
-    <link rel="prefetch" href="recipes/lemon-ginger-syrup.html">
-    <link rel="prefetch" href="recipes/lemon-tart.html">
-    <link rel="prefetch" href="recipes/onion-soup.html">
-    <link rel="prefetch" href="recipes/walnut-cake.html">
-    <script type="module" src="assets/app.js?v=e9322c862f"></script>
+    <meta property="og:locale" content="en">
+    <meta property="og:description" content="9 recipes">
+    <link rel="icon" href="assets/favicon.svg?v=a05a54ab8f" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/style.css?v=ffb2a536fb">
+    <!-- Load recipe pages on hover or touch, where supported (Speculation Rules API). -->
+    <script type="speculationrules">
+      {"prefetch": [{"where": {"href_matches": "recipes/*"}, "eagerness": "moderate"}]}
+    </script>
+    <script type="module" src="assets/app.js?v=df6e18f31d"></script>
   </head>
   <body>
     <main class="recipe-index">
       <h1>My Recipes</h1>
-      <label class="search-box">
+      <!-- Search and tags need JavaScript: app.js shows them. -->
+      <label class="search-box" data-requires-js hidden>
+        <span class="visually-hidden">Search recipes</span>
         <span aria-hidden="true">⌕</span>
-        <input id="recipe-search" type="search" aria-label="Search recipes" autocomplete="off">
+        <input id="recipe-search" type="search" placeholder="Search 9 recipes" autocomplete="off">
       </label>
-      <div class="tag-cloud" id="tag-cloud"></div>
-      <div class="recipe-grid" id="recipe-grid"></div>
+      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="Filter by tag" data-requires-js hidden><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="breakfast" style="--tag-weight: 1"><span>breakfast</span><span data-tag-count>1</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="budget-friendly" style="--tag-weight: 1.75"><span>budget-friendly</span><span data-tag-count>4</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="cookies" style="--tag-weight: 1"><span>cookies</span><span data-tag-count>1</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="dessert" style="--tag-weight: 1.5"><span>dessert</span><span data-tag-count>3</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="drinks" style="--tag-weight: 1"><span>drinks</span><span data-tag-count>1</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="easy" style="--tag-weight: 1.25"><span>easy</span><span data-tag-count>2</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="gluten-free" style="--tag-weight: 1.5"><span>gluten-free</span><span data-tag-count>3</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="healthy" style="--tag-weight: 1.5"><span>healthy</span><span data-tag-count>3</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="snack" style="--tag-weight: 1.25"><span>snack</span><span data-tag-count>2</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="soup" style="--tag-weight: 1"><span>soup</span><span data-tag-count>1</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="tart" style="--tag-weight: 1"><span>tart</span><span data-tag-count>1</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="tips" style="--tag-weight: 1"><span>tips</span><span data-tag-count>1</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="vegan" style="--tag-weight: 1.5"><span>vegan</span><span data-tag-count>3</span></button><button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="winter" style="--tag-weight: 1"><span>winter</span><span data-tag-count>1</span></button></div>
+      <p class="search-status" id="search-status" role="status" data-none="No recipes found" data-one="{count} recipe" data-other="{count} recipes"></p>
+      <div class="recipe-grid" id="recipe-grid">
+        <article class="recipe-card" data-search="Buckwheat Crêpe Batter healthy gluten-free For Breton savoury crêpes (galettes). Preparation Mix 300g of buckwheat flour, 10g of salt, 1 egg, then gradually add 750ml of water, keeping the batter smooth. preparation 3min" data-tags="[&#34;healthy&#34;, &#34;gluten-free&#34;]">
+          <a href="recipes/buckwheat-crepes.html"><div class="card-body"><h2>Buckwheat Crêpe Batter</h2><p class="card-excerpt">For Breton savoury crêpes (galettes).</p><div class="recipe-tags"><span class="tag">healthy</span><span class="tag">gluten-free</span></div></div><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card" data-search="Caramel tips dessert vegan How to get it right every time. Preparation Step 1 Pour a third of the 150g of white sugar with 1 tbsp of water into a heavy-bottomed saucepan and heat over medium heat. Step 2 As soon as it melts and turns liquid at the edges, add the second third. Then add the last third once the previous one has melted. Step 3 Never stir. Gently tilt the pan if needed to even it out. Step 4 Remove from the heat as soon as the caramel is golden (or gives off a light smoke). cooking 15min" data-tags="[&#34;tips&#34;, &#34;dessert&#34;, &#34;vegan&#34;]">
+          <a href="recipes/caramel.html"><div class="card-body"><h2>Caramel</h2><p class="card-excerpt">How to get it right every time.</p><div class="recipe-tags"><span class="tag">tips</span><span class="tag">dessert</span><span class="tag">vegan</span></div></div><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card has-image" data-search="Crackers snack gluten-free budget-friendly Hard to eat only one. Preparation Step 1 Mix 30g of rolled oats, 60g of pumpkin seeds, 30g of sunflower seeds, 130g of buckwheat flour and 1/2 tsp of salt. Step 2 Stir 130ml of water and 20g of olive oil into the dry mix. Step 3 (Optional) Add 60g of grated cheese or spices of your choice. Step 4 Lay down a first sheet of baking paper. Spread the mixture on it, place a second sheet on top, and flatten with a rolling pin. Step 5 Score lines or triangles. Carefully remove the top sheet. Step 6 Bake at 150ºC for about 1 hour. preparation 10 cooking 1h" data-tags="[&#34;snack&#34;, &#34;gluten-free&#34;, &#34;budget-friendly&#34;]">
+          <a href="recipes/crackers.html"><div class="card-body"><h2>Crackers</h2><p class="card-excerpt">Hard to eat only one.</p><div class="recipe-tags"><span class="tag">snack</span><span class="tag">gluten-free</span><span class="tag">budget-friendly</span></div></div><img class="card-image" src="assets/images/thumbnails/crackers.jpeg" srcset="assets/images/thumbnails/small/crackers.jpeg 112w, assets/images/thumbnails/crackers.jpeg 224w" sizes="(max-width: 480px) 88px, 112px" width="224" height="224" alt="" loading="lazy"><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card" data-search="Crunchy Granola breakfast healthy gluten-free budget-friendly vegan A budget-friendly classic. Preparation Step 1 Mix 3 mugs of rolled oats, 4 tbsp of pure cocoa, 3 tbsp of grated coconut, 1 tbsp of sesame seeds, 2 tbsp of flaked almonds. Step 2 Stir in 1/2 mug of coconut oil, 1/4 mug of rice syrup, 1/4 mug of agave syrup, 1 tbsp of vanilla extract. Step 3 Spread on baking paper and bake at 180ºC for 10min. Step 4 Stir, and bake for another 6min. Step 5 Let cool and break into pieces. preparation 5min cooking 16min" data-tags="[&#34;breakfast&#34;, &#34;healthy&#34;, &#34;gluten-free&#34;, &#34;budget-friendly&#34;, &#34;vegan&#34;]">
+          <a href="recipes/granola.html"><div class="card-body"><h2>Crunchy Granola</h2><p class="card-excerpt">A budget-friendly classic.</p><div class="recipe-tags"><span class="tag">breakfast</span><span class="tag">healthy</span><span class="tag">gluten-free</span><span class="tag">budget-friendly</span><span class="tag">vegan</span></div></div><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card" data-search="Cookies snack cookies Julia’s version. Preparation Step 1 Preheat the oven to 200ºC. Step 2 Brown 115g of butter in a pan (6-7min). Step 3 In a first bowl, mix 160g of flour, a pinch of salt, and 1/2 tsp of baking soda. Step 4 Wait for the butter to cool down. In a second bowl, mix 70g of white sugar with 80g of brown sugar, and stir in the butter. Add 1 egg and 1 tsp of vanilla extract, and mix well. Step 5 Combine both bowls without overmixing, to keep some texture, then add the chocolate chips. Step 6 Bake for 8 to 10min. preparation 5min cooking 10min" data-tags="[&#34;snack&#34;, &#34;cookies&#34;]">
+          <a href="recipes/julia-cookies.html"><div class="card-body"><h2>Cookies</h2><p class="card-excerpt">Julia’s version.</p><div class="recipe-tags"><span class="tag">snack</span><span class="tag">cookies</span></div></div><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card" lang="en" data-search="Lemon Ginger Syrup drinks easy budget-friendly healthy vegan Preparation Step 1 Squeeze 0.5L of lemon juice. Step 2 Peel 300g of fresh ginger and grind it in a food processor. Step 3 Simmer the mixture over low heat with 0.5L of water and 100g of sugar. Step 4 Blend the result. preparation 10 cooking 45 lang en" data-tags="[&#34;drinks&#34;, &#34;easy&#34;, &#34;budget-friendly&#34;, &#34;healthy&#34;, &#34;vegan&#34;]">
+          <a href="recipes/lemon-ginger-syrup.html"><div class="card-body"><h2>Lemon Ginger Syrup</h2><p class="card-excerpt">Squeeze 0.5L of lemon juice.</p><div class="recipe-tags"><span class="tag">drinks</span><span class="tag">easy</span><span class="tag">budget-friendly</span><span class="tag">healthy</span><span class="tag">vegan</span></div></div><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card has-image" data-search="Lemon Tart dessert tart Preparation Step 1 Beat 75g of sugar with 2 whole eggs and 3 egg yolks. Step 2 Add 200ml of lemon juice, some lemon zest, 30g of melted butter, and 25g of cornstarch diluted in a little water. Bring to the boil, stirring constantly, until it thickens. Step 3 Crush 200g of speculoos biscuits and mix them with 75g of melted butter. Spread over the bottom of a 20-25cm tart dish and refrigerate for 30min. Step 4 Make a meringue with the 3 egg whites and 1 pinch of salt. Beat the whites to stiff peaks and gradually add 150g of icing sugar. Step 5 Assemble. Step 6 Put the tart under the oven grill for a few minutes, or brown it with a blowtorch. cooking 10" data-tags="[&#34;dessert&#34;, &#34;tart&#34;]">
+          <a href="recipes/lemon-tart.html"><div class="card-body"><h2>Lemon Tart</h2><p class="card-excerpt">Beat 75g of sugar with 2 whole eggs and 3 egg yolks.</p><div class="recipe-tags"><span class="tag">dessert</span><span class="tag">tart</span></div></div><img class="card-image" src="assets/images/thumbnails/lemon-tart.jpeg" srcset="assets/images/thumbnails/small/lemon-tart.jpeg 112w, assets/images/thumbnails/lemon-tart.jpeg 224w" sizes="(max-width: 480px) 88px, 112px" width="224" height="224" alt="" loading="lazy"><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card has-image" data-search="Onion Soup winter soup easy budget-friendly A winter classic that always pleases. Preparation Step 1 Peel and thinly slice the 4 onions. Step 2 Cook them in 50g of butter and 1 tbsp of oil until tender and golden brown. Step 3 Sprinkle with 1 tbsp of flour, pour in 1L of hot water and 250ml of white wine, and season. Step 4 Cover and simmer gently for 20 minutes. Step 5 Toast 6 slices of bread. Step 6 Place the slices at the bottom of 4 small ovenproof bowls. Step 7 Sprinkle with some grated Comté. Pour the soup over. Sprinkle with more cheese and grill until golden. Tips Use stock instead of water. Spread mustard on the bread slices. Crack an egg into the bowl of soup before adding the grated cheese. preparation 45 cooking 15" data-tags="[&#34;winter&#34;, &#34;soup&#34;, &#34;easy&#34;, &#34;budget-friendly&#34;]">
+          <a href="recipes/onion-soup.html"><div class="card-body"><h2>Onion Soup</h2><p class="card-excerpt">A winter classic that always pleases.</p><div class="recipe-tags"><span class="tag">winter</span><span class="tag">soup</span><span class="tag">easy</span><span class="tag">budget-friendly</span></div></div><img class="card-image" src="assets/images/thumbnails/onion-soup.jpeg" srcset="assets/images/thumbnails/small/onion-soup.jpeg 112w, assets/images/thumbnails/onion-soup.jpeg 224w" sizes="(max-width: 480px) 88px, 112px" width="224" height="224" alt="" loading="lazy"><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+        <article class="recipe-card" data-search="Walnut Cake dessert From Mamie Lucette. Preparation Preheat the oven to 180ºC. Step 1 Blend 250g of walnuts. Step 2 Beat the 6 egg yolks with 200g of sugar. Stir in the walnuts and 50g of breadcrumbs. Step 3 Gently fold in 6 egg whites beaten to stiff peaks. Step 4 Bake for 30min. preparation 15min cooking 30min" data-tags="[&#34;dessert&#34;]">
+          <a href="recipes/walnut-cake.html"><div class="card-body"><h2>Walnut Cake</h2><p class="card-excerpt">From Mamie Lucette.</p><div class="recipe-tags"><span class="tag">dessert</span></div></div><span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+      </div>
     </main>
     <footer class="site-footer">
-      <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0 Universal</a> — Built with
-      <a href="https://github.com/leplatrem/python-recettes">Recettes</a>, the free software
-      that turns Markdown files into a recipes website.
+      <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0 Universal</a> — Built with <a href="https://github.com/leplatrem/python-recettes">Recettes v0.1.dev1+gf58e96280</a>, the free software that turns Markdown files into a recipes website.
     </footer>
-
-    <template id="tag-cloud-item-template">
-      <button class="tag-cloud-item" type="button" aria-pressed="false">
-        <span data-tag-name></span>
-        <span data-tag-count></span>
-      </button>
-    </template>
-
-    <template id="recipe-card-template">
-      <article class="recipe-card">
-        <a>
-          <div class="card-body">
-            <h2 data-recipe-title></h2>
-            <p class="card-excerpt" data-recipe-excerpt></p>
-            <div class="recipe-tags" data-recipe-tags></div>
-          </div>
-          <img class="card-image" data-recipe-image alt="" loading="lazy" hidden>
-          <span class="card-arrow" aria-hidden="true">↗</span>
-        </a>
-      </article>
-    </template>
-
-    <template id="recipe-tag-template">
-      <span class="tag" data-tag-label></span>
-    </template>
   </body>
 </html>

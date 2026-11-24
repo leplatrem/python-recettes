@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import unicodedata
+from functools import cache
+from importlib import resources
 from pathlib import Path
 from typing import NoReturn
 
@@ -32,6 +35,30 @@ def slugify(text: str) -> str:
 
 def natural_key(name: str) -> list[object]:
     return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", name.casefold())]
+
+
+DEFAULT_LANG = "en"
+
+
+@cache
+def translations() -> dict[str, dict[str, str]]:
+    """Interface strings by language.
+
+    In the strings, `{count}` is replaced by a number, `{recettes}` by a link to the project.
+    """
+    path = resources.files("recettes") / "translations.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def strings(lang: str) -> dict[str, str]:
+    """Interface strings for a language tag ("fr-CA" -> French), English by default."""
+    primary = lang.split("-")[0].casefold()
+    return translations().get(primary, translations()[DEFAULT_LANG])
+
+
+def recipes_count(lang: str, count: int) -> str:
+    """ "1 recipe", "2 recipes"..."""
+    return strings(lang)["results_one" if count == 1 else "results_other"].format(count=count)
 
 
 # Settings guessed from the CI environment (GitHub Actions, GitLab CI).

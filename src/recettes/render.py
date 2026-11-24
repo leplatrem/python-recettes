@@ -13,10 +13,10 @@ import jinja2
 from markdown_it.token import Token
 from markupsafe import Markup
 
-from recettes import __version__, i18n, markdown
+from recettes import __version__, markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
-from recettes.utils import natural_key, slugify, strip_accents
+from recettes.utils import natural_key, slugify, strings, strip_accents
 
 
 def quantity(ingredient: Ingredient) -> str:
@@ -67,7 +67,7 @@ def gallery_alt(recipe: Recipe, image: str, index: int, lang: str) -> str:
     suffix = Path(image).stem[len(recipe.slug) + 1 :].replace("-", " ").replace("_", " ")
     if suffix.strip() and not suffix.isdigit():
         return f"{recipe.title} – {suffix.strip()}"
-    return f"{recipe.title}, {i18n.strings(lang)['photo']} {index}"
+    return f"{recipe.title}, {strings(lang)['photo']} {index}"
 
 
 def insert_section_images(recipe: Recipe) -> list[Token]:

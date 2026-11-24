@@ -11,7 +11,6 @@ from pathlib import Path
 
 from markupsafe import Markup
 
-from recettes import i18n
 from recettes.images import cached_export_image, image_size, output_name, prune_cache
 from recettes.recipes import (
     Recipe,
@@ -25,7 +24,7 @@ from recettes.render import (
     render_template,
     tag_counts,
 )
-from recettes.utils import fail
+from recettes.utils import DEFAULT_LANG, fail, recipes_count, strings
 
 DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
 # Defaults are twice the stylesheet sizes (recipe page column width, home page card
@@ -55,7 +54,7 @@ class BuildOptions:
 def common_language(recipes: list[Recipe]) -> str:
     """Language of all recipes when they have the same, English otherwise."""
     languages = {recipe.lang for recipe in recipes}
-    return (languages.pop() or i18n.DEFAULT_LANG) if len(languages) == 1 else i18n.DEFAULT_LANG
+    return (languages.pop() or DEFAULT_LANG) if len(languages) == 1 else DEFAULT_LANG
 
 
 def export_images(
@@ -161,7 +160,7 @@ def build(
             description=recipe.excerpt,
             image=recipe.main_image,
             article_tags=recipe.tags,
-            t=i18n.strings(lang),
+            t=strings(lang),
             **common,
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
@@ -174,10 +173,10 @@ def build(
         recipes=recipes,
         path="",
         page_type="website",
-        description=options.description or i18n.recipes_count(site_lang, len(recipes)),
+        description=options.description or recipes_count(site_lang, len(recipes)),
         image=None,
         article_tags=[],
-        t=i18n.strings(site_lang),
+        t=strings(site_lang),
         **common,
     )
     (destination / "index.html").write_text(index, encoding="utf-8")

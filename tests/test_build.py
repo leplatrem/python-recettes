@@ -404,7 +404,7 @@ def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
     build(source, tmp_path / "plain")
     plain = (tmp_path / "plain" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
     assert "{{ edit_link }}" not in plain
-    assert 'aria-label="Edit"' not in plain
+    assert "aria-label=\"Edit" not in plain
 
     build(
         source,
@@ -414,7 +414,8 @@ def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
     page = (tmp_path / "edit" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
     assert (
         '<a href="https://codeberg.org/me/recipes/_edit/main/r/soupe%20oignon.md" '
-        'aria-label="Edit" title="Edit" target="_blank">✎</a>'
+        'aria-label="Edit (opens in a new tab)" title="Edit (opens in a new tab)" '
+        'target="_blank" rel="noopener">✎</a>'
     ) in page
 
 

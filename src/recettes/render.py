@@ -254,4 +254,8 @@ def edit_link(edit_url: str | None, path: Path) -> str:
     if not edit_url:
         return ""
     url = edit_url.rstrip("/") + "/" + quote(path.name)
-    return f'<a href="{attr(url)}" aria-label="Edit" title="Edit" target="_blank">✎</a>'
+    label = "Edit (opens in a new tab)"
+    return (
+        f'<a href="{attr(url)}" aria-label="{label}" title="{label}" target="_blank" '
+        'rel="noopener">✎</a>'
+    )

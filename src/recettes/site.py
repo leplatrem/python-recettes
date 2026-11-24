@@ -7,6 +7,7 @@ import dataclasses
 import hashlib
 import html
 import shutil
+from importlib import resources
 from pathlib import Path
 from urllib.parse import quote
 
@@ -117,9 +118,9 @@ def build(
         fail("Cache directory must be outside the output directory")
     recipes = load_recipes(source, options.simple_mode)
 
-    package_dir = Path(__file__).parent
-    static = package_dir / "static"
-    templates = package_dir / "templates"
+    package = resources.files("recettes")
+    static = package / "static"
+    templates = package / "templates"
     assets = destination / "assets"
     recipes_dir = destination / "recipes"
     # Remove previous outputs, so deleted recipes and pictures are not published anymore.
@@ -130,11 +131,14 @@ def build(
     # Content hashes appended to asset URLs, so browsers never use stale cached copies.
     versions = {}
     for filename in ("style.css", "app.js", "recipe.js", "favicon.svg"):
-        shutil.copyfile(static / filename, assets / filename)
-        digest = hashlib.sha256((static / filename).read_bytes()).hexdigest()[:10]
+        content = (static / filename).read_bytes()
+        (assets / filename).write_bytes(content)
+        digest = hashlib.sha256(content).hexdigest()[:10]
         versions[filename.replace(".", "_") + "_version"] = digest
     footer_license = license_html(options.license)
-    shutil.copytree(static / "fonts", assets / "fonts", dirs_exist_ok=True)
+    (assets / "fonts").mkdir()
+    for font in (static / "fonts").iterdir():
+        (assets / "fonts" / font.name).write_bytes(font.read_bytes())
     image_dir = assets / "images"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     used_cache: set[Path] = set()

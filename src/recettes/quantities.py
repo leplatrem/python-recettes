@@ -7,7 +7,7 @@ import json
 import re
 from fractions import Fraction
 from functools import cache
-from pathlib import Path
+from importlib import resources
 
 from recettes.text import strip_accents
 
@@ -83,7 +83,7 @@ def name_words(text: str) -> tuple[str, ...]:
 @cache
 def densities() -> list[tuple[tuple[str, ...], float]]:
     """Known ingredient names (as words) with their density, longest names first."""
-    path = Path(__file__).parent / "densities.json"
+    path = resources.files("recettes") / "densities.json"
     entries = json.loads(path.read_text(encoding="utf-8"))
     names = [
         (name_words(name), float(entry["density"]))

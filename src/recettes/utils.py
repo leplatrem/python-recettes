@@ -1,4 +1,4 @@
-"""Text helpers."""
+"""Helpers shared by the other modules."""
 
 from __future__ import annotations
 

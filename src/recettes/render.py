@@ -15,7 +15,7 @@ from markdown_it.token import Token
 from recettes import __version__, i18n, markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
-from recettes.text import natural_key, slugify, strip_accents
+from recettes.utils import natural_key, slugify, strip_accents
 
 
 def attr(value: object) -> str:

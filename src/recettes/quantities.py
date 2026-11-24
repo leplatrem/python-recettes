@@ -9,7 +9,7 @@ from fractions import Fraction
 from functools import cache
 from importlib import resources
 
-from recettes.text import strip_accents
+from recettes.utils import strip_accents
 
 QUANTITY_RE = re.compile(
     r"^(?P<amount>\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)?)"

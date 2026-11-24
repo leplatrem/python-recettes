@@ -14,7 +14,7 @@ from recettes import markdown
 from recettes.errors import fail
 from recettes.images import output_name
 from recettes.quantities import MASS_UNITS_G, Ingredient, aggregate_ingredients, volume_ml
-from recettes.text import natural_key, slugify
+from recettes.utils import natural_key, slugify
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif", ".heic", ".heif"}
 

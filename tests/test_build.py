@@ -338,7 +338,7 @@ def test_links_to_missing_files_fail_the_build(tmp_path: Path, link: str) -> Non
     source.mkdir()
     (source / "flan.md").write_text(f"Servez avec {link}.\n", encoding="utf-8")
 
-    with pytest.raises(RecettesError, match="'flan.md' links to missing file"):
+    with pytest.raises(RecettesError, match=r"'flan\.md' links to missing file"):
         build(source, tmp_path / "site")
 
 
@@ -578,7 +578,7 @@ def test_pictures_converted_to_the_same_name_are_rejected(tmp_path: Path) -> Non
     (source / "soup.jpg").write_bytes(b"fake jpeg")
     (source / "soup.heic").write_bytes(b"fake heic")
 
-    with pytest.raises(RecettesError, match="both be published as 'soup.jpg'"):
+    with pytest.raises(RecettesError, match=r"both be published as 'soup\.jpg'"):
         build(source, tmp_path / "site")
 
 
@@ -617,7 +617,7 @@ def test_lint_checks_links_and_densities(
     assert not (tmp_path / "site").exists()
 
     (source / "soup.md").write_text("Serve with [bread](bread.md).\n", encoding="utf-8")
-    with pytest.raises(RecettesError, match="links to missing file 'bread.md'"):
+    with pytest.raises(RecettesError, match=r"links to missing file 'bread\.md'"):
         lint(source)
 
 

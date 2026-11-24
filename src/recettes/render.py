@@ -63,9 +63,9 @@ def property_name(name: str) -> str:
 
 
 def property_value(name: str, value: object) -> str:
-    if name.casefold() in DURATION_PROPERTIES and isinstance(value, (int, float)):
-        if not isinstance(value, bool):
-            return f"{display_value(value)} min"
+    is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
+    if name.casefold() in DURATION_PROPERTIES and is_number:
+        return f"{display_value(value)} min"
     return display_value(value)
 
 
@@ -121,7 +121,7 @@ def insert_section_images(recipe: Recipe) -> list[Token]:
     headings = markdown.headings(tokens)
     insertions: dict[int, str] = {}
     placed = set()
-    for number, (index, text) in enumerate(headings):
+    for number, (_, text) in enumerate(headings):
         slug = slugify(text)
         if slug not in section_images or slug in placed:
             continue

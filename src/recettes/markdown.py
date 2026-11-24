@@ -84,9 +84,9 @@ def inline_text(token: Token, with_ingredients: bool = True) -> str:
     """Text of an inline token, without markup."""
     parts = []
     for child in token.children or []:
-        if child.type in {"text", "code_inline", "image"}:
-            parts.append(child.content)
-        elif child.type == "ingredient" and with_ingredients:
+        if child.type in {"text", "code_inline", "image"} or (
+            child.type == "ingredient" and with_ingredients
+        ):
             parts.append(child.content)
         elif child.type in {"softbreak", "hardbreak"}:
             parts.append(" ")

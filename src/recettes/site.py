@@ -112,9 +112,7 @@ def build(
     if source == destination or source in destination.parents:
         fail("Output directory must be outside the recipe source directory")
     # Only the top level of the source directory is read, so the cache can be a subdirectory.
-    if cache_dir and (
-        cache_dir == source or cache_dir == destination or destination in cache_dir.parents
-    ):
+    if cache_dir and (cache_dir in (source, destination) or destination in cache_dir.parents):
         fail("Cache directory must be outside the output directory")
     recipes = load_recipes(source, options.simple_mode)
 

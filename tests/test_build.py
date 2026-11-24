@@ -7,7 +7,6 @@ import pytest
 
 from recettes import __version__, markdown
 from recettes.ci import ci_base_url, ci_edit_url
-from recettes.errors import RecettesError
 from recettes.quantities import (
     Ingredient,
     aggregate_ingredients,
@@ -16,6 +15,7 @@ from recettes.quantities import (
     volume_ml,
 )
 from recettes.site import BuildOptions, build, lint
+from recettes.utils import RecettesError
 
 
 @pytest.mark.parametrize(

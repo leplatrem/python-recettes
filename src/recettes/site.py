@@ -12,7 +12,6 @@ from pathlib import Path
 from urllib.parse import quote
 
 from recettes import i18n
-from recettes.errors import fail
 from recettes.images import cached_export_image, image_size, output_name, prune_cache
 from recettes.recipes import (
     Recipe,
@@ -30,6 +29,7 @@ from recettes.render import (
     sitemap_xml,
     tag_cloud_html,
 )
+from recettes.utils import fail
 
 DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
 # Defaults are twice the stylesheet sizes (recipe page column width, home page card

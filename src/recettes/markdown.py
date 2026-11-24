@@ -13,8 +13,8 @@ from markdown_it.rules_inline import StateInline
 from markdown_it.token import Token
 from markdown_it.utils import EnvType, OptionsDict
 
-from recettes.errors import fail
 from recettes.quantities import Ingredient
+from recettes.utils import fail
 
 HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 

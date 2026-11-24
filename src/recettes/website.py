@@ -56,6 +56,7 @@ class BuildOptions:
     image_width: int = DEFAULT_IMAGE_WIDTH
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH
     simple_mode: bool = True
+    diagrams: bool = True
     cache_dir: Path | None = None
     # Home page description for search engines and link previews, guessed when empty.
     description: str = ""
@@ -127,7 +128,7 @@ def build(
     # Only the top level of the source directory is read, so the cache can be a subdirectory.
     if cache_dir and (cache_dir in (source, destination) or destination in cache_dir.parents):
         fail("Cache directory must be outside the output directory")
-    recipes = load_recipes(source, options.simple_mode)
+    recipes = load_recipes(source, options.simple_mode, options.diagrams)
 
     package = resources.files("recettes")
     static = package / "static"
@@ -181,6 +182,7 @@ def build(
             lang=lang,
             recipe=recipe,
             content=recipe_content(recipe),
+            diagram=recipe_diagram(recipe),
             edit_url=edit_link(options.edit_url, recipe.path),
             path=recipe_url(recipe),
             page_type="article",
@@ -310,6 +312,20 @@ def recipe_content(recipe: Recipe) -> Markup:
     """Recipe text, with its ingredients and section pictures."""
     tokens = insert_section_images(recipe)
     return Markup(markdown.render(tokens, lambda item: macros().ingredient(item, "span")))
+
+
+def recipe_diagram(recipe: Recipe) -> Markup:
+    """Diagram of the steps, each one between the step before it and its ingredients."""
+    diagram = Markup()
+    if not recipe.diagram:
+        return diagram
+    for label, ingredients in markdown.diagram_steps(recipe.tokens):
+        inputs = diagram + Markup().join(macros().ingredient(item, "div") for item in ingredients)
+        diagram = Markup(
+            '<div class="schema-step"><div class="schema-inputs">{}</div>'
+            '<div class="schema-label">{}</div></div>'
+        ).format(inputs, label)
+    return diagram
 
 
 def search_text(recipe: Recipe) -> str:

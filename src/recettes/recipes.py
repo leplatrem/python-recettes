@@ -47,6 +47,8 @@ class Recipe:
     main_image: str | None
     section_images: dict[str, list[str]]
     gallery: list[str]
+    # Whether to draw a diagram of the steps, from the `diagram` property or the build option.
+    diagram: bool = True
     # Size of the published pictures, by path in the images folder (once exported).
     picture_sizes: dict[str, tuple[int, int]] = dataclasses.field(default_factory=dict)
 
@@ -140,7 +142,7 @@ def parse_portions(value: object) -> int | None:
     return portions if portions >= 1 else None
 
 
-def load_recipes(source: Path, simple_mode: bool = True) -> list[Recipe]:
+def load_recipes(source: Path, simple_mode: bool = True, diagrams: bool = True) -> list[Recipe]:
     """Read and check all recipes of the source directory (its top level only)."""
     if not source.is_dir():
         fail(f"Recipe directory does not exist: {source}")
@@ -149,7 +151,9 @@ def load_recipes(source: Path, simple_mode: bool = True) -> list[Recipe]:
         fail(f"No Markdown recipes found in {source}")
     images = assign_images(source, {path.stem for path in paths})
     link_targets = local_link_targets(paths, images)
-    return [load_recipe(path, link_targets, images[path.stem], simple_mode) for path in paths]
+    return [
+        load_recipe(path, link_targets, images[path.stem], simple_mode, diagrams) for path in paths
+    ]
 
 
 def load_recipe(
@@ -157,6 +161,7 @@ def load_recipe(
     link_targets: dict[Path, str],
     images: list[Path],
     simple_mode: bool = True,
+    diagrams: bool = True,
 ) -> Recipe:
     try:
         document = frontmatter.load(path)
@@ -184,7 +189,7 @@ def load_recipe(
                     err=True,
                 )
 
-    excluded = {"title", "tags"}
+    excluded = {"title", "tags", "diagram"}
     if portions is not None or metadata.get("portions") in (None, ""):
         excluded.add("portions")
     properties = [
@@ -206,4 +211,5 @@ def load_recipe(
         main_image=main_image,
         section_images=section_images,
         gallery=gallery,
+        diagram=bool(metadata.get("diagram", diagrams)),
     )

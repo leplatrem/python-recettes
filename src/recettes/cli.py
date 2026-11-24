@@ -84,6 +84,13 @@ def build_command(
             help="Offer a switch to measure ingredients with glasses and spoons instead of a scale",
         ),
     ] = True,
+    diagrams: Annotated[
+        bool,
+        typer.Option(
+            "--diagrams/--no-diagrams",
+            help="Draw a diagram of each recipe, unless its `diagram` property says otherwise",
+        ),
+    ] = True,
     cache_dir: Annotated[
         Path,
         typer.Option(
@@ -139,6 +146,7 @@ def build_command(
         image_width=image_width,
         thumbnail_width=thumbnail_width,
         simple_mode=simple_mode,
+        diagrams=diagrams,
         cache_dir=cache_dir,
         lang=lang,
         description=description,

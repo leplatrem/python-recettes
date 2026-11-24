@@ -102,6 +102,8 @@ Pages include [Open Graph](https://ogp.me/) tags, for link previews in social ne
 recettes build examples/ --base-url https://recipes.example.com/
 ```
 
+A `sitemap.xml` file listing the pages for search engines is also generated with this URL.
+
 The home page description, for search engines and link previews, can be set with `--description` (the number of recipes by default).
 
 The footer of every page shows the license of the recipes, [Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/) by default. Pass another one, in Markdown, with `--license` (or an empty string to hide it):

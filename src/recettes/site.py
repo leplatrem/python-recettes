@@ -26,6 +26,7 @@ from recettes.render import (
     recipe_card_html,
     recipe_html_parts,
     render_template,
+    sitemap_xml,
     tag_cloud_html,
 )
 
@@ -189,6 +190,11 @@ def build(
         **interface_values(site_lang),
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
+    sitemap = destination / "sitemap.xml"
+    if options.base_url:
+        sitemap.write_text(sitemap_xml(options.base_url, recipes), encoding="utf-8")
+    else:
+        sitemap.unlink(missing_ok=True)
     if cache_dir:
         prune_cache(cache_dir, used_cache)
     return len(recipes)

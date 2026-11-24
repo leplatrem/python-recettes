@@ -499,6 +499,13 @@ def test_open_graph_tags(tmp_path: Path) -> None:
     assert '<meta property="og:url" content="https://example.com/recettes/">' in index
     assert '<meta name="description" content="1 recipe">' in index
     assert '<meta name="twitter:card" content="summary">' in index
+    assert (output / "sitemap.xml").read_text(encoding="utf-8") == (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        "  <url><loc>https://example.com/recettes/</loc></url>\n"
+        "  <url><loc>https://example.com/recettes/recipes/tarte.html</loc></url>\n"
+        "</urlset>\n"
+    )
 
     build(source, output, BuildOptions(description="Family recipes", lang="fr-CA"))
     index = (output / "index.html").read_text(encoding="utf-8")
@@ -519,6 +526,7 @@ def test_open_graph_tags_without_base_url(tmp_path: Path, no_ci_env: pytest.Monk
     assert "og:" not in recipe
     assert "og:" not in (output / "index.html").read_text(encoding="utf-8")
     assert "canonical" not in recipe
+    assert not (output / "sitemap.xml").exists()
 
 
 def test_license_shown_in_footer(tmp_path: Path) -> None:

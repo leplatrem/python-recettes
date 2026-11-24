@@ -271,6 +271,18 @@ def meta_tags(
     return "\n    ".join(tags_html)
 
 
+def sitemap_xml(base_url: str, recipes: list[Recipe]) -> str:
+    """List of the website pages, for search engines."""
+    base = base_url.rstrip("/") + "/"
+    urls = [base, *(base + recipe_url(recipe) for recipe in recipes)]
+    entries = "".join(f"  <url><loc>{html.escape(url)}</loc></url>\n" for url in urls)
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{entries}</urlset>\n"
+    )
+
+
 def license_html(license: str) -> str:
     """Render the license Markdown for the footer, followed by a separator."""
     license = license.strip()

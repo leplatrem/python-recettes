@@ -155,3 +155,5 @@ The version comes from the Git tag. Creating a [new release](https://github.com/
 ## License
 
 CC0 1.0 Universal
+
+The bundled fonts, DM Sans and Playfair Display, are distributed under the [SIL Open Font License](src/recettes/static/fonts/OFL.txt).

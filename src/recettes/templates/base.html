@@ -15,7 +15,8 @@
   <body>
 {% block body %}{% endblock %}
     <footer class="site-footer">
-      {{ license }} {{ t_built_with }}
+{% set recettes_link %}<a href="{{ project_url }}">Recettes v{{ version }}</a>{% endset %}
+      {{ license }} {{ t.built_with|replace("{recettes}", recettes_link) }}
     </footer>
   </body>
 </html>

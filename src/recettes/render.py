@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import html
 import json
 from collections import Counter
 from pathlib import Path
@@ -18,10 +17,6 @@ from recettes import __version__, i18n, markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
 from recettes.utils import natural_key, slugify, strip_accents
-
-
-def attr(value: object) -> str:
-    return html.escape(str(value), quote=True)
 
 
 def quantity(ingredient: Ingredient) -> str:
@@ -164,6 +159,8 @@ TEMPLATES.filters.update(
 # Jinja2 types its globals after its own defaults.
 template_globals: dict[str, Any] = TEMPLATES.globals
 template_globals.update(
+    project_url="https://github.com/leplatrem/python-recettes",
+    version=__version__,
     gallery_alt=gallery_alt,
     picture_files=picture_files,
     recipe_url=recipe_url,
@@ -178,18 +175,6 @@ def macros() -> Any:
 
 def render_template(filename: str, /, **context: object) -> str:
     return TEMPLATES.get_template(filename).render(context) + "\n"
-
-
-PROJECT_URL = "https://github.com/leplatrem/python-recettes"
-
-
-def interface_values(lang: str) -> dict[str, Markup]:
-    """Translated interface strings, as `t_*` template values."""
-    strings = i18n.strings(lang)
-    values = {f"t_{name}": Markup(attr(text)) for name, text in strings.items()}
-    link = f'<a href="{PROJECT_URL}">Recettes v{attr(__version__)}</a>'
-    values["t_built_with"] = Markup(attr(strings["built_with"]).replace("{recettes}", link))
-    return values
 
 
 def edit_link(edit_url: str | None, path: Path) -> str:

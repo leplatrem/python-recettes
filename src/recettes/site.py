@@ -20,7 +20,6 @@ from recettes.recipes import (
 )
 from recettes.render import (
     edit_link,
-    interface_values,
     license_html,
     recipe_content,
     render_template,
@@ -159,7 +158,7 @@ def build(
             article_tags=recipe.tags,
             license=footer_license,
             **versions,
-            **interface_values(lang),
+            t=i18n.strings(lang),
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
     index = render_template(
@@ -167,7 +166,6 @@ def build(
         root="",
         title=options.title,
         lang=site_lang,
-        search_placeholder=i18n.strings(site_lang)["search_placeholder"].format(count=len(recipes)),
         tags=tag_counts(recipes),
         recipes=recipes,
         site_name=options.title,
@@ -179,7 +177,7 @@ def build(
         article_tags=[],
         license=footer_license,
         **versions,
-        **interface_values(site_lang),
+        t=i18n.strings(site_lang),
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
     sitemap = destination / "sitemap.xml"

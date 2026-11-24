@@ -12,14 +12,14 @@
       <h1>{{ title }}</h1>
       <!-- Search and tags need JavaScript: app.js shows them. -->
       <label class="search-box" data-requires-js hidden>
-        <span class="visually-hidden">{{ t_search_label }}</span>
+        <span class="visually-hidden">{{ t.search_label }}</span>
         <span aria-hidden="true">⌕</span>
-        <input id="recipe-search" type="search" placeholder="{{ search_placeholder }}" autocomplete="off">
+        <input id="recipe-search" type="search" placeholder="{{ t.search_placeholder|replace("{count}", recipes|length) }}" autocomplete="off">
       </label>
-      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="{{ t_tags_label }}" data-requires-js hidden>
+      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="{{ t.tags_label }}" data-requires-js hidden>
         {%- for tag in tags %}<button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="{{ tag.name }}" style="--tag-weight: {{ "%.3g"|format(tag.weight) }}"><span>{{ tag.name }}</span><span data-tag-count>{{ tag.count }}</span></button>{% endfor -%}
       </div>
-      <p class="search-status" id="search-status" role="status" data-none="{{ t_results_none }}" data-one="{{ t_results_one }}" data-other="{{ t_results_other }}"></p>
+      <p class="search-status" id="search-status" role="status" data-none="{{ t.results_none }}" data-one="{{ t.results_one }}" data-other="{{ t.results_other }}"></p>
       <div class="recipe-grid" id="recipe-grid">
 {% for recipe in recipes %}
         <article class="recipe-card{% if recipe.main_image %} has-image{% endif %}"{% if recipe.lang %} lang="{{ recipe.lang }}"{% endif %} data-search="{{ search_text(recipe) }}" data-tags="{{ recipe.tags|json }}">

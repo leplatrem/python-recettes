@@ -5,9 +5,9 @@
 {% endblock %}
 {% block body %}
     <nav class="detail-nav">
-      <a href="../index.html" aria-label="{{ t_back }}">←</a>
+      <a href="../index.html" aria-label="{{ t.back }}">←</a>
 {% if edit_url %}
-      <a href="{{ edit_url }}" aria-label="{{ t_edit }}" title="{{ t_edit }}" target="_blank" rel="noopener">✎</a>
+      <a href="{{ edit_url }}" aria-label="{{ t.edit }}" title="{{ t.edit }}" target="_blank" rel="noopener">✎</a>
 {% endif %}
     </nav>
     <main class="recipe-page">
@@ -25,15 +25,15 @@
         </header>
         <section class="ingredients">
           <div class="ingredients-heading">
-            <h2 class="ingredients-title">{{ t_ingredients }}</h2>
+            <h2 class="ingredients-title">{{ t.ingredients }}</h2>
             <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml"{% if not recipe.ingredients|selectattr("ml")|list %} hidden{% endif %}>
               <input type="checkbox" id="simple-toggle" role="switch">
-              <span>{{ t_simple }}</span>
+              <span>{{ t.simple }}</span>
             </label>
             <div class="servings" id="servings-control"{% if recipe.portions %} data-portions="{{ recipe.portions }}"{% else %} hidden{% endif %}>
-              <button type="button" data-servings-step="-1" aria-label="{{ t_decrease_servings }}">−</button>
+              <button type="button" data-servings-step="-1" aria-label="{{ t.decrease_servings }}">−</button>
               <span><strong id="servings-count">{{ recipe.portions or "" }}</strong>×</span>
-              <button type="button" data-servings-step="1" aria-label="{{ t_increase_servings }}">+</button>
+              <button type="button" data-servings-step="1" aria-label="{{ t.increase_servings }}">+</button>
             </div>
           </div>
           <ul class="ingredient-list">

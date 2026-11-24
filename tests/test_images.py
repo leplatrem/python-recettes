@@ -4,7 +4,7 @@ import pytest
 from PIL import Image, ImageCms
 
 from recettes.images import export_image
-from recettes.site import build
+from recettes.site import BuildOptions, build
 
 
 def test_images_are_downscaled_and_main_picture_has_a_thumbnail(tmp_path: Path) -> None:
@@ -15,7 +15,7 @@ def test_images_are_downscaled_and_main_picture_has_a_thumbnail(tmp_path: Path) 
     Image.new("RGB", (300, 600), "blue").save(source / "tarte-etape-1.png")
     output = tmp_path / "site"
 
-    build(source, output, image_width=800, thumbnail_width=100)
+    build(source, output, BuildOptions(image_width=800, thumbnail_width=100))
 
     images = output / "assets" / "images"
     with Image.open(images / "tarte.jpg") as image:
@@ -40,7 +40,7 @@ def test_multi_picture_jpegs_from_phones_are_downscaled(tmp_path: Path) -> None:
         assert (image.format, image.is_animated) == ("MPO", True)
     output = tmp_path / "site"
 
-    build(source, output, image_width=800, thumbnail_width=100)
+    build(source, output, BuildOptions(image_width=800, thumbnail_width=100))
 
     images = output / "assets" / "images"
     with Image.open(images / "tarte.jpeg") as image:
@@ -60,7 +60,7 @@ def test_resized_images_drop_exif_but_keep_color_profile(tmp_path: Path) -> None
     Image.new("RGB", (2000, 1000), "red").save(source / "tarte.jpg", exif=exif, icc_profile=icc)
     output = tmp_path / "site"
 
-    build(source, output, image_width=800, thumbnail_width=100)
+    build(source, output, BuildOptions(image_width=800, thumbnail_width=100))
 
     images = output / "assets" / "images"
     for path in (images / "tarte.jpg", images / "thumbnails" / "tarte.jpg"):
@@ -81,7 +81,7 @@ def test_heic_images_are_converted_to_jpeg(tmp_path: Path) -> None:
     Image.new("RGB", (300, 200), "green").save(source / "gnocchi-extra.HEIC", format="HEIF")
     output = tmp_path / "site"
 
-    build(source, output, image_width=800, thumbnail_width=100)
+    build(source, output, BuildOptions(image_width=800, thumbnail_width=100))
 
     images = output / "assets" / "images"
     with Image.open(images / "gnocchi.jpg") as image:
@@ -119,7 +119,11 @@ def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> N
 
     monkeypatch.setattr(images_module, "export_image", counting_export)
 
-    build(source, tmp_path / "site", image_width=800, thumbnail_width=100, cache_dir=cache)
+    build(
+        source,
+        tmp_path / "site",
+        BuildOptions(image_width=800, thumbnail_width=100, cache_dir=cache),
+    )
     assert sorted(calls) == [
         ("tarte-1.png", 800, False),
         ("tarte.jpg", 100, True),
@@ -130,7 +134,7 @@ def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> N
     # A fresh output directory is filled from the cache.
     calls.clear()
     output = tmp_path / "site2"
-    build(source, output, image_width=800, thumbnail_width=100, cache_dir=cache)
+    build(source, output, BuildOptions(image_width=800, thumbnail_width=100, cache_dir=cache))
     assert calls == []
     with Image.open(output / "assets" / "images" / "tarte.jpg") as image:
         assert image.size == (800, 400)
@@ -139,14 +143,14 @@ def test_cached_images_are_not_processed_again(tmp_path: Path, monkeypatch) -> N
 
     # Only changed pictures (or settings) are processed again; stale entries are pruned.
     Image.new("RGB", (2000, 1000), "green").save(source / "tarte-1.png")
-    build(source, output, image_width=800, thumbnail_width=100, cache_dir=cache)
+    build(source, output, BuildOptions(image_width=800, thumbnail_width=100, cache_dir=cache))
     assert calls == [("tarte-1.png", 800, False)]
     assert len(list(cache.iterdir())) == 3
     with Image.open(output / "assets" / "images" / "tarte-1.png") as image:
         assert image.getpixel((0, 0)) == (0, 128, 0)
 
     calls.clear()
-    build(source, output, image_width=600, thumbnail_width=100, cache_dir=cache)
+    build(source, output, BuildOptions(image_width=600, thumbnail_width=100, cache_dir=cache))
     assert sorted(calls) == [("tarte-1.png", 600, False), ("tarte.jpg", 600, False)]
     assert len(list(cache.iterdir())) == 3
 

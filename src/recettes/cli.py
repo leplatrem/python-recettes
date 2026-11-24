@@ -8,11 +8,14 @@ from typing import Annotated
 import typer
 
 from recettes.ci import ci_base_url, ci_edit_url
-from recettes.recipes import (
+from recettes.site import (
     DEFAULT_IMAGE_WIDTH,
+    DEFAULT_LICENSE,
     DEFAULT_THUMBNAIL_WIDTH,
+    BuildOptions,
+    build,
+    lint,
 )
-from recettes.site import DEFAULT_LICENSE, build, lint
 
 app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from Markdown.")
 
@@ -94,20 +97,17 @@ def build_command(
     ] = DEFAULT_LICENSE,
 ) -> None:
     """Build the static recipe website."""
-    edit_url = edit_url or ci_edit_url(source)
-    base_url = base_url or ci_base_url()
-    count = build(
-        source,
-        destination,
-        title,
-        edit_url,
-        image_width,
-        thumbnail_width,
-        simple_mode,
-        cache_dir,
-        base_url,
-        license,
+    options = BuildOptions(
+        title=title,
+        edit_url=edit_url or ci_edit_url(source),
+        base_url=base_url or ci_base_url(),
+        license=license,
+        image_width=image_width,
+        thumbnail_width=thumbnail_width,
+        simple_mode=simple_mode,
+        cache_dir=cache_dir,
     )
+    count = build(source, destination, options)
     typer.echo(f"Built {count} recipes into {destination}")
 
 

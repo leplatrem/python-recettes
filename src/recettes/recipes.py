@@ -17,10 +17,6 @@ from recettes.quantities import MASS_UNITS_G, Ingredient, aggregate_ingredients,
 from recettes.text import natural_key, slugify
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif", ".heic", ".heif"}
-# Defaults are twice the stylesheet sizes (recipe page column width, home page card
-# thumbnail), so pictures stay sharp on high-density (retina) screens.
-DEFAULT_IMAGE_WIDTH = 2 * 760
-DEFAULT_THUMBNAIL_WIDTH = 2 * 112
 
 
 @dataclasses.dataclass

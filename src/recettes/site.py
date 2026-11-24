@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import html
 import shutil
@@ -11,8 +12,6 @@ from urllib.parse import quote
 from recettes.errors import fail
 from recettes.images import cached_export_image, output_name, prune_cache
 from recettes.recipes import (
-    DEFAULT_IMAGE_WIDTH,
-    DEFAULT_THUMBNAIL_WIDTH,
     Recipe,
     load_recipes,
 )
@@ -26,24 +25,40 @@ from recettes.render import (
 )
 
 DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
+# Defaults are twice the stylesheet sizes (recipe page column width, home page card
+# thumbnail), so pictures stay sharp on high-density (retina) screens.
+DEFAULT_IMAGE_WIDTH = 2 * 760
+DEFAULT_THUMBNAIL_WIDTH = 2 * 112
+
+
+@dataclasses.dataclass(frozen=True)
+class BuildOptions:
+    """Website settings, see the `build` command help."""
+
+    title: str = "Recipes"
+    edit_url: str | None = None
+    base_url: str | None = None
+    license: str = DEFAULT_LICENSE
+    image_width: int = DEFAULT_IMAGE_WIDTH
+    thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH
+    simple_mode: bool = True
+    cache_dir: Path | None = None
 
 
 def export_images(
     recipe: Recipe,
     image_dir: Path,
-    image_width: int,
-    thumbnail_width: int,
-    cache_dir: Path | None,
+    options: BuildOptions,
     used_cache: set[Path],
 ) -> None:
     """Publish the recipe pictures, and a square thumbnail of the main one."""
     for image in recipe.images:
         name = output_name(image)
-        exports = [(image_dir / name, image_width, False)]
+        exports = [(image_dir / name, options.image_width, False)]
         if name == recipe.main_image:
-            exports.append((image_dir / "thumbnails" / name, thumbnail_width, True))
+            exports.append((image_dir / "thumbnails" / name, options.thumbnail_width, True))
         for target, width, square in exports:
-            entry = cached_export_image(image, target, width, square, cache_dir)
+            entry = cached_export_image(image, target, width, square, options.cache_dir)
             if entry is not None:
                 used_cache.add(entry)
 
@@ -51,18 +66,14 @@ def export_images(
 def build(
     source: Path,
     destination: Path,
-    title: str = "Recipes",
-    edit_url: str | None = None,
-    image_width: int = DEFAULT_IMAGE_WIDTH,
-    thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH,
-    simple_mode: bool = True,
-    cache_dir: Path | None = None,
-    base_url: str | None = None,
-    license: str = DEFAULT_LICENSE,
+    options: BuildOptions | None = None,
 ) -> int:
+    """Generate the website in `destination`, and return the number of recipes."""
+    options = options or BuildOptions()
     source = source.resolve()
     destination = destination.resolve()
-    cache_dir = cache_dir.resolve() if cache_dir else None
+    cache_dir = options.cache_dir.resolve() if options.cache_dir else None
+    options = dataclasses.replace(options, cache_dir=cache_dir)
     if source == destination or source in destination.parents:
         fail("Output directory must be outside the recipe source directory")
     # Only the top level of the source directory is read, so the cache can be a subdirectory.
@@ -70,7 +81,7 @@ def build(
         cache_dir == source or cache_dir == destination or destination in cache_dir.parents
     ):
         fail("Cache directory must be outside the output directory")
-    recipes = load_recipes(source, simple_mode)
+    recipes = load_recipes(source, options.simple_mode)
 
     package_dir = Path(__file__).parent
     static = package_dir / "static"
@@ -88,24 +99,24 @@ def build(
         shutil.copyfile(static / filename, assets / filename)
         digest = hashlib.sha256((static / filename).read_bytes()).hexdigest()[:10]
         versions[filename.replace(".", "_") + "_version"] = digest
-    footer_license = license_html(license)
+    footer_license = license_html(options.license)
     shutil.copytree(static / "fonts", assets / "fonts", dirs_exist_ok=True)
     image_dir = assets / "images"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     used_cache: set[Path] = set()
     for recipe in recipes:
         slug = recipe.slug
-        export_images(recipe, image_dir, image_width, thumbnail_width, cache_dir, used_cache)
+        export_images(recipe, image_dir, options, used_cache)
         page = render_template(
             templates / "recipe.html",
             title=html.escape(recipe.title),
             lang=html.escape(recipe.lang, quote=True),
-            edit_link=edit_link(edit_url, recipe.path),
+            edit_link=edit_link(options.edit_url, recipe.path),
             meta_tags=meta_tags(
                 recipe.title,
                 "article",
-                title,
-                base_url,
+                options.title,
+                options.base_url,
                 f"recipes/{quote(slug, safe='-_')}.html",
                 recipe.excerpt,
                 recipe.main_image,
@@ -125,10 +136,10 @@ def build(
     languages = {recipe.lang for recipe in recipes if recipe.lang}
     index = render_template(
         templates / "index.html",
-        title=html.escape(title),
+        title=html.escape(options.title),
         lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
         prefetch_links=prefetch_links,
-        meta_tags=meta_tags(title, "website", title, base_url, ""),
+        meta_tags=meta_tags(options.title, "website", options.title, options.base_url, ""),
         license=footer_license,
         **versions,
     )

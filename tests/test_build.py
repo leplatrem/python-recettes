@@ -14,7 +14,7 @@ from recettes.quantities import (
     parse_quantity,
     volume_ml,
 )
-from recettes.site import build, lint
+from recettes.site import BuildOptions, build, lint
 
 
 @pytest.mark.parametrize(
@@ -170,7 +170,7 @@ def test_simple_mode_can_be_disabled(tmp_path: Path, capsys: pytest.CaptureFixtu
     )
     output = tmp_path / "site"
 
-    build(source, output, simple_mode=False)
+    build(source, output, BuildOptions(simple_mode=False))
 
     recipe = (output / "recipes" / "cake.html").read_text(encoding="utf-8")
     assert '<label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml" hidden>' in recipe
@@ -409,7 +409,11 @@ def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
     assert "{{ edit_link }}" not in plain
     assert 'aria-label="Edit"' not in plain
 
-    build(source, tmp_path / "edit", edit_url="https://codeberg.org/me/recipes/_edit/main/r/")
+    build(
+        source,
+        tmp_path / "edit",
+        BuildOptions(edit_url="https://codeberg.org/me/recipes/_edit/main/r/"),
+    )
     page = (tmp_path / "edit" / "recipes" / "soupe oignon.html").read_text(encoding="utf-8")
     assert (
         '<a href="https://codeberg.org/me/recipes/_edit/main/r/soupe%20oignon.md" '
@@ -466,7 +470,9 @@ def test_open_graph_tags(tmp_path: Path) -> None:
     (source / "tarte.jpg").write_bytes(b"fake jpeg")
     output = tmp_path / "site"
 
-    build(source, output, title="Mes recettes", base_url="https://example.com/recettes")
+    build(
+        source, output, BuildOptions(title="Mes recettes", base_url="https://example.com/recettes")
+    )
 
     recipe = (output / "recipes" / "tarte.html").read_text(encoding="utf-8")
     assert '<meta property="og:title" content="Tarte &quot;citron&quot;">' in recipe
@@ -517,11 +523,11 @@ def test_license_shown_in_footer(tmp_path: Path) -> None:
             " Built with"
         ) in html
 
-    build(source, tmp_path / "custom", license="© *Me*")
+    build(source, tmp_path / "custom", BuildOptions(license="© *Me*"))
     html = (tmp_path / "custom" / "index.html").read_text(encoding="utf-8")
     assert "© <em>Me</em> — Built with" in html
 
-    build(source, tmp_path / "none", license="")
+    build(source, tmp_path / "none", BuildOptions(license=""))
     html = (tmp_path / "none" / "index.html").read_text(encoding="utf-8")
     assert "—" not in html.split('class="site-footer"')[1]
 

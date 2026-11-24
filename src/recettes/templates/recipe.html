@@ -1,39 +1,52 @@
 {% extends "base.html" %}
+{% from "macros.html" import figure, ingredient, picture %}
 {% block head %}
     <script type="module" src="../assets/recipe.js?v={{ recipe_js_version }}"></script>
 {% endblock %}
 {% block body %}
     <nav class="detail-nav">
       <a href="../index.html" aria-label="{{ t_back }}">←</a>
-      {{ edit_link }}
+{% if edit_url %}
+      <a href="{{ edit_url }}" aria-label="{{ t_edit }}" title="{{ t_edit }}" target="_blank" rel="noopener">✎</a>
+{% endif %}
     </nav>
     <main class="recipe-page">
       <article class="recipe">
         <header class="recipe-heading">
-          <h1 id="recipe-title">{{ title }}</h1>
+          <h1 id="recipe-title">{{ recipe.title }}</h1>
           <div class="recipe-meta-row">
-            <dl class="recipe-properties" id="recipe-properties"{{ properties_hidden }}>{{ properties }}</dl>
-            <div class="recipe-tags" id="recipe-tags">{{ tags }}</div>
+            <dl class="recipe-properties" id="recipe-properties"{% if not recipe.properties %} hidden{% endif %}>
+              {%- for item in recipe.properties %}<div class="recipe-property"><dt>{{ item.name }}</dt><dd>{{ item.value|display }}</dd></div>{% endfor -%}
+            </dl>
+            <div class="recipe-tags" id="recipe-tags">
+              {%- for tag in recipe.tags %}<a class="tag" href="../index.html?tag={{ tag|urlquote }}">{{ tag }}</a>{% endfor -%}
+            </div>
           </div>
         </header>
         <section class="ingredients">
           <div class="ingredients-heading">
             <h2 class="ingredients-title">{{ t_ingredients }}</h2>
-            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml"{{ simple_hidden }}>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml"{% if not recipe.ingredients|selectattr("ml")|list %} hidden{% endif %}>
               <input type="checkbox" id="simple-toggle" role="switch">
               <span>{{ t_simple }}</span>
             </label>
-            <div class="servings" id="servings-control"{{ servings_attrs }}>
+            <div class="servings" id="servings-control"{% if recipe.portions %} data-portions="{{ recipe.portions }}"{% else %} hidden{% endif %}>
               <button type="button" data-servings-step="-1" aria-label="{{ t_decrease_servings }}">−</button>
-              <span><strong id="servings-count">{{ portions }}</strong>×</span>
+              <span><strong id="servings-count">{{ recipe.portions or "" }}</strong>×</span>
               <button type="button" data-servings-step="1" aria-label="{{ t_increase_servings }}">+</button>
             </div>
           </div>
-          <ul class="ingredient-list">{{ ingredient_list }}</ul>
+          <ul class="ingredient-list">
+            {%- for item in recipe.ingredient_list %}{{ ingredient(item, "li") }}{% endfor -%}
+          </ul>
         </section>
-        {{ main_image }}
+{% if recipe.main_image %}
+        <figure class="recipe-main-image">{{ picture(recipe, recipe.main_image, recipe.title, lazy=False) }}</figure>
+{% endif %}
         <div class="recipe-content" id="recipe-content">{{ content }}</div>
-        <div class="recipe-gallery" id="recipe-gallery">{{ gallery }}</div>
+        <div class="recipe-gallery" id="recipe-gallery">
+          {%- for image in recipe.gallery %}{{ figure(recipe, image, gallery_alt(recipe, image, loop.index, lang)) }}{% endfor -%}
+        </div>
       </article>
     </main>
 {% endblock %}

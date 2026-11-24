@@ -207,7 +207,7 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert '<script type="speculationrules">' in index
     assert '<h2 class="ingredients-title">Ingrédients</h2>' in recipe
     assert '<html lang="fr">' in recipe
-    assert "<title>Soupe à l&#x27;oignon</title>" in recipe
+    assert "<title>Soupe à l&#39;oignon</title>" in recipe
     assert '<a class="tag" href="../index.html?tag=hiver">hiver</a>' in recipe
     properties = [("preparation", "45"), ("cuisson", "15"), ("lang", "fr"), ("auteur", "Test")]
     for name, value in properties:
@@ -235,8 +235,8 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert "TOKEN" not in search
     assert '<article class="recipe-card" lang="fr"' in index
     assert (
-        '<img loading="lazy" src="../assets/images/soupe-oignon-1.jpg" '
-        'alt="Soupe à l&#x27;oignon, photo 1">'
+        '<img src="../assets/images/soupe-oignon-1.jpg" '
+        'alt="Soupe à l&#39;oignon, photo 1" loading="lazy">'
     ) in recipe
     assert (output / "assets" / "images" / "soupe-oignon-1.jpg").read_bytes() == b"fake jpeg"
 
@@ -378,8 +378,9 @@ def test_images_are_placed_as_main_picture_in_sections_or_gallery(tmp_path: Path
     assert main in recipe
     assert recipe.index("ingredient-list") < recipe.index(main) < recipe.index("recipe-content")
     step = (
-        '<p>Étalez la pâte.</p>\n<div class="recipe-step-images"><figure><img loading="lazy" '
-        'src="../assets/images/tarte-etape-1.png" alt="Tarte – Étape 1"></figure></div>\n'
+        '<p>Étalez la pâte.</p>\n<div class="recipe-step-images"><figure>'
+        '<img src="../assets/images/tarte-etape-1.png" alt="Tarte – Étape 1" loading="lazy">'
+        "</figure></div>\n"
         "<h2>Étape 2</h2>"
     )
     assert step in recipe

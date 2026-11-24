@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import dataclasses
 import html
 import json
 from collections import Counter
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote
 
 import jinja2
@@ -22,16 +24,10 @@ def attr(value: object) -> str:
     return html.escape(str(value), quote=True)
 
 
-def ingredient_html(ingredient: Ingredient, tag: str) -> str:
-    amount, unit, name, ml = ingredient.amount, ingredient.unit, ingredient.name, ingredient.ml
-    if amount is None:
-        return f"<{tag} data-ingredient>{html.escape(name or ingredient.raw)}</{tag}>"
-    text = " ".join(part for part in (format_amount(amount), unit, name) if part)
-    volume = f' data-ml="{attr(round(ml, 2))}"' if ml is not None else ""
-    return (
-        f'<{tag} data-ingredient data-amount="{attr(float(amount))}" '
-        f'data-unit="{attr(unit)}" data-name="{attr(name)}"{volume}>{html.escape(text)}</{tag}>'
-    )
+def quantity(ingredient: Ingredient) -> str:
+    """Amount, unit and name of an ingredient ("70 g de beurre")."""
+    amount = format_amount(ingredient.amount) if ingredient.amount is not None else ""
+    return " ".join(part for part in (amount, ingredient.unit, ingredient.name) if part)
 
 
 def display_value(value: object) -> str:
@@ -44,38 +40,31 @@ def display_value(value: object) -> str:
     return "" if value is None else str(value)
 
 
-def size_attributes(recipe: Recipe, path: str) -> str:
-    """Picture dimensions, so the browser reserves its space before loading it."""
-    size = recipe.picture_sizes.get(path)
-    return f' width="{size[0]}" height="{size[1]}"' if size else ""
-
-
 # Displayed width of recipe page pictures, see `.recipe-page` in the stylesheet.
 PICTURE_SIZES = "(min-width: 796px) 760px, calc(100vw - 36px)"
 THUMBNAIL_SIZES = "(max-width: 480px) 88px, 112px"
 
 
-def srcset_attributes(recipe: Recipe, folder: str, url: str, image: str, sizes: str) -> str:
-    """Let browsers pick the small version of a picture when it is sharp enough.
+@dataclasses.dataclass
+class PictureFiles:
+    src: str
+    # Lets browsers pick the small version of a picture when it is sharp enough.
+    srcset: str
+    sizes: str
+    # Dimensions, so the browser reserves the picture space before loading it.
+    size: tuple[int, int] | None
 
-    `folder` is the picture folder within the images folder, `url` the URL of the latter.
-    """
-    small, large = (
-        recipe.picture_sizes.get(f"{path}{image}") for path in (f"{folder}small/", folder)
-    )
-    if not (small and large):
-        return ""
+
+def picture_files(recipe: Recipe, image: str, root: str, thumbnail: bool) -> PictureFiles:
+    """URLs and size of a published picture, from a page at `root`."""
+    folder = "thumbnails/" if thumbnail else ""
+    url = f"{root}assets/images/{folder}"
     name = quote(image, safe="")
-    srcset = f"{url}{folder}small/{name} {small[0]}w, {url}{folder}{name} {large[0]}w"
-    return f' srcset="{attr(srcset)}" sizes="{sizes}"'
-
-
-def image_html(recipe: Recipe, image: str, alt: str, lazy: bool = True) -> str:
-    loading = ' loading="lazy"' if lazy else ""
-    src = f"../assets/images/{quote(image, safe='')}"
-    srcset = srcset_attributes(recipe, "", "../assets/images/", image, PICTURE_SIZES)
-    dimensions = size_attributes(recipe, image)
-    return f'<img{loading} src="{attr(src)}"{srcset}{dimensions} alt="{attr(alt)}">'
+    small = recipe.picture_sizes.get(f"{folder}small/{image}")
+    large = recipe.picture_sizes.get(f"{folder}{image}")
+    srcset = f"{url}small/{name} {small[0]}w, {url}{name} {large[0]}w" if small and large else ""
+    sizes = THUMBNAIL_SIZES if thumbnail else PICTURE_SIZES
+    return PictureFiles(src=f"{url}{name}", srcset=srcset, sizes=sizes, size=large)
 
 
 def gallery_alt(recipe: Recipe, image: str, index: int, lang: str) -> str:
@@ -84,10 +73,6 @@ def gallery_alt(recipe: Recipe, image: str, index: int, lang: str) -> str:
     if suffix.strip() and not suffix.isdigit():
         return f"{recipe.title} – {suffix.strip()}"
     return f"{recipe.title}, {i18n.strings(lang)['photo']} {index}"
-
-
-def figure_html(recipe: Recipe, image: str, alt: str) -> str:
-    return f"<figure>{image_html(recipe, image, alt)}</figure>"
 
 
 def insert_section_images(recipe: Recipe) -> list[Token]:
@@ -103,7 +88,8 @@ def insert_section_images(recipe: Recipe) -> list[Token]:
         placed.add(slug)
         end = headings[number + 1][0] if number + 1 < len(headings) else len(tokens)
         figures = "".join(
-            figure_html(recipe, image, f"{recipe.title} – {text}") for image in section_images[slug]
+            macros().figure(recipe, image, f"{recipe.title} – {text}")
+            for image in section_images[slug]
         )
         insertions[end] = f'<div class="recipe-step-images">{figures}</div>\n'
     result = []
@@ -117,42 +103,10 @@ def insert_section_images(recipe: Recipe) -> list[Token]:
     return result
 
 
-def recipe_html_parts(recipe: Recipe, lang: str) -> dict[str, str]:
-    tags = "".join(
-        f'<a class="tag" href="../index.html?tag={attr(quote(tag, safe="-_.!~*()"))}">'
-        f"{html.escape(tag)}</a>"
-        for tag in recipe.tags
-    )
-    properties = "".join(
-        f'<div class="recipe-property"><dt>{html.escape(item.name)}</dt>'
-        f"<dd>{html.escape(display_value(item.value))}</dd></div>"
-        for item in recipe.properties
-    )
-    title = recipe.title
-    gallery = "".join(
-        figure_html(recipe, image, gallery_alt(recipe, image, index, lang))
-        for index, image in enumerate(recipe.gallery, 1)
-    )
-    main = (
-        f'<figure class="recipe-main-image">'
-        f"{image_html(recipe, recipe.main_image, title, lazy=False)}</figure>"
-        if recipe.main_image
-        else ""
-    )
+def recipe_content(recipe: Recipe) -> Markup:
+    """Recipe text, with its ingredients and section pictures."""
     tokens = insert_section_images(recipe)
-    portions = recipe.portions
-    return {
-        "tags": tags,
-        "properties": properties,
-        "properties_hidden": "" if properties else " hidden",
-        "servings_attrs": f' data-portions="{portions}"' if portions else " hidden",
-        "simple_hidden": ("" if any(item.ml for item in recipe.ingredients) else " hidden"),
-        "portions": str(portions or ""),
-        "ingredient_list": "".join(ingredient_html(item, "li") for item in recipe.ingredient_list),
-        "gallery": gallery,
-        "main_image": main,
-        "content": markdown.render(tokens, lambda item: ingredient_html(item, "span")),
-    }
+    return Markup(markdown.render(tokens, lambda item: macros().ingredient(item, "span")))
 
 
 def search_text(recipe: Recipe) -> str:
@@ -167,14 +121,13 @@ def recipe_card_html(recipe: Recipe) -> str:
     classes = "recipe-card has-image" if recipe.main_image else "recipe-card"
     excerpt = f'<p class="card-excerpt">{html.escape(recipe.excerpt)}</p>' if recipe.excerpt else ""
     tags = "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in recipe.tags)
-    image = ""
-    if recipe.main_image:
-        name = recipe.main_image
-        image = (
-            f'<img class="card-image" src="{attr(thumbnail_url(name))}"'
-            f"{srcset_attributes(recipe, 'thumbnails/', 'assets/images/', name, THUMBNAIL_SIZES)}"
-            f'{size_attributes(recipe, f"thumbnails/{name}")} alt="" loading="lazy">'
+    image = (
+        macros().picture(
+            recipe, recipe.main_image, "", root="", thumbnail=True, **{"class": "card-image"}
         )
+        if recipe.main_image
+        else ""
+    )
     return (
         f'<article class="{classes}"{lang} data-search="{attr(search_text(recipe))}" '
         f'data-tags="{attr(json.dumps(recipe.tags, ensure_ascii=False))}">'
@@ -201,10 +154,6 @@ def tag_cloud_html(recipes: list[Recipe]) -> str:
 
 def recipe_url(recipe: Recipe) -> str:
     return f"recipes/{quote(recipe.slug, safe='-_')}.html"
-
-
-def thumbnail_url(image: str) -> str:
-    return f"assets/images/thumbnails/{quote(image, safe='')}"
 
 
 def meta_tags(
@@ -278,29 +227,37 @@ TEMPLATES = jinja2.Environment(
 )
 
 
-def render_template(filename: str, /, **values: str) -> str:
-    """Fill a template; values are HTML already escaped."""
-    template = TEMPLATES.get_template(filename)
-    return template.render({name: Markup(value) for name, value in values.items()}) + "\n"
+TEMPLATES.filters.update(
+    display=display_value,
+    quantity=quantity,
+    urlquote=lambda text: quote(text, safe="-_.!~*()"),
+)
+# Jinja2 types its globals after its own defaults.
+template_globals: dict[str, Any] = TEMPLATES.globals
+template_globals.update(gallery_alt=gallery_alt, picture_files=picture_files)
+
+
+def macros() -> Any:
+    """Template macros, to call them from Python."""
+    return TEMPLATES.get_template("macros.html").module
+
+
+def render_template(filename: str, /, **context: object) -> str:
+    return TEMPLATES.get_template(filename).render(context) + "\n"
 
 
 PROJECT_URL = "https://github.com/leplatrem/python-recettes"
 
 
-def interface_values(lang: str) -> dict[str, str]:
+def interface_values(lang: str) -> dict[str, Markup]:
     """Translated interface strings, as `t_*` template values."""
-    values = {f"t_{name}": attr(text) for name, text in i18n.strings(lang).items()}
+    strings = i18n.strings(lang)
+    values = {f"t_{name}": Markup(attr(text)) for name, text in strings.items()}
     link = f'<a href="{PROJECT_URL}">Recettes v{attr(__version__)}</a>'
-    values["t_built_with"] = values["t_built_with"].replace("{recettes}", link)
+    values["t_built_with"] = Markup(attr(strings["built_with"]).replace("{recettes}", link))
     return values
 
 
-def edit_link(edit_url: str | None, path: Path, lang: str) -> str:
-    if not edit_url:
-        return ""
-    url = edit_url.rstrip("/") + "/" + quote(path.name)
-    label = attr(i18n.strings(lang)["edit"])
-    return (
-        f'<a href="{attr(url)}" aria-label="{label}" title="{label}" target="_blank" '
-        'rel="noopener">✎</a>'
-    )
+def edit_link(edit_url: str | None, path: Path) -> str:
+    """URL to edit a recipe on its Git forge."""
+    return edit_url.rstrip("/") + "/" + quote(path.name) if edit_url else ""

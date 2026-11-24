@@ -1,0 +1,21 @@
+{# Also called from Python, for ingredients and pictures within the recipe text. #}
+{% macro ingredient(item, tag) -%}
+{% if item.amount is none -%}
+<{{ tag }} data-ingredient>{{ item.name or item.raw }}</{{ tag }}>
+{%- else -%}
+<{{ tag }} data-ingredient data-amount="{{ item.amount }}" data-unit="{{ item.unit }}" data-name="{{ item.name }}"
+{%- if item.ml is not none %} data-ml="{{ item.ml|round(2) }}"{% endif %}>{{ item|quantity }}</{{ tag }}>
+{%- endif %}
+{%- endmacro %}
+
+{% macro picture(recipe, image, alt, root="../", thumbnail=False, lazy=True, class="") -%}
+{% set files = picture_files(recipe, image, root, thumbnail) -%}
+<img{% if class %} class="{{ class }}"{% endif %} src="{{ files.src }}"
+{%- if files.srcset %} srcset="{{ files.srcset }}" sizes="{{ files.sizes }}"{% endif %}
+{%- if files.size %} width="{{ files.size[0] }}" height="{{ files.size[1] }}"{% endif %} alt="{{ alt }}"
+{%- if lazy %} loading="lazy"{% endif %}>
+{%- endmacro %}
+
+{% macro figure(recipe, image, alt) -%}
+<figure>{{ picture(recipe, image, alt) }}</figure>
+{%- endmacro %}

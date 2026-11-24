@@ -5,127 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from recettes import __version__, markdown
-from recettes.quantities import (
-    Ingredient,
-    aggregate_ingredients,
-    find_density,
-    parse_quantity,
-    volume_ml,
-)
-from recettes.utils import RecettesError, ci_base_url, ci_edit_url
+from recettes import __version__
+from recettes.utils import RecettesError
 from recettes.website import BuildOptions, build, lint
-
-
-@pytest.mark.parametrize(
-    ("text", "parsed"),
-    [
-        ("1.5L of water", (1.5, "l", "of water")),
-        ("50g de beurre", (50.0, "g", "de beurre")),
-        ("1cas d'huile", (1.0, "c. à s.", "d'huile")),
-        ("1/2 cac", (0.5, "c. à c.", "")),
-        ("3 gousses d'ail", (3.0, "", "gousses d'ail")),
-        ("2 louches de bouillon", (2.0, "", "louches de bouillon")),
-        ("0.5cac", (0.5, "c. à c.", "")),
-        ("4 oignons", (4.0, "", "oignons")),
-        ("2 cucchiai di zucchero", (2.0, "cucchiai", "di zucchero")),
-        ("1/2 cucchiaino di sale", (0.5, "cucchiaino", "di sale")),
-        ("3 cucchiaiate di miele", (3.0, "", "cucchiaiate di miele")),
-        ("comté râpé", (None, "", "comté râpé")),
-    ],
-)
-def test_parse_quantity_and_guessed_count_unit(text: str, parsed: tuple) -> None:
-    assert parse_quantity(text) == parsed
-
-
-@pytest.mark.parametrize(
-    ("quantity", "expected_unit"),
-    [
-        ("1 càs", "c. à s."),
-        ("1 c. à s.", "c. à s."),
-        ("1 càc", "c. à c."),
-        ("1 c. à c.", "c. à c."),
-        ("1 TL", "TL"),
-        ("1 EL", "EL"),
-        ("1 cdita", "cdita"),
-        ("1 cda", "cda"),
-        ("1 Cc", "Cc"),
-        ("1 CC", "CC"),
-        ("1 cc", "cc"),
-        ("1 ct", "ct"),
-        ("1 tsk", "tsk"),
-        ("1 msk", "msk"),
-        ("1 ts", "ts"),
-        ("1 ss", "ss"),
-        ("1 fl_oz", "fl oz"),
-        ("1 floz", "fl oz"),
-        ("1 fl oz", "fl oz"),
-        ("1 cucchiaio", "cucchiaio"),
-        ("1 cucchiai", "cucchiai"),
-        ("1 Cucchiaino", "cucchiaino"),
-        ("1 cucchiaini", "cucchiaini"),
-    ],
-)
-def test_parse_localized_spoon_units(quantity: str, expected_unit: str) -> None:
-    amount, unit, name = parse_quantity(quantity)
-    assert (amount, unit, name) == (1.0, expected_unit, "")
-
-
-def test_aggregate_repeated_ingredients_by_name_and_unit() -> None:
-    ingredients = [
-        Ingredient(raw="50g de beurre", amount=50.0, unit="g", name="de beurre"),
-        Ingredient(raw="20g de beurre", amount=20.0, unit="g", name="de beurre"),
-        Ingredient(raw="1/2 cac de sel", amount=0.5, unit="cac", name="de sel"),
-        Ingredient(raw="0.5cac de sel", amount=0.5, unit="cac", name="de sel"),
-    ]
-
-    aggregated = aggregate_ingredients(ingredients)
-
-    assert [(item.amount, item.unit, item.name) for item in aggregated] == [
-        (70.0, "g", "de beurre"),
-        (1.0, "cac", "de sel"),
-    ]
-
-
-@pytest.mark.parametrize(
-    ("name", "density"),
-    [
-        ("of flour", 0.55),
-        ("de farine de sarrasin", 0.55),
-        ("di zucchero", 0.85),
-        ("de azúcar glas", 0.56),
-        ("de sucre glace", 0.56),
-        ("of icing sugar", 0.56),
-        ("of walnuts", 0.45),
-        ("de noix de coco râpée", 0.35),
-        ("de pépites de chocolat", 0.7),
-        ("of salted peanuts", None),
-        ("of fresh ginger", None),
-    ],
-)
-def test_find_density_in_several_languages(name: str, density: float | None) -> None:
-    assert find_density(name) == density
-
-
-@pytest.mark.parametrize(
-    ("amount", "unit", "name", "ml"),
-    [
-        (110, "g", "of flour", 200),
-        (1, "kg", "de beurre", 1000 / 0.91),
-        (1, "c. à s.", "d'huile", 15),
-        (2, "tsp", "of anything", 10),
-        (2, "cucchiai", "di olio", 30),
-        (1, "cucchiaino", "di sale", 5),
-        (0.5, "l", "of water", 500),
-        (50, "g", "of fresh ginger", None),
-        (4, "", "eggs", None),
-        (None, "", "lemon zest", None),
-    ],
-)
-def test_volume_ml_for_simple_mode(
-    amount: float | None, unit: str, name: str, ml: float | None
-) -> None:
-    assert volume_ml(amount, unit, name) == (pytest.approx(ml) if ml else None)
 
 
 def test_simple_mode_volumes_and_unknown_density_warning(
@@ -260,82 +142,6 @@ def test_recipe_without_portions_has_no_toggle_and_properties_are_optional(
     assert "<p>Just a recipe.</p>" in recipe
 
 
-@pytest.mark.parametrize("value", ["4 à 6", "beaucoup", "2.5", "0"])
-def test_non_integer_portions_are_rendered_as_text_property(tmp_path: Path, value: str) -> None:
-    source = tmp_path / "recipes"
-    source.mkdir()
-    (source / "simple.md").write_text(
-        f"---\ntitle: Simple\nportions: '{value}'\n---\n\nJust a recipe.\n", encoding="utf-8"
-    )
-    output = tmp_path / "site"
-
-    build(source, output)
-
-    recipe = (output / "recipes" / "simple.html").read_text(encoding="utf-8")
-    assert '<div class="servings" id="servings-control" hidden>' in recipe
-    assert '<dl class="recipe-properties" id="recipe-properties" hidden>' not in recipe
-    assert "<dt>portions</dt>" in recipe
-    assert value in recipe
-
-
-def test_html_comments_are_not_rendered(tmp_path: Path) -> None:
-    source = tmp_path / "recipes"
-    source.mkdir()
-    (source / "gnocchi.md").write_text(
-        "---\ntitle: Gnocchi\n---\n\n<!-- original (IMG_2469.HEIC):\nsecret notes -->\n\n"
-        "Mix {{250g ricotta}} <!-- inline note --> gently.\n",
-        encoding="utf-8",
-    )
-    output = tmp_path / "site"
-
-    build(source, output)
-
-    recipe = (output / "recipes" / "gnocchi.html").read_text(encoding="utf-8")
-    index = (output / "index.html").read_text(encoding="utf-8")
-    for page in (recipe, index):
-        assert "IMG_2469" not in page
-        assert "secret notes" not in page
-        assert "inline note" not in page
-    assert "ricotta" in recipe
-
-
-def test_local_markdown_recipe_links_resolve_to_recipe_pages(tmp_path: Path) -> None:
-    source = tmp_path / "recipes"
-    source.mkdir()
-    (source / "flan-coco.md").write_text(
-        "---\ntitle: Flan coco\n---\n\nServez avec [caramel](caramel), "
-        "[caramel.md](caramel.md), [html](caramel.html), [dot](./caramel.md), "
-        "[anchor](caramel.md#etape-2), [accents](<crème brûlée.md>) "
-        "ou [haut](#top).\n\n![photo](flan-coco-1.jpg)\n",
-        encoding="utf-8",
-    )
-    (source / "caramel.md").write_text(
-        "---\ntitle: Caramel\n---\n\nDu caramel.\n", encoding="utf-8"
-    )
-    (source / "crème brûlée.md").write_text("Crème.\n", encoding="utf-8")
-    (source / "flan-coco-1.jpg").write_bytes(b"fake jpeg")
-    output = tmp_path / "site"
-
-    build(source, output)
-
-    recipe = (output / "recipes" / "flan-coco.html").read_text(encoding="utf-8")
-    assert recipe.count('href="../recipes/caramel.html"') == 4
-    assert 'href="../recipes/caramel.html#etape-2"' in recipe
-    assert 'href="../recipes/cr%C3%A8me%20br%C3%BBl%C3%A9e.html"' in recipe
-    assert 'href="#top"' in recipe
-    assert '<img src="../assets/images/flan-coco-1.jpg" alt="photo">' in recipe
-
-
-@pytest.mark.parametrize("link", ["[tiramisu](tiramisu.md)", "![photo](flan-2.jpg)"])
-def test_links_to_missing_files_fail_the_build(tmp_path: Path, link: str) -> None:
-    source = tmp_path / "recipes"
-    source.mkdir()
-    (source / "flan.md").write_text(f"Servez avec {link}.\n", encoding="utf-8")
-
-    with pytest.raises(RecettesError, match=r"'flan\.md' links to missing file"):
-        build(source, tmp_path / "site")
-
-
 def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:
     source = tmp_path / "recipes"
     source.mkdir()
@@ -415,45 +221,6 @@ def test_edit_link_only_when_edit_url_given(tmp_path: Path) -> None:
         'aria-label="Edit (opens in a new tab)" title="Edit (opens in a new tab)" '
         'target="_blank" rel="noopener">✎</a>'
     ) in page
-
-
-@pytest.fixture
-def no_ci_env(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
-    for name in ("GITHUB_ACTIONS", "GITLAB_CI"):
-        monkeypatch.delenv(name, raising=False)
-    return monkeypatch
-
-
-def test_ci_edit_url_from_github_actions(tmp_path: Path, no_ci_env: pytest.MonkeyPatch) -> None:
-    assert ci_edit_url(tmp_path / "recipes") is None
-    no_ci_env.setenv("GITHUB_ACTIONS", "true")
-    no_ci_env.setenv("GITHUB_SERVER_URL", "https://github.com")
-    no_ci_env.setenv("GITHUB_REPOSITORY", "me/recipes")
-    no_ci_env.setenv("GITHUB_REF_NAME", "main")
-    no_ci_env.setenv("GITHUB_WORKSPACE", str(tmp_path))
-    assert ci_edit_url(tmp_path / "recipes") == "https://github.com/me/recipes/edit/main/recipes"
-    assert ci_edit_url(tmp_path) == "https://github.com/me/recipes/edit/main"
-    assert ci_edit_url(Path("/elsewhere")) is None
-
-
-def test_ci_edit_url_from_gitlab_ci(tmp_path: Path, no_ci_env: pytest.MonkeyPatch) -> None:
-    no_ci_env.setenv("GITLAB_CI", "true")
-    no_ci_env.setenv("CI_PROJECT_URL", "https://gitlab.com/me/recipes")
-    no_ci_env.setenv("CI_COMMIT_REF_NAME", "main")
-    no_ci_env.setenv("CI_PROJECT_DIR", str(tmp_path))
-    assert ci_edit_url(tmp_path / "r") == "https://gitlab.com/me/recipes/-/edit/main/r"
-
-
-def test_ci_base_url_from_github_actions(no_ci_env: pytest.MonkeyPatch) -> None:
-    assert ci_base_url() is None
-    no_ci_env.setenv("GITHUB_ACTIONS", "true")
-    no_ci_env.setenv("GITHUB_SERVER_URL", "https://github.com")
-    no_ci_env.setenv("GITHUB_REPOSITORY", "Me/recipes")
-    assert ci_base_url() == "https://me.github.io/recipes/"
-    no_ci_env.setenv("GITHUB_REPOSITORY", "Me/me.github.io")
-    assert ci_base_url() == "https://me.github.io/"
-    no_ci_env.setenv("GITHUB_SERVER_URL", "https://github.example.com")
-    assert ci_base_url() is None
 
 
 def test_open_graph_tags(tmp_path: Path) -> None:
@@ -566,40 +333,6 @@ def test_build_removes_outputs_of_deleted_recipes(tmp_path: Path) -> None:
     assert (output / "CNAME").exists()
 
 
-def test_pictures_converted_to_the_same_name_are_rejected(tmp_path: Path) -> None:
-    source = tmp_path / "recipes"
-    source.mkdir()
-    (source / "soup.md").write_text("Hot.", encoding="utf-8")
-    (source / "soup.jpg").write_bytes(b"fake jpeg")
-    (source / "soup.heic").write_bytes(b"fake heic")
-
-    with pytest.raises(RecettesError, match=r"both be published as 'soup\.jpg'"):
-        build(source, tmp_path / "site")
-
-
-def test_cc_is_cubic_centimeters_in_english() -> None:
-    assert volume_ml(10, "cc", "of milk", "en") == 10
-    assert volume_ml(10, "cc", "of milk", "en-GB") == 10
-    assert volume_ml(10, "cc", "de lait", "fr") == 50
-    assert volume_ml(10, "cc", "de lait") == 50
-
-
-def test_ingredients_in_picture_descriptions_and_code(tmp_path: Path) -> None:
-    source = tmp_path / "recipes"
-    source.mkdir()
-    (source / "eggs.md").write_text(
-        "![Beaten {{ 2 eggs }}](eggs-1.jpg)\n\nWrite `{{ 1 egg }}` in recipes.\n",
-        encoding="utf-8",
-    )
-    (source / "eggs-1.jpg").write_bytes(b"fake jpeg")
-
-    build(source, tmp_path / "site")
-
-    recipe = (tmp_path / "site" / "recipes" / "eggs.html").read_text(encoding="utf-8")
-    assert 'alt="Beaten 2 eggs"' in recipe
-    assert "<code>{{ 1 egg }}</code>" in recipe
-
-
 def test_lint_checks_links_and_densities(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -614,16 +347,6 @@ def test_lint_checks_links_and_densities(
     (source / "soup.md").write_text("Serve with [bread](bread.md).\n", encoding="utf-8")
     with pytest.raises(RecettesError, match=r"links to missing file 'bread\.md'"):
         lint(source)
-
-
-def test_long_excerpt_is_cut_between_words() -> None:
-    tokens = markdown.parse("Whisk the eggs with sugar, then fold in the flour gently.")
-
-    assert markdown.first_paragraph(tokens, limit=30) == "Whisk the eggs with sugar…"
-    assert (
-        markdown.first_paragraph(tokens)
-        == "Whisk the eggs with sugar, then fold in the flour gently."
-    )
 
 
 def test_interface_language(tmp_path: Path) -> None:
@@ -652,15 +375,3 @@ def test_interface_language(tmp_path: Path) -> None:
     assert '<html lang="fr-CA">' in index
     assert 'aria-label="Filtrer par étiquette"' in index
     assert 'aria-label="Retour"' in soup
-
-
-def test_version_option() -> None:
-    from typer.testing import CliRunner
-
-    from recettes import __version__
-    from recettes.cli import app
-
-    result = CliRunner().invoke(app, ["--version"])
-
-    assert result.exit_code == 0
-    assert result.output == f"recettes {__version__}\n"

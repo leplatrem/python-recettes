@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from recettes import markdown
+from recettes import __version__, markdown
 from recettes.ci import ci_base_url, ci_edit_url
 from recettes.errors import RecettesError
 from recettes.quantities import (
@@ -641,7 +641,10 @@ def test_interface_language(tmp_path: Path) -> None:
     assert ">Ingredients</h2>" in soup
     assert '<html lang="es">' in sopa
     assert ">Ingredientes</h2>" in sopa
-    assert 'Hecho con <a href="https://github.com/leplatrem/python-recettes">Recettes</a>' in sopa
+    assert (
+        'Hecho con <a href="https://github.com/leplatrem/python-recettes">'
+        f"Recettes v{__version__}</a>"
+    ) in sopa
 
     build(source, tmp_path / "french", BuildOptions(lang="fr-CA"))
     index = (tmp_path / "french" / "index.html").read_text(encoding="utf-8")

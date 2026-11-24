@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 from markdown_it.token import Token
 
-from recettes import i18n, markdown
+from recettes import __version__, i18n, markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
 from recettes.text import natural_key, slugify, strip_accents
@@ -297,7 +297,7 @@ PROJECT_URL = "https://github.com/leplatrem/python-recettes"
 def interface_values(lang: str) -> dict[str, str]:
     """Translated interface strings, as `t_*` template values."""
     values = {f"t_{name}": attr(text) for name, text in i18n.strings(lang).items()}
-    link = f'<a href="{PROJECT_URL}">Recettes</a>'
+    link = f'<a href="{PROJECT_URL}">Recettes v{attr(__version__)}</a>'
     values["t_built_with"] = values["t_built_with"].replace("{recettes}", link)
     return values
 

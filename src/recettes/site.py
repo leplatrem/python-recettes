@@ -8,7 +8,6 @@ import hashlib
 import shutil
 from importlib import resources
 from pathlib import Path
-from urllib.parse import quote
 
 from markupsafe import Markup
 
@@ -22,6 +21,7 @@ from recettes.render import (
     edit_link,
     license_html,
     recipe_content,
+    recipe_url,
     render_template,
     tag_counts,
 )
@@ -127,7 +127,7 @@ def build(
         content = (static / filename).read_bytes()
         (assets / filename).write_bytes(content)
         digest = hashlib.sha256(content).hexdigest()[:10]
-        versions[filename.replace(".", "_") + "_version"] = digest
+        versions[filename] = digest
     footer_license = Markup(license_html(options.license))
     (assets / "fonts").mkdir()
     for font in (static / "fonts").iterdir():
@@ -137,6 +137,13 @@ def build(
     used_cache: set[Path] = set()
     site_lang = options.lang or common_language(recipes)
     base_url = options.base_url.rstrip("/") + "/" if options.base_url else ""
+    # Values used by the layout of all pages.
+    common = {
+        "site_name": options.title,
+        "base_url": base_url,
+        "license": footer_license,
+        "versions": versions,
+    }
     for recipe in recipes:
         slug = recipe.slug
         lang = recipe.lang or site_lang
@@ -149,16 +156,13 @@ def build(
             recipe=recipe,
             content=recipe_content(recipe),
             edit_url=edit_link(options.edit_url, recipe.path),
-            site_name=options.title,
-            base_url=base_url,
-            path=f"recipes/{quote(slug, safe='-_')}.html",
+            path=recipe_url(recipe),
             page_type="article",
             description=recipe.excerpt,
             image=recipe.main_image,
             article_tags=recipe.tags,
-            license=footer_license,
-            **versions,
             t=i18n.strings(lang),
+            **common,
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
     index = render_template(
@@ -168,16 +172,13 @@ def build(
         lang=site_lang,
         tags=tag_counts(recipes),
         recipes=recipes,
-        site_name=options.title,
-        base_url=base_url,
         path="",
         page_type="website",
         description=options.description or i18n.recipes_count(site_lang, len(recipes)),
         image=None,
         article_tags=[],
-        license=footer_license,
-        **versions,
         t=i18n.strings(site_lang),
+        **common,
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
     sitemap = destination / "sitemap.xml"

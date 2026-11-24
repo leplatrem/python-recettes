@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "macros.html" import figure, ingredient, picture %}
 {% block head %}
-    <script type="module" src="../assets/recipe.js?v={{ recipe_js_version }}"></script>
+    <script type="module" src="../assets/recipe.js?v={{ versions["recipe.js"] }}"></script>
 {% endblock %}
 {% block body %}
     <nav class="detail-nav">

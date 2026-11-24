@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#181a16" media="(prefers-color-scheme: dark)">
     <title>{{ title }}</title>
 {% include "meta.html" %}
-    <link rel="icon" href="{{ root }}assets/favicon.svg?v={{ favicon_svg_version }}" type="image/svg+xml">
-    <link rel="stylesheet" href="{{ root }}assets/style.css?v={{ style_css_version }}">
+    <link rel="icon" href="{{ root }}assets/favicon.svg?v={{ versions["favicon.svg"] }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ root }}assets/style.css?v={{ versions["style.css"] }}">
 {% block head %}{% endblock %}
   </head>
   <body>

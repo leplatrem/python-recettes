@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=77", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,21 +7,31 @@ name = "recettes"
 dynamic = ["version"]
 description = "Build a static recipe website from Markdown files."
 readme = "README.md"
-license = {file = "LICENSE"}
-requires-python = ">=3.10"
+# The bundled fonts are under the SIL Open Font License.
+license = "CC0-1.0 AND OFL-1.1"
+license-files = ["LICENSE", "src/recettes/static/fonts/OFL.txt"]
+requires-python = ">=3.11"
 authors = [{name = "Mathieu Leplatre"}]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Environment :: Console",
     "Topic :: Text Processing :: Markup :: Markdown",
-    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
 ]
 keywords = ["recipes", "markdown", "static site"]
-dependencies = ["typer>=0.12", "python-frontmatter>=1.1", "markdown-it-py>=3"]
+dependencies = [
+    "click>=8",
+    "jinja2>=3.1",
+    "typer>=0.12",
+    "python-frontmatter>=1.1",
+    "rich>=13",
+    "markdown-it-py>=3",
+    "pillow>=10",
+    "pillow-heif>=0.18",
+]
 
-[project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6"]
+[dependency-groups]
+dev = ["pre-commit>=4", "pytest>=8", "ruff>=0.6", "ty>=0.0.109"]
 
 [project.urls]
 Repository = "https://github.com/leplatrem/python-recettes"
@@ -30,7 +40,7 @@ Repository = "https://github.com/leplatrem/python-recettes"
 recettes = "recettes.cli:app"
 
 [tool.setuptools.package-data]
-recettes = ["static/*", "templates/*"]
+recettes = ["densities.json", "translations.json", "static/*", "static/fonts/*", "templates/*"]
 
 [tool.setuptools_scm]
 # can be empty if no extra settings are needed, presence enables setuptools_scm
@@ -38,9 +48,14 @@ recettes = ["static/*", "templates/*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.ty.src]
+include = ["src"]
+
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "PTH"]
+# Typographic characters in user facing texts.
+allowed-confusables = ["–", "’"]

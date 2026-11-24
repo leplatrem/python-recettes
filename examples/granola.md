@@ -2,7 +2,7 @@
 title: Crunchy Granola
 preparation: 5min
 cooking: 16min
-tags: breakfast, healthy, gluten-free, budget-friendly
+tags: breakfast, healthy, gluten-free, budget-friendly, vegan
 ---
 
 A budget-friendly classic.

@@ -1,0 +1,23 @@
+{% if description %}
+    <meta name="description" content="{{ description }}">
+{% endif %}
+{# Canonical URL and Open Graph tags (link previews) need absolute URLs. #}
+{% if base_url %}
+    <link rel="canonical" href="{{ base_url }}{{ path }}">
+    <meta name="twitter:card" content="{{ "summary_large_image" if image else "summary" }}">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:type" content="{{ page_type }}">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:url" content="{{ base_url }}{{ path }}">
+    {# Open Graph locales use underscores ("fr_CA"). #}
+    <meta property="og:locale" content="{{ lang|replace("-", "_") }}">
+{% if description %}
+    <meta property="og:description" content="{{ description }}">
+{% endif %}
+{% if image %}
+    <meta property="og:image" content="{{ base_url }}assets/images/{{ image|urlquote }}">
+{% endif %}
+{% for tag in article_tags %}
+    <meta property="article:tag" content="{{ tag }}">
+{% endfor %}
+{% endif %}

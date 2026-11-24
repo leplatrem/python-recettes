@@ -1,45 +1,53 @@
-<!doctype html>
-<html lang="{{ lang }}">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="../assets/style.css?v={{ style_css_version }}">
-    <script type="module" src="../assets/recipe.js?v={{ recipe_js_version }}"></script>
-  </head>
-  <body>
+{% extends "base.html" %}
+{% from "macros.html" import figure, ingredient, picture %}
+{% block head %}
+    <script type="module" src="../assets/recipe.js?v={{ versions["recipe.js"] }}"></script>
+{% endblock %}
+{% block body %}
     <nav class="detail-nav">
-      <a href="../index.html" aria-label="Back">←</a>
+      <a href="../index.html" aria-label="{{ t.back }}">←</a>
+{% if edit_url %}
+      <a href="{{ edit_url }}" aria-label="{{ t.edit }}" title="{{ t.edit }}" target="_blank" rel="noopener">✎</a>
+{% endif %}
     </nav>
     <main class="recipe-page">
       <article class="recipe">
         <header class="recipe-heading">
-          <h1 id="recipe-title">{{ title }}</h1>
+          <h1 id="recipe-title">{{ recipe.title }}</h1>
           <div class="recipe-meta-row">
-            <dl class="recipe-properties" id="recipe-properties"{{ properties_hidden }}>{{ properties }}</dl>
-            <div class="recipe-tags" id="recipe-tags">{{ tags }}</div>
+            <dl class="recipe-properties" id="recipe-properties"{% if not recipe.properties %} hidden{% endif %}>
+              {%- for item in recipe.properties %}<div class="recipe-property"><dt>{{ item.name }}</dt><dd>{{ item.value|display }}</dd></div>{% endfor -%}
+            </dl>
+            <div class="recipe-tags" id="recipe-tags">
+              {%- for tag in recipe.tags %}<a class="tag" href="../index.html?tag={{ tag|urlquote }}">{{ tag }}</a>{% endfor -%}
+            </div>
           </div>
         </header>
         <section class="ingredients">
           <div class="ingredients-heading">
-            <h2 class="ingredients-title">Ingredients</h2>
-            <div class="servings" id="servings-control"{{ servings_attrs }}>
-              <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
-              <span><strong id="servings-count">{{ portions }}</strong>×</span>
-              <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
+            <h2 class="ingredients-title">{{ t.ingredients }}</h2>
+            <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml"{% if not recipe.ingredients|selectattr("ml")|list %} hidden{% endif %}>
+              <input type="checkbox" id="simple-toggle" role="switch">
+              <span>{{ t.simple }}</span>
+            </label>
+            <div class="servings" id="servings-control"{% if recipe.portions %} data-portions="{{ recipe.portions }}"{% else %} hidden{% endif %}>
+              <button type="button" data-servings-step="-1" aria-label="{{ t.decrease_servings }}">−</button>
+              <span><strong id="servings-count">{{ recipe.portions or "" }}</strong>×</span>
+              <button type="button" data-servings-step="1" aria-label="{{ t.increase_servings }}">+</button>
             </div>
           </div>
-          <ul id="ingredient-list">{{ ingredient_list }}</ul>
+          <ul class="ingredient-list">
+            {%- for item in recipe.ingredient_list %}{{ ingredient(item, "li") }}{% endfor -%}
+          </ul>
         </section>
+{% if recipe.main_image %}
+        <figure class="recipe-main-image">{{ picture(recipe, recipe.main_image, recipe.title, lazy=False) }}</figure>
+{% endif %}
         <div class="recipe-content" id="recipe-content">{{ content }}</div>
-        <div class="recipe-schema">{{ schema }}</div>
-        <div class="recipe-gallery" id="recipe-gallery">{{ gallery }}</div>
+        <div class="recipe-schema">{{ diagram }}</div>
+        <div class="recipe-gallery" id="recipe-gallery">
+          {%- for image in recipe.gallery %}{{ figure(recipe, image, gallery_alt(recipe, image, loop.index, lang)) }}{% endfor -%}
+        </div>
       </article>
     </main>
-    <footer class="site-footer">
-      Built with
-      <a href="https://github.com/leplatrem/python-recettes">Recettes</a>, the free software
-      that turns Markdown files into a recipes website.
-    </footer>
-  </body>
-</html>
+{% endblock %}

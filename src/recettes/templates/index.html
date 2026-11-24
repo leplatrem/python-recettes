@@ -1,50 +1,35 @@
-<!doctype html>
-<html lang="{{ lang }}">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="assets/style.css?v={{ style_css_version }}">
-    <link rel="preload" id="recipes-data" href="recipes.json?v={{ recipes_json_version }}" as="fetch" crossorigin>
-    {{ prefetch_links }}
-    <script type="module" src="assets/app.js?v={{ app_js_version }}"></script>
-  </head>
-  <body>
+{% extends "base.html" %}
+{% from "macros.html" import picture %}
+{% block head %}
+    <!-- Load recipe pages on hover or touch, where supported (Speculation Rules API). -->
+    <script type="speculationrules">
+      {"prefetch": [{"where": {"href_matches": "recipes/*"}, "eagerness": "moderate"}]}
+    </script>
+    <script type="module" src="assets/app.js?v={{ versions["app.js"] }}"></script>
+{% endblock %}
+{% block body %}
     <main class="recipe-index">
       <h1>{{ title }}</h1>
-      <label class="search-box">
+      <!-- Search and tags need JavaScript: app.js shows them. -->
+      <label class="search-box" data-requires-js hidden>
+        <span class="visually-hidden">{{ t.search_label }}</span>
         <span aria-hidden="true">⌕</span>
-        <input id="recipe-search" type="search" aria-label="Search recipes" autocomplete="off">
+        <input id="recipe-search" type="search" placeholder="{{ t.search_placeholder|replace("{count}", recipes|length) }}" autocomplete="off">
       </label>
-      <div class="tag-cloud" id="tag-cloud"></div>
-      <div class="recipe-grid" id="recipe-grid"></div>
+      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="{{ t.tags_label }}" data-requires-js hidden>
+        {%- for tag in tags %}<button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="{{ tag.name }}" style="--tag-weight: {{ "%.3g"|format(tag.weight) }}"><span>{{ tag.name }}</span><span data-tag-count>{{ tag.count }}</span></button>{% endfor -%}
+      </div>
+      <p class="search-status" id="search-status" role="status" data-none="{{ t.results_none }}" data-one="{{ t.results_one }}" data-other="{{ t.results_other }}"></p>
+      <div class="recipe-grid" id="recipe-grid">
+{% for recipe in recipes %}
+        <article class="recipe-card{% if recipe.main_image %} has-image{% endif %}"{% if recipe.lang %} lang="{{ recipe.lang }}"{% endif %} data-search="{{ search_text(recipe) }}" data-tags="{{ recipe.tags|json }}">
+          <a href="{{ recipe_url(recipe) }}"><div class="card-body"><h2>{{ recipe.title }}</h2>
+            {%- if recipe.excerpt %}<p class="card-excerpt">{{ recipe.excerpt }}</p>{% endif -%}
+            <div class="recipe-tags">{% for tag in recipe.tags %}<span class="tag">{{ tag }}</span>{% endfor %}</div></div>
+            {%- if recipe.main_image %}{{ picture(recipe, recipe.main_image, "", root="", thumbnail=True, class="card-image") }}{% endif -%}
+            <span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+{% endfor %}
+      </div>
     </main>
-    <footer class="site-footer">
-      Built with
-      <a href="https://github.com/leplatrem/python-recettes">Recettes</a>, the free software
-      that turns Markdown files into a recipes website.
-    </footer>
-
-    <template id="tag-cloud-item-template">
-      <button class="tag-cloud-item" type="button" aria-pressed="false">
-        <span data-tag-name></span>
-        <span data-tag-count></span>
-      </button>
-    </template>
-
-    <template id="recipe-card-template">
-      <article class="recipe-card">
-        <a>
-          <h2 data-recipe-title></h2>
-          <p class="card-excerpt" data-recipe-excerpt></p>
-          <div class="recipe-tags" data-recipe-tags></div>
-          <span class="card-arrow" aria-hidden="true">↗</span>
-        </a>
-      </article>
-    </template>
-
-    <template id="recipe-tag-template">
-      <span class="tag" data-tag-label></span>
-    </template>
-  </body>
-</html>
+{% endblock %}

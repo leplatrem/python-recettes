@@ -4,7 +4,7 @@ portions: 20
 preparation: 10
 cooking: 45
 lang: en
-tags: drinks, easy, budget-friendly, healthy
+tags: drinks, easy, budget-friendly, healthy, vegan
 ---
 
 # Preparation

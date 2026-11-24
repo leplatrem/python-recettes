@@ -1,0 +1,3 @@
+# setuptools-scm includes all tracked files: leave out what is not needed to build or test.
+prune examples
+prune .github

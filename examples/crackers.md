@@ -3,8 +3,10 @@ title: Crackers
 portions: 20
 preparation: 10
 cooking: 1h
-tags: snack, gluten-free
+tags: snack, gluten-free, budget-friendly
 ---
+
+Hard to eat only one.
 
 # Preparation
 
@@ -16,9 +18,9 @@ Mix {{ 30g of rolled oats }}, {{ 60g of pumpkin seeds }}, {{ 30g of sunflower se
 
 Stir {{ 130ml of water }} and {{ 20g of olive oil }} into the dry mix.
 
-## Step 3
+## Step 3 (Optional)
 
-Add {{ 60g of grated cheese }}.
+Add {{ 60g of grated cheese }} or {{ spices of your choice }}.
 
 ## Step 4
 

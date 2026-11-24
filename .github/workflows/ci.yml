@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
+    # Tags are checked by the publish workflow.
+    branches: ["**"]
   pull_request:
+  # Run before publishing a release.
+  workflow_call:
 
 permissions:
   contents: read
@@ -11,16 +15,15 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - name: Install project and development tools
-        run: uv sync --locked --extra dev
-      - name: Lint with Ruff
-        run: uv run --locked ruff check .
+        run: uv sync --locked
+      - name: Lint Python, JavaScript and CSS
+        run: uv run --locked pre-commit run --all-files --show-diff-on-failure
+      - name: Check recipe content
+        run: uv run --locked recettes lint examples/
       - name: Run tests
         run: uv run --locked pytest
-      - name: Check JavaScript and CSS formatting
-        run: npx --yes prettier@3.6.2 --check "src/recettes/static/**/*.{js,css}"

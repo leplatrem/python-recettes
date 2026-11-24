@@ -65,10 +65,17 @@ def property_value(name: str, value: object) -> str:
     return display_value(value)
 
 
-def image_html(image: str, alt: str, lazy: bool = True) -> str:
+def size_attributes(recipe: Recipe, path: str) -> str:
+    """Picture dimensions, so the browser reserves its space before loading it."""
+    size = recipe.picture_sizes.get(path)
+    return f' width="{size[0]}" height="{size[1]}"' if size else ""
+
+
+def image_html(recipe: Recipe, image: str, alt: str, lazy: bool = True) -> str:
     loading = ' loading="lazy"' if lazy else ""
     src = f"../assets/images/{quote(image, safe='')}"
-    return f'<img{loading} src="{attr(src)}" alt="{attr(alt)}">'
+    dimensions = size_attributes(recipe, image)
+    return f'<img{loading} src="{attr(src)}"{dimensions} alt="{attr(alt)}">'
 
 
 def gallery_alt(recipe: Recipe, image: str, index: int) -> str:
@@ -79,14 +86,13 @@ def gallery_alt(recipe: Recipe, image: str, index: int) -> str:
     return f"{recipe.title}, photo {index}"
 
 
-def figure_html(image: str, alt: str) -> str:
-    return f"<figure>{image_html(image, alt)}</figure>"
+def figure_html(recipe: Recipe, image: str, alt: str) -> str:
+    return f"<figure>{image_html(recipe, image, alt)}</figure>"
 
 
-def insert_section_images(
-    tokens: list[Token], section_images: dict[str, list[str]], title: str
-) -> list[Token]:
+def insert_section_images(recipe: Recipe) -> list[Token]:
     """Append each heading's images at the end of its section (before the next heading)."""
+    tokens, section_images = recipe.tokens, recipe.section_images
     headings = markdown.headings(tokens)
     insertions: dict[int, str] = {}
     placed = set()
@@ -96,7 +102,9 @@ def insert_section_images(
             continue
         placed.add(slug)
         end = headings[number + 1][0] if number + 1 < len(headings) else len(tokens)
-        figures = "".join(figure_html(image, f"{title} – {text}") for image in section_images[slug])
+        figures = "".join(
+            figure_html(recipe, image, f"{recipe.title} – {text}") for image in section_images[slug]
+        )
         insertions[end] = f'<div class="recipe-step-images">{figures}</div>\n'
     result = []
     for index, token in enumerate([*tokens, None]):
@@ -122,16 +130,16 @@ def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
     )
     title = recipe.title
     gallery = "".join(
-        figure_html(image, gallery_alt(recipe, image, index))
+        figure_html(recipe, image, gallery_alt(recipe, image, index))
         for index, image in enumerate(recipe.gallery, 1)
     )
     main = (
         f'<figure class="recipe-main-image">'
-        f"{image_html(recipe.main_image, title, lazy=False)}</figure>"
+        f"{image_html(recipe, recipe.main_image, title, lazy=False)}</figure>"
         if recipe.main_image
         else ""
     )
-    tokens = insert_section_images(recipe.tokens, recipe.section_images, title)
+    tokens = insert_section_images(recipe)
     portions = recipe.portions
     return {
         "tags": tags,
@@ -160,8 +168,8 @@ def recipe_card_html(recipe: Recipe) -> str:
     excerpt = f'<p class="card-excerpt">{html.escape(recipe.excerpt)}</p>' if recipe.excerpt else ""
     tags = "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in recipe.tags)
     image = (
-        f'<img class="card-image" src="{attr(thumbnail_url(recipe.main_image))}" alt="" '
-        'loading="lazy">'
+        f'<img class="card-image" src="{attr(thumbnail_url(recipe.main_image))}"'
+        f'{size_attributes(recipe, f"thumbnails/{recipe.main_image}")} alt="" loading="lazy">'
         if recipe.main_image
         else ""
     )

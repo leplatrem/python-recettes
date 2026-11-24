@@ -48,6 +48,8 @@ class Recipe:
     main_image: str | None
     section_images: dict[str, list[str]]
     gallery: list[str]
+    # Size of the published pictures, by path in the images folder (once exported).
+    picture_sizes: dict[str, tuple[int, int]] = dataclasses.field(default_factory=dict)
 
     @property
     def slug(self) -> str:

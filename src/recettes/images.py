@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import PIL
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import ExifTags, Image, ImageOps, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 
 register_heif_opener()
@@ -24,6 +24,19 @@ def output_name(source: Path) -> str:
     if source.suffix.lower() in CONVERTED_TO_JPEG:
         return f"{source.stem}.jpg"
     return source.name
+
+
+def image_size(path: Path) -> tuple[int, int] | None:
+    """Width and height of a picture as displayed (EXIF orientation applied)."""
+    try:
+        with Image.open(path) as image:
+            width, height = image.size
+            # Orientations 5 to 8 are rotated by 90 degrees.
+            if image.getexif().get(ExifTags.Base.Orientation, 1) in (5, 6, 7, 8):
+                return height, width
+            return width, height
+    except (UnidentifiedImageError, OSError, ValueError):
+        return None
 
 
 def _resized_image(image: Image.Image, width: int, square: bool) -> Image.Image | None:

@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from recettes.errors import fail
-from recettes.images import cached_export_image, output_name, prune_cache
+from recettes.images import cached_export_image, image_size, output_name, prune_cache
 from recettes.recipes import (
     Recipe,
     load_recipes,
@@ -56,13 +56,17 @@ def export_images(
     """Publish the recipe pictures, and a square thumbnail of the main one."""
     for image in recipe.images:
         name = output_name(image)
-        exports = [(image_dir / name, options.image_width, False)]
+        exports = [(name, options.image_width, False)]
         if name == recipe.main_image:
-            exports.append((image_dir / "thumbnails" / name, options.thumbnail_width, True))
-        for target, width, square in exports:
+            exports.append((f"thumbnails/{name}", options.thumbnail_width, True))
+        for path, width, square in exports:
+            target = image_dir / path
             entry = cached_export_image(image, target, width, square, options.cache_dir)
             if entry is not None:
                 used_cache.add(entry)
+            size = image_size(target) if target.exists() else None
+            if size:
+                recipe.picture_sizes[path] = size
 
 
 def build(

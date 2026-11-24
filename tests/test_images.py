@@ -94,7 +94,7 @@ def test_heic_images_are_converted_to_jpeg(tmp_path: Path) -> None:
         assert image.format == "JPEG"
     assert not list(images.rglob("*.heic")) and not list(images.rglob("*.HEIC"))
     recipe = (output / "recipes" / "gnocchi.html").read_text(encoding="utf-8")
-    assert "gnocchi-etape-1.jpg" in recipe
+    assert 'gnocchi-etape-1.jpg" width="300" height="200"' in recipe
     assert "../assets/images/gnocchi-extra.jpg" in recipe
     assert "heic" not in recipe.lower()
     index = (output / "index.html").read_text(encoding="utf-8")

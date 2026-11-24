@@ -696,6 +696,11 @@ def build(
     static = package_dir / "static"
     templates = package_dir / "templates"
     assets = destination / "assets"
+    recipes_dir = destination / "recipes"
+    # Remove previous outputs, so deleted recipes and pictures are not published anymore.
+    for generated in (assets, recipes_dir):
+        if generated.is_dir():
+            shutil.rmtree(generated)
     assets.mkdir(parents=True, exist_ok=True)
     # Content hashes appended to asset URLs, so browsers never use stale cached copies.
     versions = {}
@@ -706,7 +711,6 @@ def build(
     footer_license = license_html(license)
     shutil.copytree(static / "fonts", assets / "fonts", dirs_exist_ok=True)
     image_dir = assets / "images"
-    recipes_dir = destination / "recipes"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     recipes = []
     images = assign_images(source, {path.stem for path in paths})

@@ -524,3 +524,23 @@ def test_license_shown_in_footer(tmp_path: Path) -> None:
     build(source, tmp_path / "none", license="")
     html = (tmp_path / "none" / "index.html").read_text(encoding="utf-8")
     assert "—" not in html.split('class="site-footer"')[1]
+
+
+def test_build_removes_outputs_of_deleted_recipes(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "soup.md").write_text("Hot.", encoding="utf-8")
+    (source / "cake.md").write_text("Sweet.", encoding="utf-8")
+    (source / "cake.jpg").write_bytes(b"fake jpeg")
+    output = tmp_path / "site"
+    build(source, output)
+    (output / "CNAME").write_text("recipes.example.com", encoding="utf-8")
+
+    (source / "cake.md").unlink()
+    (source / "cake.jpg").unlink()
+    build(source, output)
+
+    assert (output / "recipes" / "soup.html").exists()
+    assert not (output / "recipes" / "cake.html").exists()
+    assert not (output / "assets" / "images" / "cake.jpg").exists()
+    assert (output / "CNAME").exists()

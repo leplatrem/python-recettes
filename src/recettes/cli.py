@@ -452,6 +452,28 @@ def display_value(value: object) -> str:
     return "" if value is None else str(value)
 
 
+# Front matter properties holding a duration: plain numbers are minutes.
+DURATION_PROPERTIES = {
+    *("preparation", "cooking", "resting", "rest", "baking", "total"),
+    *("préparation", "cuisson", "repos", "attente"),
+    *("preparazione", "cottura", "riposo"),
+    *("preparación", "cocción", "reposo"),
+}
+
+
+def property_name(name: str) -> str:
+    """Human-friendly property name ("cooking_time" -> "Cooking time")."""
+    text = name.replace("_", " ")
+    return text[:1].upper() + text[1:]
+
+
+def property_value(name: str, value: object) -> str:
+    if name.casefold() in DURATION_PROPERTIES and isinstance(value, (int, float)):
+        if not isinstance(value, bool):
+            return f"{display_value(value)} min"
+    return display_value(value)
+
+
 def image_html(image: str, alt: str, lazy: bool = True) -> str:
     loading = ' loading="lazy"' if lazy else ""
     src = f"../assets/images/{quote(image, safe='')}"
@@ -490,8 +512,8 @@ def recipe_html_parts(recipe: dict[str, object]) -> dict[str, str]:
         for tag in recipe["tags"]
     )
     properties = "".join(
-        f'<div class="recipe-property"><dt>{html.escape(str(item["name"]))}</dt>'
-        f"<dd>{html.escape(display_value(item['value']))}</dd></div>"
+        f'<div class="recipe-property"><dt>{html.escape(property_name(str(item["name"])))}</dt>'
+        f"<dd>{html.escape(property_value(str(item['name']), item['value']))}</dd></div>"
         for item in recipe["properties"]
     )
     title = str(recipe["title"])

@@ -4,9 +4,9 @@ import re
 from pathlib import Path
 
 import pytest
-import typer
 
 from recettes.cli import (
+    RecettesError,
     aggregate_ingredients,
     build,
     ci_base_url,
@@ -332,7 +332,7 @@ def test_links_to_missing_files_fail_the_build(tmp_path: Path, link: str) -> Non
     source.mkdir()
     (source / "flan.md").write_text(f"Servez avec {link}.\n", encoding="utf-8")
 
-    with pytest.raises(typer.BadParameter, match="'flan.md' links to missing file"):
+    with pytest.raises(RecettesError, match="'flan.md' links to missing file"):
         build(source, tmp_path / "site")
 
 
@@ -553,7 +553,7 @@ def test_pictures_converted_to_the_same_name_are_rejected(tmp_path: Path) -> Non
     (source / "soup.jpg").write_bytes(b"fake jpeg")
     (source / "soup.heic").write_bytes(b"fake heic")
 
-    with pytest.raises(typer.BadParameter, match="both be published as 'soup.jpg'"):
+    with pytest.raises(RecettesError, match="both be published as 'soup.jpg'"):
         build(source, tmp_path / "site")
 
 

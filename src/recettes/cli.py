@@ -10,9 +10,10 @@ import unicodedata
 from fractions import Fraction
 from functools import cache
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, NoReturn
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
+import click
 import frontmatter
 import typer
 from markdown_it import MarkdownIt
@@ -62,8 +63,12 @@ def main() -> None:
     """Build and maintain a static recipe website."""
 
 
-def fail(message: str) -> None:
-    raise typer.BadParameter(message)
+class RecettesError(click.ClickException):
+    """Invalid recipes or options: shown to the user without a traceback."""
+
+
+def fail(message: str) -> NoReturn:
+    raise RecettesError(message)
 
 
 def parse_quantity(value: str) -> tuple[float | None, str, str]:

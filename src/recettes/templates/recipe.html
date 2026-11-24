@@ -6,7 +6,7 @@
   </head>
   <body>
     <nav class="detail-nav">
-      <a href="../index.html" aria-label="Back">←</a>
+      <a href="../index.html" aria-label="{{ t_back }}">←</a>
       {{ edit_link }}
     </nav>
     <main class="recipe-page">
@@ -20,15 +20,15 @@
         </header>
         <section class="ingredients">
           <div class="ingredients-heading">
-            <h2 class="ingredients-title">Ingredients</h2>
+            <h2 class="ingredients-title">{{ t_ingredients }}</h2>
             <label class="simple-toggle" title="🥛 = 200 ml, 🥄 = 15 ml"{{ simple_hidden }}>
               <input type="checkbox" id="simple-toggle" role="switch">
-              <span>Simple</span>
+              <span>{{ t_simple }}</span>
             </label>
             <div class="servings" id="servings-control"{{ servings_attrs }}>
-              <button type="button" data-servings-step="-1" aria-label="Decrease servings">−</button>
+              <button type="button" data-servings-step="-1" aria-label="{{ t_decrease_servings }}">−</button>
               <span><strong id="servings-count">{{ portions }}</strong>×</span>
-              <button type="button" data-servings-step="1" aria-label="Increase servings">+</button>
+              <button type="button" data-servings-step="1" aria-label="{{ t_increase_servings }}">+</button>
             </div>
           </div>
           <ul id="ingredient-list">{{ ingredient_list }}</ul>

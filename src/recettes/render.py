@@ -11,7 +11,7 @@ from urllib.parse import quote
 
 from markdown_it.token import Token
 
-from recettes import markdown
+from recettes import i18n, markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
 from recettes.text import natural_key, slugify, strip_accents
@@ -99,12 +99,12 @@ def image_html(recipe: Recipe, image: str, alt: str, lazy: bool = True) -> str:
     return f'<img{loading} src="{attr(src)}"{srcset}{dimensions} alt="{attr(alt)}">'
 
 
-def gallery_alt(recipe: Recipe, image: str, index: int) -> str:
+def gallery_alt(recipe: Recipe, image: str, index: int, lang: str) -> str:
     """Describe a gallery picture with its file name suffix (`soup-bowl.jpg` -> "bowl")."""
     suffix = Path(image).stem[len(recipe.slug) + 1 :].replace("-", " ").replace("_", " ")
     if suffix.strip() and not suffix.isdigit():
         return f"{recipe.title} – {suffix.strip()}"
-    return f"{recipe.title}, photo {index}"
+    return f"{recipe.title}, {i18n.strings(lang)['photo']} {index}"
 
 
 def figure_html(recipe: Recipe, image: str, alt: str) -> str:
@@ -138,7 +138,7 @@ def insert_section_images(recipe: Recipe) -> list[Token]:
     return result
 
 
-def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
+def recipe_html_parts(recipe: Recipe, lang: str) -> dict[str, str]:
     tags = "".join(
         f'<a class="tag" href="../index.html?tag={attr(quote(tag, safe="-_.!~*()"))}">'
         f"{html.escape(tag)}</a>"
@@ -151,7 +151,7 @@ def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
     )
     title = recipe.title
     gallery = "".join(
-        figure_html(recipe, image, gallery_alt(recipe, image, index))
+        figure_html(recipe, image, gallery_alt(recipe, image, index, lang))
         for index, image in enumerate(recipe.gallery, 1)
     )
     main = (
@@ -290,11 +290,22 @@ def render_template(path: Path, **values: str) -> str:
     return PLACEHOLDER_RE.sub(value, template)
 
 
-def edit_link(edit_url: str | None, path: Path) -> str:
+PROJECT_URL = "https://github.com/leplatrem/python-recettes"
+
+
+def interface_values(lang: str) -> dict[str, str]:
+    """Translated interface strings, as `t_*` template values."""
+    values = {f"t_{name}": attr(text) for name, text in i18n.strings(lang).items()}
+    link = f'<a href="{PROJECT_URL}">Recettes</a>'
+    values["t_built_with"] = values["t_built_with"].replace("{recettes}", link)
+    return values
+
+
+def edit_link(edit_url: str | None, path: Path, lang: str) -> str:
     if not edit_url:
         return ""
     url = edit_url.rstrip("/") + "/" + quote(path.name)
-    label = "Edit (opens in a new tab)"
+    label = attr(i18n.strings(lang)["edit"])
     return (
         f'<a href="{attr(url)}" aria-label="{label}" title="{label}" target="_blank" '
         'rel="noopener">✎</a>'

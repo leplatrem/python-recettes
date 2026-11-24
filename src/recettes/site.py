@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 from urllib.parse import quote
 
+from recettes import i18n
 from recettes.errors import fail
 from recettes.images import cached_export_image, image_size, output_name, prune_cache
 from recettes.recipes import (
@@ -19,6 +20,7 @@ from recettes.recipes import (
 from recettes.render import (
     attr,
     edit_link,
+    interface_values,
     license_html,
     meta_tags,
     recipe_card_html,
@@ -46,6 +48,14 @@ class BuildOptions:
     thumbnail_width: int = DEFAULT_THUMBNAIL_WIDTH
     simple_mode: bool = True
     cache_dir: Path | None = None
+    # Language of the interface and of recipes without `lang`, guessed when empty.
+    lang: str = ""
+
+
+def common_language(recipes: list[Recipe]) -> str:
+    """Language of all recipes when they have the same, English otherwise."""
+    languages = {recipe.lang for recipe in recipes}
+    return (languages.pop() or i18n.DEFAULT_LANG) if len(languages) == 1 else i18n.DEFAULT_LANG
 
 
 def export_images(
@@ -125,15 +135,17 @@ def build(
     image_dir = assets / "images"
     recipes_dir.mkdir(parents=True, exist_ok=True)
     used_cache: set[Path] = set()
+    site_lang = options.lang or common_language(recipes)
     for recipe in recipes:
         slug = recipe.slug
+        lang = recipe.lang or site_lang
         export_images(recipe, image_dir, options, used_cache)
         page = render_template(
             templates / "recipe.html",
             root="../",
             title=html.escape(recipe.title),
-            lang=html.escape(recipe.lang, quote=True),
-            edit_link=edit_link(options.edit_url, recipe.path),
+            lang=attr(lang),
+            edit_link=edit_link(options.edit_url, recipe.path, lang),
             meta_tags=meta_tags(
                 recipe.title,
                 "article",
@@ -146,21 +158,24 @@ def build(
             ),
             license=footer_license,
             **versions,
-            **recipe_html_parts(recipe),
+            **interface_values(lang),
+            **recipe_html_parts(recipe, lang),
         )
         (recipes_dir / f"{slug}.html").write_text(page, encoding="utf-8")
-    languages = {recipe.lang for recipe in recipes if recipe.lang}
     index = render_template(
         templates / "index.html",
         root="",
         title=html.escape(options.title),
-        lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
-        search_placeholder=attr(f"Search {len(recipes)} recipes"),
+        lang=attr(site_lang),
+        search_placeholder=attr(
+            i18n.strings(site_lang)["search_placeholder"].format(count=len(recipes))
+        ),
         tag_cloud=tag_cloud_html(recipes),
         recipe_cards="".join(recipe_card_html(recipe) for recipe in recipes),
         meta_tags=meta_tags(options.title, "website", options.title, options.base_url, ""),
         license=footer_license,
         **versions,
+        **interface_values(site_lang),
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
     if cache_dir:

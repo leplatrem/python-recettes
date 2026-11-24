@@ -122,6 +122,12 @@ recettes build examples/ --cache-dir ~/.cache/recettes/
 
 On GitHub Actions, persist this directory between runs with [actions/cache](https://github.com/actions/cache), as in [this repository's workflow](.github/workflows/cd.yaml).
 
+The interface (search, buttons, footer) is available in English, French, Spanish, Italian and German. Recipe pages follow their `lang` property, and the home page the language shared by all recipes (English otherwise). Choose the language of the website, also used for recipes without `lang`, with `--lang` (or the `RECETTES_LANG` environment variable):
+
+```sh
+recettes build examples/ --lang fr
+```
+
 Recipe pages offer a *Simple* switch to measure ingredients with glasses (🥛 = 200 ml) and spoons (🥄 = 15 ml) instead of a scale. Disable it with:
 
 ```sh

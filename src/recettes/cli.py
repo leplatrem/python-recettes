@@ -87,6 +87,16 @@ def build_command(
             "Defaults to the GitHub Pages URL of the repository on GitHub Actions",
         ),
     ] = None,
+    lang: Annotated[
+        str,
+        typer.Option(
+            "--lang",
+            envvar="RECETTES_LANG",
+            help="Language of the website (e.g. fr), for its interface and the recipes "
+            "without a `lang` property. Defaults to the language of the recipes when they "
+            "all have the same, English otherwise",
+        ),
+    ] = "",
     license: Annotated[
         str,
         typer.Option(
@@ -106,6 +116,7 @@ def build_command(
         thumbnail_width=thumbnail_width,
         simple_mode=simple_mode,
         cache_dir=cache_dir,
+        lang=lang,
     )
     count = build(source, destination, options)
     typer.echo(f"Built {count} recipes into {destination}")

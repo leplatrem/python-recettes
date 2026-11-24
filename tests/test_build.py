@@ -203,10 +203,10 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert '<p class="card-excerpt">Mélangez 4 oignons et 50g de beurre.</p>' in index
     assert '<span class="tag">hiver</span>' in index
     assert 'data-tag="hiver" style="--tag-weight: 1">' in index
-    assert 'placeholder="Search 1 recipes"' in index
+    assert 'placeholder="Rechercher parmi 1 recettes"' in index
     assert 'rel="prefetch"' not in index
     assert '<script type="speculationrules">' in index
-    assert '<h2 class="ingredients-title">Ingredients</h2>' in recipe
+    assert '<h2 class="ingredients-title">Ingrédients</h2>' in recipe
     assert '<html lang="fr">' in recipe
     assert "<title>Soupe à l&#x27;oignon</title>" in recipe
     assert '<a class="tag" href="../index.html?tag=hiver">hiver</a>' in recipe
@@ -610,3 +610,28 @@ def test_long_excerpt_is_cut_between_words() -> None:
         markdown.first_paragraph(tokens)
         == "Whisk the eggs with sugar, then fold in the flour gently."
     )
+
+
+def test_interface_language(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "soup.md").write_text("Hot.", encoding="utf-8")
+    (source / "sopa.md").write_text("---\nlang: es\n---\nCaliente.", encoding="utf-8")
+
+    build(source, tmp_path / "default")
+    index = (tmp_path / "default" / "index.html").read_text(encoding="utf-8")
+    soup = (tmp_path / "default" / "recipes" / "soup.html").read_text(encoding="utf-8")
+    sopa = (tmp_path / "default" / "recipes" / "sopa.html").read_text(encoding="utf-8")
+    assert '<html lang="en">' in index
+    assert 'placeholder="Search 2 recipes"' in index
+    assert ">Ingredients</h2>" in soup
+    assert '<html lang="es">' in sopa
+    assert ">Ingredientes</h2>" in sopa
+    assert 'Hecho con <a href="https://github.com/leplatrem/python-recettes">Recettes</a>' in sopa
+
+    build(source, tmp_path / "french", BuildOptions(lang="fr-CA"))
+    index = (tmp_path / "french" / "index.html").read_text(encoding="utf-8")
+    soup = (tmp_path / "french" / "recipes" / "soup.html").read_text(encoding="utf-8")
+    assert '<html lang="fr-CA">' in index
+    assert 'aria-label="Filtrer par étiquette"' in index
+    assert 'aria-label="Retour"' in soup

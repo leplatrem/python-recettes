@@ -71,6 +71,14 @@ def image_html(image: str, alt: str, lazy: bool = True) -> str:
     return f'<img{loading} src="{attr(src)}" alt="{attr(alt)}">'
 
 
+def gallery_alt(recipe: Recipe, image: str, index: int) -> str:
+    """Describe a gallery picture with its file name suffix (`soup-bowl.jpg` -> "bowl")."""
+    suffix = Path(image).stem[len(recipe.slug) + 1 :].replace("-", " ").replace("_", " ")
+    if suffix.strip() and not suffix.isdigit():
+        return f"{recipe.title} – {suffix.strip()}"
+    return f"{recipe.title}, photo {index}"
+
+
 def figure_html(image: str, alt: str) -> str:
     return f"<figure>{image_html(image, alt)}</figure>"
 
@@ -114,7 +122,8 @@ def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
     )
     title = recipe.title
     gallery = "".join(
-        figure_html(image, f"{title} {index}") for index, image in enumerate(recipe.gallery, 1)
+        figure_html(image, gallery_alt(recipe, image, index))
+        for index, image in enumerate(recipe.gallery, 1)
     )
     main = (
         f'<figure class="recipe-main-image">'

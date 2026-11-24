@@ -242,7 +242,7 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     assert '<article class="recipe-card" lang="fr"' in index
     assert (
         '<img loading="lazy" src="../assets/images/soupe-oignon-1.jpg" '
-        'alt="Soupe à l&#x27;oignon 1">'
+        'alt="Soupe à l&#x27;oignon, photo 1">'
     ) in recipe
     assert (output / "assets" / "images" / "soupe-oignon-1.jpg").read_bytes() == b"fake jpeg"
 
@@ -390,6 +390,7 @@ def test_images_are_placed_as_main_picture_in_sections_or_gallery(tmp_path: Path
     assert step in recipe
     gallery = recipe[recipe.index('id="recipe-gallery"') :]
     assert "tarte-inconnu.webp" in gallery
+    assert 'alt="Tarte – inconnu"' in gallery
     assert "tarte-citron.jpg" not in recipe
     index = (output / "index.html").read_text(encoding="utf-8")
     assert '<img class="card-image" src="assets/images/thumbnails/tarte.jpg"' in index

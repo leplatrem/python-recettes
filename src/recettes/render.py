@@ -115,41 +115,24 @@ def search_text(recipe: Recipe) -> str:
     return " ".join([recipe.title, *recipe.tags, recipe.text, *properties])
 
 
-def recipe_card_html(recipe: Recipe) -> str:
-    """Home page card, with the data used to filter it."""
-    lang = f' lang="{attr(recipe.lang)}"' if recipe.lang else ""
-    classes = "recipe-card has-image" if recipe.main_image else "recipe-card"
-    excerpt = f'<p class="card-excerpt">{html.escape(recipe.excerpt)}</p>' if recipe.excerpt else ""
-    tags = "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in recipe.tags)
-    image = (
-        macros().picture(
-            recipe, recipe.main_image, "", root="", thumbnail=True, **{"class": "card-image"}
-        )
-        if recipe.main_image
-        else ""
-    )
-    return (
-        f'<article class="{classes}"{lang} data-search="{attr(search_text(recipe))}" '
-        f'data-tags="{attr(json.dumps(recipe.tags, ensure_ascii=False))}">'
-        f'<a href="{attr(recipe_url(recipe))}">'
-        f'<div class="card-body"><h2>{html.escape(recipe.title)}</h2>{excerpt}'
-        f'<div class="recipe-tags">{tags}</div></div>'
-        f'{image}<span class="card-arrow" aria-hidden="true">↗</span></a></article>'
-    )
+@dataclasses.dataclass
+class TagCount:
+    name: str
+    count: int
+    # From 1 to 2, to show frequent tags larger.
+    weight: float
 
 
-def tag_cloud_html(recipes: list[Recipe]) -> str:
-    """Buttons to filter recipes by tag, larger for frequent tags."""
+def tag_counts(recipes: list[Recipe]) -> list[TagCount]:
+    """Tags of all recipes, in alphabetical order."""
     counts = Counter(tag for recipe in recipes for tag in recipe.tags)
     highest = max(counts.values(), default=1)
-    return "".join(
-        f'<button class="tag-cloud-item" type="button" aria-pressed="false" '
-        f'data-tag="{attr(tag)}" style="--tag-weight: {1 + (count - 1) / highest:.3g}">'
-        f"<span>{html.escape(tag)}</span><span data-tag-count>{count}</span></button>"
+    return [
+        TagCount(tag, count, 1 + (count - 1) / highest)
         for tag, count in sorted(
             counts.items(), key=lambda item: natural_key(strip_accents(item[0]))
         )
-    )
+    ]
 
 
 def recipe_url(recipe: Recipe) -> str:
@@ -229,12 +212,18 @@ TEMPLATES = jinja2.Environment(
 
 TEMPLATES.filters.update(
     display=display_value,
+    json=lambda value: json.dumps(value, ensure_ascii=False),
     quantity=quantity,
     urlquote=lambda text: quote(text, safe="-_.!~*()"),
 )
 # Jinja2 types its globals after its own defaults.
 template_globals: dict[str, Any] = TEMPLATES.globals
-template_globals.update(gallery_alt=gallery_alt, picture_files=picture_files)
+template_globals.update(
+    gallery_alt=gallery_alt,
+    picture_files=picture_files,
+    recipe_url=recipe_url,
+    search_text=search_text,
+)
 
 
 def macros() -> Any:

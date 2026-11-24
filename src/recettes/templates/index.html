@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import picture %}
 {% block head %}
     <!-- Load recipe pages on hover or touch, where supported (Speculation Rules API). -->
     <script type="speculationrules">
@@ -15,8 +16,20 @@
         <span aria-hidden="true">⌕</span>
         <input id="recipe-search" type="search" placeholder="{{ search_placeholder }}" autocomplete="off">
       </label>
-      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="{{ t_tags_label }}" data-requires-js hidden>{{ tag_cloud }}</div>
+      <div class="tag-cloud" id="tag-cloud" role="group" aria-label="{{ t_tags_label }}" data-requires-js hidden>
+        {%- for tag in tags %}<button class="tag-cloud-item" type="button" aria-pressed="false" data-tag="{{ tag.name }}" style="--tag-weight: {{ "%.3g"|format(tag.weight) }}"><span>{{ tag.name }}</span><span data-tag-count>{{ tag.count }}</span></button>{% endfor -%}
+      </div>
       <p class="search-status" id="search-status" role="status" data-none="{{ t_results_none }}" data-one="{{ t_results_one }}" data-other="{{ t_results_other }}"></p>
-      <div class="recipe-grid" id="recipe-grid">{{ recipe_cards }}</div>
+      <div class="recipe-grid" id="recipe-grid">
+{% for recipe in recipes %}
+        <article class="recipe-card{% if recipe.main_image %} has-image{% endif %}"{% if recipe.lang %} lang="{{ recipe.lang }}"{% endif %} data-search="{{ search_text(recipe) }}" data-tags="{{ recipe.tags|json }}">
+          <a href="{{ recipe_url(recipe) }}"><div class="card-body"><h2>{{ recipe.title }}</h2>
+            {%- if recipe.excerpt %}<p class="card-excerpt">{{ recipe.excerpt }}</p>{% endif -%}
+            <div class="recipe-tags">{% for tag in recipe.tags %}<span class="tag">{{ tag }}</span>{% endfor %}</div></div>
+            {%- if recipe.main_image %}{{ picture(recipe, recipe.main_image, "", root="", thumbnail=True, class="card-image") }}{% endif -%}
+            <span class="card-arrow" aria-hidden="true">↗</span></a>
+        </article>
+{% endfor %}
+      </div>
     </main>
 {% endblock %}

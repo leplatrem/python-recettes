@@ -23,11 +23,10 @@ from recettes.render import (
     interface_values,
     license_html,
     meta_tags,
-    recipe_card_html,
     recipe_content,
     render_template,
     sitemap_xml,
-    tag_cloud_html,
+    tag_counts,
 )
 from recettes.utils import fail
 
@@ -176,8 +175,8 @@ def build(
         title=options.title,
         lang=site_lang,
         search_placeholder=i18n.strings(site_lang)["search_placeholder"].format(count=len(recipes)),
-        tag_cloud=Markup(tag_cloud_html(recipes)),
-        recipe_cards=Markup("".join(recipe_card_html(recipe) for recipe in recipes)),
+        tags=tag_counts(recipes),
+        recipes=recipes,
         meta_tags=Markup(
             meta_tags(
                 options.title,

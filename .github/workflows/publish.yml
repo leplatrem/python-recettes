@@ -3,11 +3,21 @@ name: Publish Python 🐍 distribution 📦 to PyPI
 on:
   push:
     tags:
-      - '*'
+      # Versions, e.g. 1.6.0 or 2.0.0rc1.
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: read
 
 jobs:
+  ci:
+    name: Lint and test
+    uses: ./.github/workflows/ci.yml
+
   build:
     name: Build distribution 📦
+    needs:
+      - ci
     runs-on: ubuntu-latest
 
     steps:

@@ -141,7 +141,7 @@ recettes build examples/ --no-simple-mode
 ## Development
 
 ```sh
-uv sync --extra dev
+uv sync
 uv run recettes --help
 uv run ruff check .
 uv run pytest

@@ -654,7 +654,7 @@ dependencies = [
     { name = "typer" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
@@ -666,12 +666,15 @@ requires-dist = [
     { name = "markdown-it-py", specifier = ">=3" },
     { name = "pillow", specifier = ">=10" },
     { name = "pillow-heif", specifier = ">=0.18" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "python-frontmatter", specifier = ">=1.1" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "typer", specifier = ">=0.12" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8" },
+    { name = "ruff", specifier = ">=0.6" },
+]
 
 [[package]]
 name = "rich"

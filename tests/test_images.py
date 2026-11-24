@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from PIL import Image, ImageCms
 
-from recettes.cli import build
 from recettes.images import export_image
+from recettes.site import build
 
 
 def test_images_are_downscaled_and_main_picture_has_a_thumbnail(tmp_path: Path) -> None:

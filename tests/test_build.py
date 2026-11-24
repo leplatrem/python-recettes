@@ -5,16 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from recettes.cli import (
-    RecettesError,
-    aggregate_ingredients,
-    build,
-    ci_base_url,
-    ci_edit_url,
-    find_density,
-    parse_quantity,
-    volume_ml,
-)
+from recettes.ci import ci_base_url, ci_edit_url
+from recettes.errors import RecettesError
+from recettes.quantities import aggregate_ingredients, find_density, parse_quantity, volume_ml
+from recettes.site import build
 
 
 @pytest.mark.parametrize(

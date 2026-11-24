@@ -1,0 +1,21 @@
+"""Text helpers."""
+
+from __future__ import annotations
+
+import re
+import unicodedata
+
+
+def strip_accents(text: str) -> str:
+    """Remove diacritics ("Étape" -> "Etape")."""
+    normalized = unicodedata.normalize("NFKD", text)
+    return "".join(char for char in normalized if not unicodedata.combining(char))
+
+
+def slugify(text: str) -> str:
+    """Turn a heading into a filename-friendly slug ("Étape 1" -> "etape-1")."""
+    return re.sub(r"[^a-z0-9]+", "-", strip_accents(text).casefold()).strip("-")
+
+
+def natural_key(name: str) -> list[object]:
+    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", name.casefold())]

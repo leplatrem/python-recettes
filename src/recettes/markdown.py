@@ -127,21 +127,45 @@ def headings(tokens: list[Token]) -> list[tuple[int, str]]:
     ]
 
 
+def emphasized_text(token: Token) -> str:
+    """Words in emphasis or bold of an inline token, e.g. "Cream" in `**Cream** the butter`."""
+    parts: list[str] = []
+    depth = 0
+    for child in token.children or []:
+        if child.type in {"em_open", "strong_open"}:
+            if depth == 0:
+                parts.append("")
+            depth += 1
+        elif child.type in {"em_close", "strong_close"}:
+            depth -= 1
+        elif depth and child.type in {"text", "code_inline"}:
+            parts[-1] += child.content
+        elif depth and child.type in {"softbreak", "hardbreak"}:
+            parts[-1] += " "
+    return " ".join(" ".join(parts).split())
+
+
 def diagram_steps(tokens: list[Token]) -> list[tuple[str, list[Ingredient]]]:
-    """Steps of the recipe diagram: the text before their first ingredient, and ingredients.
+    """Steps of the recipe diagram: their words in emphasis or bold, and their ingredients.
 
     Steps start with the first paragraph that has ingredients, and end with its section.
+    Ingredients of paragraphs without emphasis go to the next step (or the last one), so
+    there are no steps without words, and no diagram when no paragraph has emphasis.
     """
     steps: list[tuple[str, list[Ingredient]]] = []
+    pending: list[Ingredient] = []
     for token, inline in itertools.pairwise(tokens):
-        if token.type == "heading_open" and token.tag == "h1" and steps:
+        if token.type == "heading_open" and token.tag == "h1" and (steps or pending):
             break
         if token.type != "paragraph_open":
             continue
-        step_ingredients = ingredients([inline])
-        if steps or step_ingredients:
-            label = inline.content.split("{{")[0].strip(" ,;:.")
-            steps.append((label, step_ingredients))
+        pending += ingredients([inline])
+        label = emphasized_text(inline)
+        if label and (steps or pending):
+            steps.append((label, pending))
+            pending = []
+    if steps:
+        steps[-1][1].extend(pending)
     return steps
 
 

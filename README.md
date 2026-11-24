@@ -138,7 +138,7 @@ Recipe pages offer a *Simple* switch to measure ingredients with glasses (🥛 =
 recettes build examples/ --no-simple-mode
 ```
 
-Recipe pages show a diagram of the steps after the recipe text: each paragraph with ingredients, and the ones after it in its section, is drawn next to its ingredients and the steps before it. Disable diagrams with `--no-diagrams`, or for a single recipe with the `diagram: false` property (`diagram: true` shows it despite `--no-diagrams`).
+Recipe pages show a summary diagram of the steps after the recipe text: from the first paragraph with ingredients to the end of its section, each paragraph with words in *emphasis* or **bold** is a step. Disable diagrams with `--no-diagrams`, or for a single recipe with the `diagram: false` property (`diagram: true` shows it despite `--no-diagrams`).
 
 ## Development
 

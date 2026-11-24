@@ -407,9 +407,9 @@ def test_diagram_nests_each_step_around_the_one_before(tmp_path: Path) -> None:
     diagram = build_one(
         tmp_path,
         "From grandma.\n\n# Preparation\n\n"
-        "1. Cream {{ 100g butter }} with {{ 200g of sugar }}.\n"
-        "2. Beat in {{ 2 eggs }}.\n"
-        "3. Bake for 30min.\n",
+        "1. **Cream** {{ 100g butter }} with {{ 200g of sugar }}.\n"
+        "2. *Beat in* {{ 2 eggs }}.\n"
+        "3. **Bake** for *30min*.\n",
     )
 
     texts = re.findall(r">([^<]+)<", diagram)
@@ -419,7 +419,7 @@ def test_diagram_nests_each_step_around_the_one_before(tmp_path: Path) -> None:
         "Cream",
         "2 eggs",
         "Beat in",
-        "Bake for 30min",
+        "Bake 30min",
     ]
     assert diagram.startswith('<div class="schema-step"><div class="schema-inputs">' * 3)
     assert 'data-amount="100.0" data-unit="g" data-name="butter"' in diagram
@@ -429,8 +429,8 @@ def test_diagram_stops_at_the_section_after_the_steps(tmp_path: Path) -> None:
     diagram = build_one(
         tmp_path,
         "# Preparation\n\n"
-        "## Step 1\n\nMix {{ 100g flour }}.\n\n"
-        "## Step 2\n\nBake.\n\n"
+        "## Step 1\n\n**Mix** {{ 100g flour }}.\n\n"
+        "## Step 2\n\n**Bake**.\n\n"
         "# Notes\n\nTry it with {{ 50g of raspberries }}.\n\n- Less sugar\n",
     )
 
@@ -439,9 +439,39 @@ def test_diagram_stops_at_the_section_after_the_steps(tmp_path: Path) -> None:
 
 
 def test_diagram_labels_are_escaped(tmp_path: Path) -> None:
-    diagram = build_one(tmp_path, "Mix <b> & {{ 100g flour }}.\n")
+    diagram = build_one(tmp_path, "**Mix <b> &** {{ 100g flour }}.\n")
 
     assert '<div class="schema-label">Mix &lt;b&gt; &amp;</div>' in diagram
+
+
+def test_diagram_leaves_out_paragraphs_without_emphasis_nor_ingredients(tmp_path: Path) -> None:
+    diagram = build_one(
+        tmp_path,
+        "Mix {{ 100g flour }} *and* {{ 1 egg }}.\n\n"
+        "Let it rest.\n\n"
+        "**Bake** in a ***hot** oven*, `220ºC`.\n",
+    )
+
+    texts = re.findall(r">([^<]+)<", diagram)
+    assert texts == ["100 g flour", "1 egg", "and", "Bake hot oven"]
+
+
+def test_ingredients_without_emphasis_go_to_the_next_step(tmp_path: Path) -> None:
+    diagram = build_one(
+        tmp_path,
+        "**Beat** {{ 3 eggs }}.\n\n"
+        "Add {{ feta }} and {{ olives }}.\n\n"
+        "**Bake**.\n\n"
+        "Serve with {{ salad }}.\n",
+    )
+
+    texts = re.findall(r">([^<]+)<", diagram)
+    assert texts == ["3 eggs", "Beat", "feta", "olives", "salad", "Bake"]
+    assert diagram.count('<div class="schema-step">') == 2
+
+
+def test_recipe_without_emphasis_has_no_diagram(tmp_path: Path) -> None:
+    assert build_one(tmp_path, "Mix {{ 100g flour }}.\n\nBake with {{ 1 egg }}.\n") == ""
 
 
 def test_recipe_without_ingredient_markers_has_no_diagram(tmp_path: Path) -> None:
@@ -449,7 +479,7 @@ def test_recipe_without_ingredient_markers_has_no_diagram(tmp_path: Path) -> Non
 
 
 def test_diagrams_follow_the_option_unless_the_recipe_says_otherwise(tmp_path: Path) -> None:
-    step = "Mix {{ 100g flour }}.\n"
+    step = "**Mix** {{ 100g flour }}.\n"
 
     assert build_one(tmp_path, step, diagrams=False) == ""
     assert build_one(tmp_path, "---\ndiagram: true\n---\n" + step, diagrams=False) != ""

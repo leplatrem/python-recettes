@@ -156,3 +156,5 @@ The version comes from the Git tag. Creating a [new release](https://github.com/
 CC0 1.0 Universal
 
 The bundled fonts, DM Sans and Playfair Display, are distributed under the [SIL Open Font License](src/recettes/static/fonts/OFL.txt).
+
+Favicon is *Cooking book* by [IonutNeagu](https://github.com/IonutNeagu) ([Source](https://www.svgrepo.com/svg/490066/cooking-book/), under [PD License](https://www.svgrepo.com/page/licensing/#PD).

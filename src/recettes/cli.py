@@ -55,6 +55,27 @@ VOLUME_UNITS_ML = {
         ["tsp", "c. à c.", "TL", "cdita", "cc", "ct", "cucchiaino", "cucchiaini", "tsk", "ts"], 5
     ),
 }
+# Units as displayed, from their lowercase spelling without spaces nor dots.
+UNIT_ALIASES = {
+    "cas": "c. à s.",
+    "càs": "c. à s.",
+    "cac": "c. à c.",
+    "càc": "c. à c.",
+    "tl": "TL",
+    "el": "EL",
+    "fl_oz": "fl oz",
+    "floz": "fl oz",
+    "tablespoon": "tbsp",
+    "tablespoons": "tbsp",
+    "teaspoon": "tsp",
+    "teaspoons": "tsp",
+    "cup": "cups",
+    "ounce": "oz",
+    "ounces": "oz",
+    "pound": "lb",
+    "pounds": "lb",
+    "lbs": "lb",
+}
 MASS_UNITS_G = {"mg": 0.001, "g": 1, "kg": 1000, "oz": 28.35, "lb": 453.6}
 
 
@@ -82,35 +103,21 @@ def parse_quantity(value: str) -> tuple[float | None, str, str]:
         return None, "", value.strip()
     raw_unit = (match.group("unit") or "").replace(" ", "").replace(".", "")
     normalized_unit = raw_unit.lower()
-    unit_map = {
-        "cas": "c. à s.",
-        "càs": "c. à s.",
-        "cac": "c. à c.",
-        "càc": "c. à c.",
-        "tl": "TL",
-        "el": "EL",
-        "fl_oz": "fl oz",
-        "floz": "fl oz",
-        "tablespoon": "tbsp",
-        "tablespoons": "tbsp",
-        "teaspoon": "tsp",
-        "teaspoons": "tsp",
-        "cup": "cups",
-        "ounce": "oz",
-        "ounces": "oz",
-        "pound": "lb",
-        "pounds": "lb",
-        "lbs": "lb",
-    }
-    unit = unit_map.get(normalized_unit, raw_unit if normalized_unit == "cc" else normalized_unit)
+    # Case matters for "cc": Italian "Cc"/"CC" are tablespoons, "cc" teaspoons.
+    default = raw_unit if normalized_unit == "cc" else normalized_unit
+    unit = UNIT_ALIASES.get(normalized_unit, default)
     return amount, unit, match.group("name").strip()
+
+
+def strip_accents(text: str) -> str:
+    """Remove diacritics ("Étape" -> "Etape")."""
+    normalized = unicodedata.normalize("NFKD", text)
+    return "".join(char for char in normalized if not unicodedata.combining(char))
 
 
 def name_words(text: str) -> tuple[str, ...]:
     """Lowercase words without accents nor plural "s" ("Pépites de chocolat" -> pepite, de...)."""
-    normalized = unicodedata.normalize("NFKD", text.casefold())
-    ascii_text = "".join(char for char in normalized if not unicodedata.combining(char))
-    words = re.findall(r"[a-z0-9]+", ascii_text)
+    words = re.findall(r"[a-z0-9]+", strip_accents(text.casefold()))
     return tuple(word[:-1] if len(word) > 3 and word.endswith("s") else word for word in words)
 
 
@@ -235,9 +242,7 @@ def first_paragraph(markdown: str, limit: int = 180) -> str:
 
 def slugify(text: str) -> str:
     """Turn a heading into a filename-friendly slug ("Étape 1" -> "etape-1")."""
-    normalized = unicodedata.normalize("NFKD", text)
-    ascii_text = "".join(char for char in normalized if not unicodedata.combining(char))
-    return re.sub(r"[^a-z0-9]+", "-", ascii_text.casefold()).strip("-")
+    return re.sub(r"[^a-z0-9]+", "-", strip_accents(text).casefold()).strip("-")
 
 
 def natural_key(name: str) -> list[object]:

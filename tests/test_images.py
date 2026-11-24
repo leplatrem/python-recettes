@@ -4,7 +4,7 @@ import pytest
 from PIL import Image, ImageCms
 
 from recettes.images import export_image
-from recettes.site import BuildOptions, build
+from recettes.website import BuildOptions, build
 
 
 def test_images_are_downscaled_and_main_picture_has_a_thumbnail(tmp_path: Path) -> None:

@@ -13,8 +13,8 @@ from recettes.quantities import (
     parse_quantity,
     volume_ml,
 )
-from recettes.site import BuildOptions, build, lint
 from recettes.utils import RecettesError, ci_base_url, ci_edit_url
+from recettes.website import BuildOptions, build, lint
 
 
 @pytest.mark.parametrize(

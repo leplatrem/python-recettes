@@ -654,3 +654,15 @@ def test_interface_language(tmp_path: Path) -> None:
     assert '<html lang="fr-CA">' in index
     assert 'aria-label="Filtrer par étiquette"' in index
     assert 'aria-label="Retour"' in soup
+
+
+def test_version_option() -> None:
+    from typer.testing import CliRunner
+
+    from recettes import __version__
+    from recettes.cli import app
+
+    result = CliRunner().invoke(app, ["--version"])
+
+    assert result.exit_code == 0
+    assert result.output == f"recettes {__version__}\n"

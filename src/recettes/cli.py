@@ -7,6 +7,7 @@ from typing import Annotated
 
 import typer
 
+from recettes import __version__
 from recettes.ci import ci_base_url, ci_edit_url
 from recettes.site import (
     DEFAULT_IMAGE_WIDTH,
@@ -20,8 +21,21 @@ from recettes.site import (
 app = typer.Typer(no_args_is_help=True, help="Build a static recipe website from Markdown.")
 
 
+def show_version(value: bool) -> None:
+    if value:
+        typer.echo(f"recettes {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
-def main() -> None:
+def main(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version", callback=show_version, is_eager=True, help="Show the version and exit"
+        ),
+    ] = False,
+) -> None:
     """Build and maintain a static recipe website."""
 
 

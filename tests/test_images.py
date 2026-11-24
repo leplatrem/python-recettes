@@ -97,7 +97,7 @@ def test_heic_images_are_converted_to_jpeg(tmp_path: Path) -> None:
     assert "gnocchi-etape-1.jpg" in recipe
     assert "../assets/images/gnocchi-extra.jpg" in recipe
     assert "heic" not in recipe.lower()
-    index = (output / "recipes.json").read_text(encoding="utf-8")
+    index = (output / "index.html").read_text(encoding="utf-8")
     assert "assets/images/thumbnails/gnocchi.jpg" in index
 
 

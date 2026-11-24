@@ -2,45 +2,20 @@
 <html lang="{{ lang }}">
   <head>
 {{> head.html }}
-    <link rel="preload" id="recipes-data" href="recipes.json?v={{ recipes_json_version }}" as="fetch" crossorigin>
     {{ prefetch_links }}
     <script type="module" src="assets/app.js?v={{ app_js_version }}"></script>
   </head>
   <body>
     <main class="recipe-index">
       <h1>{{ title }}</h1>
-      <label class="search-box">
+      <!-- Search and tags need JavaScript: app.js shows them. -->
+      <label class="search-box" data-requires-js hidden>
         <span aria-hidden="true">⌕</span>
-        <input id="recipe-search" type="search" aria-label="Search recipes" autocomplete="off">
+        <input id="recipe-search" type="search" aria-label="Search recipes" placeholder="{{ search_placeholder }}" autocomplete="off">
       </label>
-      <div class="tag-cloud" id="tag-cloud"></div>
-      <div class="recipe-grid" id="recipe-grid"></div>
+      <div class="tag-cloud" id="tag-cloud" data-requires-js hidden>{{ tag_cloud }}</div>
+      <div class="recipe-grid" id="recipe-grid">{{ recipe_cards }}</div>
     </main>
 {{> footer.html }}
-
-    <template id="tag-cloud-item-template">
-      <button class="tag-cloud-item" type="button" aria-pressed="false">
-        <span data-tag-name></span>
-        <span data-tag-count></span>
-      </button>
-    </template>
-
-    <template id="recipe-card-template">
-      <article class="recipe-card">
-        <a>
-          <div class="card-body">
-            <h2 data-recipe-title></h2>
-            <p class="card-excerpt" data-recipe-excerpt></p>
-            <div class="recipe-tags" data-recipe-tags></div>
-          </div>
-          <img class="card-image" data-recipe-image alt="" loading="lazy" hidden>
-          <span class="card-arrow" aria-hidden="true">↗</span>
-        </a>
-      </article>
-    </template>
-
-    <template id="recipe-tag-template">
-      <span class="tag" data-tag-label></span>
-    </template>
   </body>
 </html>

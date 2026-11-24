@@ -16,12 +16,14 @@ from recettes.recipes import (
     load_recipes,
 )
 from recettes.render import (
+    attr,
     edit_link,
     license_html,
     meta_tags,
+    recipe_card_html,
     recipe_html_parts,
-    recipe_index_data,
     render_template,
+    tag_cloud_html,
 )
 
 DEFAULT_LICENSE = "[Copyrights CC-BY](https://creativecommons.org/licenses/by/4.0/)"
@@ -132,8 +134,6 @@ def build(
         f'<link rel="prefetch" href="recipes/{quote(recipe.slug, safe="-_")}.html">'
         for recipe in recipes
     )
-    index_data = recipe_index_data(recipes)
-    versions["recipes_json_version"] = hashlib.sha256(index_data.encode()).hexdigest()[:10]
     languages = {recipe.lang for recipe in recipes if recipe.lang}
     index = render_template(
         templates / "index.html",
@@ -141,12 +141,14 @@ def build(
         title=html.escape(options.title),
         lang=html.escape(next(iter(languages)) if len(languages) == 1 else "", quote=True),
         prefetch_links=prefetch_links,
+        search_placeholder=attr(f"Search {len(recipes)} recipes"),
+        tag_cloud=tag_cloud_html(recipes),
+        recipe_cards="".join(recipe_card_html(recipe) for recipe in recipes),
         meta_tags=meta_tags(options.title, "website", options.title, options.base_url, ""),
         license=footer_license,
         **versions,
     )
     (destination / "index.html").write_text(index, encoding="utf-8")
-    (destination / "recipes.json").write_text(index_data, encoding="utf-8")
     if cache_dir:
         prune_cache(cache_dir, used_cache)
     return len(recipes)

@@ -1,77 +1,19 @@
-// Versioned URL from the preload link, so the preloaded response is reused.
-const recipesUrl = document.querySelector("#recipes-data").href;
-const recipes = await fetch(recipesUrl).then((response) => response.json());
 const searchInput = document.querySelector("#recipe-search");
-searchInput.placeholder = `Search ${recipes.length} recipes`;
-const tagCloud = document.querySelector("#tag-cloud");
-const recipeGrid = document.querySelector("#recipe-grid");
-const tagTemplate = document.querySelector("#tag-cloud-item-template");
-const cardTemplate = document.querySelector("#recipe-card-template");
-const recipeTagTemplate = document.querySelector("#recipe-tag-template");
+const tagButtons = [...document.querySelectorAll(".tag-cloud-item")];
+const cards = [...document.querySelectorAll(".recipe-card")].map((element) => ({
+  element,
+  search: element.dataset.search.toLocaleLowerCase(element.lang || undefined),
+  tags: JSON.parse(element.dataset.tags),
+}));
 const params = new URLSearchParams(window.location.search);
 let activeTag = params.get("tag") || "";
-const tagCounts = new Map();
-for (const recipe of recipes) {
-  for (const tag of recipe.tags) {
-    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-  }
-}
-const maxCount = Math.max(...tagCounts.values(), 1);
-
-for (const [tag, count] of [...tagCounts].sort(([left], [right]) =>
-  left.localeCompare(right),
-)) {
-  const fragment = tagTemplate.content.cloneNode(true);
-  const button = fragment.querySelector("button");
-  button.dataset.tag = tag;
-  button.style.setProperty("--tag-weight", 1 + (count - 1) / maxCount);
-  button.querySelector("[data-tag-name]").textContent = tag;
-  button.querySelector("[data-tag-count]").textContent = count;
-  button.addEventListener("click", () => {
-    activeTag = activeTag === tag ? "" : tag;
-    updateRecipes();
-  });
-  tagCloud.append(fragment);
-}
-
-for (const recipe of recipes) {
-  const fragment = cardTemplate.content.cloneNode(true);
-  const card = fragment.querySelector(".recipe-card");
-  const link = card.querySelector("a");
-  link.href = `recipes/${encodeURIComponent(recipe.slug)}.html`;
-  card.dataset.search = recipe.search.toLocaleLowerCase(
-    recipe.lang || undefined,
-  );
-  card.dataset.tags = JSON.stringify(recipe.tags);
-  card.querySelector("[data-recipe-title]").textContent = recipe.title;
-  const excerpt = card.querySelector("[data-recipe-excerpt]");
-  excerpt.textContent = recipe.excerpt;
-  excerpt.hidden = !recipe.excerpt;
-  if (recipe.image) {
-    const image = card.querySelector("[data-recipe-image]");
-    image.src = recipe.image;
-    image.hidden = false;
-    card.classList.add("has-image");
-  }
-  const recipeTags = card.querySelector("[data-recipe-tags]");
-  for (const tag of recipe.tags) {
-    const tagFragment = recipeTagTemplate.content.cloneNode(true);
-    tagFragment.querySelector("[data-tag-label]").textContent = tag;
-    recipeTags.append(tagFragment);
-  }
-  recipeGrid.append(fragment);
-}
-
-const cards = [...recipeGrid.querySelectorAll(".recipe-card")];
-const tagButtons = [...tagCloud.querySelectorAll(".tag-cloud-item")];
 
 function updateRecipes() {
   const query = searchInput.value.trim().toLocaleLowerCase();
   for (const card of cards) {
-    const tags = JSON.parse(card.dataset.tags);
-    card.hidden =
-      !card.dataset.search.includes(query) ||
-      Boolean(activeTag && !tags.includes(activeTag));
+    card.element.hidden =
+      !card.search.includes(query) ||
+      Boolean(activeTag && !card.tags.includes(activeTag));
   }
   for (const button of tagButtons) {
     const active = button.dataset.tag === activeTag;
@@ -80,5 +22,15 @@ function updateRecipes() {
   }
 }
 
+for (const button of tagButtons) {
+  button.addEventListener("click", () => {
+    activeTag = activeTag === button.dataset.tag ? "" : button.dataset.tag;
+    updateRecipes();
+  });
+}
 searchInput.addEventListener("input", updateRecipes);
+
+for (const element of document.querySelectorAll("[data-requires-js]")) {
+  element.hidden = false;
+}
 updateRecipes();

@@ -1,5 +1,5 @@
 import hashlib
-import json
+import html
 import re
 from pathlib import Path
 
@@ -197,8 +197,12 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
     index = (output / "index.html").read_text(encoding="utf-8")
     recipe = (output / "recipes" / "soupe-oignon.html").read_text(encoding="utf-8")
     assert not (output / "data").exists()
-    assert '<template id="recipe-card-template">' in index
-    assert '<p class="card-excerpt" data-recipe-excerpt></p>' in index
+    assert not (output / "recipes.json").exists()
+    assert '<a href="recipes/soupe-oignon.html"><div class="card-body">' in index
+    assert '<p class="card-excerpt">Mélangez 4 oignons et 50g de beurre.</p>' in index
+    assert '<span class="tag">hiver</span>' in index
+    assert 'data-tag="hiver" style="--tag-weight: 1">' in index
+    assert 'placeholder="Search 1 recipes"' in index
     assert '<link rel="prefetch" href="recipes/soupe-oignon.html">' in index
     assert '<h2 class="ingredients-title">Ingredients</h2>' in recipe
     assert '<html lang="fr">' in recipe
@@ -228,12 +232,12 @@ def test_build_recipe_site_with_frontmatter_images_and_portion_controls(tmp_path
         'data-name="de beurre" data-ml="21.98">20 g de beurre</span>'
     ) in recipe
     assert "RECIPEINGREDIENTTOKEN" not in recipe
-    index_data = json.loads((output / "recipes.json").read_text(encoding="utf-8"))
-    assert "4 oignons" in index_data[0]["search"]
-    assert "auteur Test" in index_data[0]["search"]
-    assert "<" not in index_data[0]["search"]
-    assert "TOKEN" not in index_data[0]["search"]
-    assert index_data[0]["excerpt"] == "Mélangez 4 oignons et 50g de beurre."
+    search = html.unescape(re.search(r'data-search="([^"]*)"', index).group(1))
+    assert "4 oignons" in search
+    assert "auteur Test" in search
+    assert "<" not in search
+    assert "TOKEN" not in search
+    assert '<article class="recipe-card" lang="fr"' in index
     assert (
         '<img loading="lazy" src="../assets/images/soupe-oignon-1.jpg" '
         'alt="Soupe à l&#x27;oignon 1">'
@@ -354,11 +358,6 @@ def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:
     assert f'src="assets/app.js?v={version("app.js")}"' in index
     assert f'href="../assets/style.css?v={version("style.css")}"' in recipe
     assert f'src="../assets/recipe.js?v={version("recipe.js")}"' in recipe
-    data_version = hashlib.sha256((output / "recipes.json").read_bytes()).hexdigest()[:10]
-    assert (
-        f'<link rel="preload" id="recipes-data" href="recipes.json?v={data_version}" '
-        'as="fetch" crossorigin>'
-    ) in index
     assert not re.search(r"\{\{ \w+ \}\}", index + recipe)
 
 
@@ -390,11 +389,8 @@ def test_images_are_placed_as_main_picture_in_sections_or_gallery(tmp_path: Path
     gallery = recipe[recipe.index('id="recipe-gallery"') :]
     assert "tarte-inconnu.webp" in gallery
     assert "tarte-citron.jpg" not in recipe
-    index_data = {
-        entry["slug"]: entry
-        for entry in json.loads((output / "recipes.json").read_text(encoding="utf-8"))
-    }
-    assert index_data["tarte"]["image"] == "assets/images/thumbnails/tarte.jpg"
+    index = (output / "index.html").read_text(encoding="utf-8")
+    assert '<img class="card-image" src="assets/images/thumbnails/tarte.jpg"' in index
     other = (output / "recipes" / "tarte-citron.html").read_text(encoding="utf-8")
     assert 'src="../assets/images/tarte-citron.jpg"' in other
 

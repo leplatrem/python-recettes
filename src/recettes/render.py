@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import re
+from collections import Counter
 from pathlib import Path
 from urllib.parse import quote
 
@@ -13,7 +14,7 @@ from markdown_it.token import Token
 from recettes import markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
-from recettes.text import slugify
+from recettes.text import natural_key, slugify, strip_accents
 
 
 def attr(value: object) -> str:
@@ -137,31 +138,54 @@ def recipe_html_parts(recipe: Recipe) -> dict[str, str]:
     }
 
 
-def recipe_index_data(recipes: list[Recipe]) -> str:
-    entries = []
-    for recipe in recipes:
-        search_terms = [
-            recipe.title,
-            *recipe.tags,
-            recipe.text,
-            *(f"{item.name} {item.value}" for item in recipe.properties),
-        ]
-        entries.append(
-            {
-                "slug": recipe.slug,
-                "title": recipe.title,
-                "tags": recipe.tags,
-                "excerpt": recipe.excerpt,
-                "search": " ".join(search_terms),
-                "lang": recipe.lang,
-                "image": (
-                    f"assets/images/thumbnails/{quote(recipe.main_image, safe='')}"
-                    if recipe.main_image
-                    else None
-                ),
-            }
+def search_text(recipe: Recipe) -> str:
+    """Text matched by the home page search."""
+    properties = [f"{item.name} {display_value(item.value)}" for item in recipe.properties]
+    return " ".join([recipe.title, *recipe.tags, recipe.text, *properties])
+
+
+def recipe_card_html(recipe: Recipe) -> str:
+    """Home page card, with the data used to filter it."""
+    lang = f' lang="{attr(recipe.lang)}"' if recipe.lang else ""
+    classes = "recipe-card has-image" if recipe.main_image else "recipe-card"
+    excerpt = f'<p class="card-excerpt">{html.escape(recipe.excerpt)}</p>' if recipe.excerpt else ""
+    tags = "".join(f'<span class="tag">{html.escape(tag)}</span>' for tag in recipe.tags)
+    image = (
+        f'<img class="card-image" src="{attr(thumbnail_url(recipe.main_image))}" alt="" '
+        'loading="lazy">'
+        if recipe.main_image
+        else ""
+    )
+    return (
+        f'<article class="{classes}"{lang} data-search="{attr(search_text(recipe))}" '
+        f'data-tags="{attr(json.dumps(recipe.tags, ensure_ascii=False))}">'
+        f'<a href="{attr(recipe_url(recipe))}">'
+        f'<div class="card-body"><h2>{html.escape(recipe.title)}</h2>{excerpt}'
+        f'<div class="recipe-tags">{tags}</div></div>'
+        f'{image}<span class="card-arrow" aria-hidden="true">↗</span></a></article>'
+    )
+
+
+def tag_cloud_html(recipes: list[Recipe]) -> str:
+    """Buttons to filter recipes by tag, larger for frequent tags."""
+    counts = Counter(tag for recipe in recipes for tag in recipe.tags)
+    highest = max(counts.values(), default=1)
+    return "".join(
+        f'<button class="tag-cloud-item" type="button" aria-pressed="false" '
+        f'data-tag="{attr(tag)}" style="--tag-weight: {1 + (count - 1) / highest:.3g}">'
+        f"<span>{html.escape(tag)}</span><span data-tag-count>{count}</span></button>"
+        for tag, count in sorted(
+            counts.items(), key=lambda item: natural_key(strip_accents(item[0]))
         )
-    return json.dumps(entries, ensure_ascii=False)
+    )
+
+
+def recipe_url(recipe: Recipe) -> str:
+    return f"recipes/{quote(recipe.slug, safe='-_')}.html"
+
+
+def thumbnail_url(image: str) -> str:
+    return f"assets/images/thumbnails/{quote(image, safe='')}"
 
 
 def meta_tags(

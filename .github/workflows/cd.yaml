@@ -16,8 +16,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           python-version: "3.12"
       - name: Install Recettes
@@ -25,7 +25,7 @@ jobs:
       # Resized pictures from previous builds: only new or changed ones are processed.
       - name: Restore picture cache
         id: restore-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .recettes-cache
           key: recettes-images-${{ github.sha }}
@@ -37,7 +37,7 @@ jobs:
         run: echo "key=recettes-images-${{ hashFiles('.recettes-cache/**') }}" >> "$GITHUB_OUTPUT"
       - name: Save picture cache
         if: steps.cache-key.outputs.key != steps.restore-cache.outputs.cache-matched-key
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .recettes-cache
           key: ${{ steps.cache-key.outputs.key }}

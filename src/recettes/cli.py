@@ -251,8 +251,17 @@ def assign_images(source: Path, recipe_stems: set[str]) -> dict[str, list[Path]]
         ]
         if owners:
             images[max(owners, key=len)].append(path)
+    published: dict[str, Path] = {}
     for paths in images.values():
         paths.sort(key=lambda path: natural_key(path.name))
+        for path in paths:
+            name = output_name(path)
+            if name in published:
+                fail(
+                    f"Pictures '{published[name].name}' and '{path.name}' would both be "
+                    f"published as '{name}'. Rename one of them."
+                )
+            published[name] = path
     return images
 
 

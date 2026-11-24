@@ -544,3 +544,14 @@ def test_build_removes_outputs_of_deleted_recipes(tmp_path: Path) -> None:
     assert not (output / "recipes" / "cake.html").exists()
     assert not (output / "assets" / "images" / "cake.jpg").exists()
     assert (output / "CNAME").exists()
+
+
+def test_pictures_converted_to_the_same_name_are_rejected(tmp_path: Path) -> None:
+    source = tmp_path / "recipes"
+    source.mkdir()
+    (source / "soup.md").write_text("Hot.", encoding="utf-8")
+    (source / "soup.jpg").write_bytes(b"fake jpeg")
+    (source / "soup.heic").write_bytes(b"fake heic")
+
+    with pytest.raises(typer.BadParameter, match="both be published as 'soup.jpg'"):
+        build(source, tmp_path / "site")

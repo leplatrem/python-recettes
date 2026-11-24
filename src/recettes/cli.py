@@ -131,10 +131,13 @@ def find_density(name: str) -> float | None:
     return None
 
 
-def volume_ml(amount: float | None, unit: str, name: str) -> float | None:
+def volume_ml(amount: float | None, unit: str, name: str, lang: str = "") -> float | None:
     """Volume of an ingredient in milliliters, if it can be measured with glasses and spoons."""
     if amount is None:
         return None
+    # "cc" is a teaspoon in French ("cuillère à café"), but cubic centimeters in English.
+    if unit == "cc" and lang.casefold().startswith("en"):
+        return amount
     if unit in VOLUME_UNITS_ML:
         return amount * VOLUME_UNITS_ML[unit]
     if unit in MASS_UNITS_G:
@@ -364,6 +367,7 @@ def recipe_page(
         fail(f"Could not read recipe '{path.name}': {exc}")
     metadata = document.metadata
     portions = parse_portions(metadata.get("portions"))
+    lang = str(metadata.get("lang", ""))
 
     title = str(metadata.get("title") or path.stem.replace("-", " ").title())
     slug = recipe_slug(path)
@@ -386,7 +390,7 @@ def recipe_page(
     if simple_mode:
         for ingredient in [*ingredients, *ingredient_list]:
             amount, unit = ingredient["amount"], str(ingredient["unit"])
-            ingredient["ml"] = volume_ml(amount, unit, str(ingredient["name"]))
+            ingredient["ml"] = volume_ml(amount, unit, str(ingredient["name"]), lang)
         for ingredient in ingredient_list:
             if ingredient["unit"] in MASS_UNITS_G and ingredient["ml"] is None:
                 typer.echo(
@@ -404,7 +408,7 @@ def recipe_page(
     return {
         "slug": slug,
         "title": title,
-        "lang": str(metadata.get("lang", "")),
+        "lang": lang,
         "tags": parse_tags(metadata.get("tags")),
         "properties": properties,
         "excerpt": first_paragraph(body),

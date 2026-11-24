@@ -555,3 +555,10 @@ def test_pictures_converted_to_the_same_name_are_rejected(tmp_path: Path) -> Non
 
     with pytest.raises(typer.BadParameter, match="both be published as 'soup.jpg'"):
         build(source, tmp_path / "site")
+
+
+def test_cc_is_cubic_centimeters_in_english() -> None:
+    assert volume_ml(10, "cc", "of milk", "en") == 10
+    assert volume_ml(10, "cc", "of milk", "en-GB") == 10
+    assert volume_ml(10, "cc", "de lait", "fr") == 50
+    assert volume_ml(10, "cc", "de lait") == 50

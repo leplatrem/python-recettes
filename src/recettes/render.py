@@ -6,8 +6,8 @@ import html
 import json
 import re
 from collections import Counter
+from importlib.resources.abc import Traversable
 from pathlib import Path
-from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 from markdown_it.token import Token
@@ -16,9 +16,6 @@ from recettes import i18n, markdown
 from recettes.quantities import Ingredient, format_amount
 from recettes.recipes import Recipe
 from recettes.text import natural_key, slugify, strip_accents
-
-if TYPE_CHECKING:  # Python 3.11+
-    from importlib.resources.abc import Traversable
 
 
 def attr(value: object) -> str:

@@ -144,7 +144,7 @@ recettes build examples/ --no-simple-mode
 uv sync
 uv run recettes --help
 uv run pytest
-uv run pre-commit run --all-files  # Ruff, mypy and Prettier
+uv run pre-commit run --all-files  # Ruff, ty and Prettier
 ```
 
 ## Release

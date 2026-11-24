@@ -126,7 +126,7 @@ def build(
     assets.mkdir(parents=True, exist_ok=True)
     # Content hashes appended to asset URLs, so browsers never use stale cached copies.
     versions = {}
-    for filename in ("style.css", "app.js", "recipe.js"):
+    for filename in ("style.css", "app.js", "recipe.js", "favicon.svg"):
         shutil.copyfile(static / filename, assets / filename)
         digest = hashlib.sha256((static / filename).read_bytes()).hexdigest()[:10]
         versions[filename.replace(".", "_") + "_version"] = digest

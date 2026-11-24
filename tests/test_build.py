@@ -360,6 +360,7 @@ def test_asset_urls_are_versioned_with_content_hash(tmp_path: Path) -> None:
     assert f'src="assets/app.js?v={version("app.js")}"' in index
     assert f'href="../assets/style.css?v={version("style.css")}"' in recipe
     assert f'src="../assets/recipe.js?v={version("recipe.js")}"' in recipe
+    assert f'href="../assets/favicon.svg?v={version("favicon.svg")}"' in recipe
     assert not re.search(r"\{\{ \w+ \}\}", index + recipe)
 
 
